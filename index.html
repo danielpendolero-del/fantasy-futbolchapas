@@ -724,7 +724,6 @@ document.getElementById('btnImportPlayers').addEventListener('click', async func
   var raw = document.getElementById('bulkPlayersInput').value.trim();
   if (!raw) return alert('Pega la lista de jugadores');
 
-  // Parse format: {id:1, name:"...", club:"...", points:100, },
   var players = [];
   var regex = /\{\s*id\s*:\s*(\d+)\s*,\s*name\s*:\s*"([^"]+)"\s*,\s*club\s*:\s*"([^"]+)"\s*,\s*points\s*:\s*([\d.]+)(?:\s*,\s*bombo\s*:\s*"([^"]+)")?\s*\}/gi;
   var m;
@@ -739,22 +738,36 @@ document.getElementById('btnImportPlayers').addEventListener('click', async func
   }
 
   if (players.length === 0) {
-    return alert('No se pudo parsear ningún jugador.\nRevisa el formato:\n{id:1, name:"NOMBRE", club:"CLUB", points:100.00},');
+    return alert('No se pudo parsear ningún jugador.\nFormato: {id:1, name:"NOMBRE", club:"CLUB", points:100.00},');
   }
 
+  var statusEl = document.getElementById('importStatus');
+  statusEl.textContent = 'Importando ' + players.length + ' jugadores...';
+  var btn = document.getElementById('btnImportPlayers');
+  btn.disabled = true;
+
   try {
-    // Upsert all
-    var err = (await supabaseClient.from('players').upsert(players, { onConflict: 'id' })).error;
-    if (err) throw err;
+    // Import in batches of 80 to avoid Supabase limits
+    var batchSize = 80;
+    var imported = 0;
+    for (var i = 0; i < players.length; i += batchSize) {
+      var batch = players.slice(i, i + batchSize);
+      var res = await supabaseClient.from('players').upsert(batch, { onConflict: 'id' });
+      if (res.error) throw res.error;
+      imported += batch.length;
+      statusEl.textContent = 'Importados ' + imported + ' / ' + players.length + '...';
+    }
     await loadPlayers();
-    document.getElementById('importStatus').textContent = '✅ Importados ' + players.length + ' jugadores.';
+    statusEl.textContent = 'Listo: ' + imported + ' jugadores importados.';
     document.getElementById('bulkPlayersInput').value = '';
     renderPlantilla();
     renderOnce();
-    alert('Importados ' + players.length + ' jugadores correctamente');
+    alert('Importados ' + imported + ' jugadores correctamente');
   } catch (e) {
+    statusEl.textContent = 'Error: ' + e.message;
     alert('Error al importar: ' + e.message);
   }
+  btn.disabled = false;
 });
 
 document.getElementById('btnClearPlayers').addEventListener('click', async function() {
