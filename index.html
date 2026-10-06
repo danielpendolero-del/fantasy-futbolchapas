@@ -197,9 +197,9 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
         <div class="section-title">Pegar lista de jugadores</div>
         <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
           Pega líneas con este formato (una por jugador):<br>
-          <code style="font-size:0.72rem;">{id:1, name:"NOMBRE", club:"CLUB", points:100.00, bombo:"B1"}</code>
+          <code style="font-size:0.72rem;">{id:1, name:"NOMBRE", club:"CLUB", points:100.00}</code>
         </p>
-        <textarea id="bulkPlayersInput" placeholder='{id:1, name:"JUAN LUIS JIMENEZ MORENO", club:"MADRID", points:572.13, bombo:"B1"},&#10;{id:2, name:"DAVID RUIZ REMON", club:"FUENLABRADA", points:529.00, bombo:"B1"},'></textarea>
+        <textarea id="bulkPlayersInput" placeholder='{id:1, name:"JUAN LUIS JIMENEZ MORENO", club:"MADRID", points:572.13},&#10;{id:2, name:"DAVID RUIZ REMON", club:"FUENLABRADA", points:529.00},'></textarea>
         <div class="btn-row">
           <button class="btn btn-primary" id="btnImportPlayers" style="flex:1">Importar jugadores</button>
           <button class="btn btn-danger" id="btnClearPlayers">Borrar toda la plantilla</button>
@@ -724,9 +724,9 @@ document.getElementById('btnImportPlayers').addEventListener('click', async func
   var raw = document.getElementById('bulkPlayersInput').value.trim();
   if (!raw) return alert('Pega la lista de jugadores');
 
-  // Parse format: {id:1, name:"...", club:"...", points:100, bombo:"B1"},
+  // Parse format: {id:1, name:"...", club:"...", points:100, },
   var players = [];
-  var regex = /\{\s*id\s*:\s*(\d+)\s*,\s*name\s*:\s*"([^"]+)"\s*,\s*club\s*:\s*"([^"]+)"\s*,\s*points\s*:\s*([\d.]+)\s*,\s*bombo\s*:\s*"([^"]+)"\s*\}/gi;
+  var regex = /\{\s*id\s*:\s*(\d+)\s*,\s*name\s*:\s*"([^"]+)"\s*,\s*club\s*:\s*"([^"]+)"\s*,\s*points\s*:\s*([\d.]+)(?:\s*,\s*bombo\s*:\s*"([^"]+)")?\s*\}/gi;
   var m;
   while ((m = regex.exec(raw)) !== null) {
     players.push({
@@ -734,12 +734,12 @@ document.getElementById('btnImportPlayers').addEventListener('click', async func
       name: m[2],
       club: m[3],
       points: parseFloat(m[4]),
-      bombo: m[5]
+      bombo: m[5] || 'B4'
     });
   }
 
   if (players.length === 0) {
-    return alert('No se pudo parsear ningún jugador.\nRevisa el formato:\n{id:1, name:"NOMBRE", club:"CLUB", points:100.00, bombo:"B1"},');
+    return alert('No se pudo parsear ningún jugador.\nRevisa el formato:\n{id:1, name:"NOMBRE", club:"CLUB", points:100.00},');
   }
 
   try {
