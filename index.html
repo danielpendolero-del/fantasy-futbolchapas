@@ -3,98 +3,41 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Fantasy Futbolchapas · Campeonato de España</title>
+<title>Fantasy Futbolchapas</title>
 <style>
 :root {
-  --bg: #0b1120;
-  --card: #1e293b;
-  --card2: #162032;
-  --accent: #22c55e;
-  --accent2: #16a34a;
-  --blue: #3b82f6;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --text: #f1f5f9;
-  --muted: #94a3b8;
-  --border: #334155;
+  --bg: #0b1120; --card: #1e293b; --card2: #162032; --accent: #22c55e;
+  --blue: #3b82f6; --danger: #ef4444; --warning: #f59e0b;
+  --text: #f1f5f9; --muted: #94a3b8; --border: #334155;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  padding: 12px;
-  max-width: 980px;
-  margin: 0 auto;
-  min-height: 100vh;
-  line-height: 1.4;
+  background: var(--bg); color: var(--text); padding: 12px;
+  max-width: 980px; margin: 0 auto; min-height: 100vh; line-height: 1.4;
 }
-header {
-  text-align: center;
-  margin-bottom: 16px;
-  padding: 12px 0 8px;
-}
-header h1 {
-  font-size: 1.45rem;
-  color: var(--accent);
-  font-weight: 800;
-  letter-spacing: -0.5px;
-  cursor: default;
-  user-select: none;
-}
-header .sub {
-  font-size: 0.78rem;
-  color: var(--muted);
-  margin-top: 2px;
-}
-
-/* Tabs */
+header { text-align: center; margin-bottom: 16px; padding: 12px 0 8px; }
+header h1 { font-size: 1.45rem; color: var(--accent); font-weight: 800; user-select: none; }
+header .sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
 .tabs {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 16px;
-  background: var(--card);
-  padding: 6px;
-  border-radius: 12px;
-  border: 1px solid var(--border);
+  display: flex; gap: 6px; margin-bottom: 16px; background: var(--card);
+  padding: 6px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap;
 }
 .tab {
-  flex: 1;
-  padding: 11px 6px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
+  flex: 1; min-width: 70px; padding: 10px 6px; background: transparent; border: none;
+  border-radius: 8px; color: var(--muted); font-size: 0.8rem; font-weight: 600; cursor: pointer;
 }
-.tab.active {
-  background: var(--accent);
-  color: #000;
-}
-
+.tab.active { background: var(--accent); color: #000; }
 .panel { display: none; }
 .panel.active { display: block; }
-
 .card {
-  background: var(--card);
-  border-radius: 14px;
-  padding: 14px;
-  border: 1px solid var(--border);
-  margin-bottom: 12px;
+  background: var(--card); border-radius: 14px; padding: 14px;
+  border: 1px solid var(--border); margin-bottom: 12px;
 }
 .btn {
-  border: none;
-  border-radius: 9px;
-  padding: 10px 14px;
-  font-weight: 600;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: opacity 0.15s;
+  border: none; border-radius: 9px; padding: 10px 14px; font-weight: 600;
+  font-size: 0.85rem; cursor: pointer;
 }
-.btn:active { opacity: 0.85; }
 .btn-primary { background: var(--accent); color: #000; }
 .btn-blue { background: var(--blue); color: #fff; }
 .btn-danger { background: var(--danger); color: #fff; }
@@ -102,160 +45,71 @@ header .sub {
 .btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
 .btn-sm { padding: 6px 10px; font-size: 0.75rem; border-radius: 6px; }
-
-input, select, textarea {
-  background: #0f172a;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  color: var(--text);
-  padding: 10px 12px;
-  font-size: 0.95rem;
-  width: 100%;
-  font-family: inherit;
+input, textarea {
+  background: #0f172a; border: 1px solid var(--border); border-radius: 9px;
+  color: var(--text); padding: 10px 12px; font-size: 0.95rem; width: 100%; font-family: inherit;
 }
-input:focus, textarea:focus { outline: 2px solid var(--accent); border-color: transparent; }
-textarea { min-height: 80px; resize: vertical; }
-
-.budget-bar {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
-}
+input:focus, textarea:focus { outline: 2px solid var(--accent); }
+textarea { min-height: 100px; resize: vertical; }
+.budget-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
 .budget-item { text-align: center; }
-.budget-item label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; display: block; letter-spacing: 0.3px; }
+.budget-item label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; display: block; }
 .budget-item span { font-size: 1.05rem; font-weight: 700; color: var(--accent); }
-
 .player-card {
-  background: var(--card2);
-  border-radius: 11px;
-  padding: 10px 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid var(--border);
-  margin-bottom: 7px;
-  transition: border-color 0.15s;
+  background: var(--card2); border-radius: 11px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); margin-bottom: 7px;
 }
 .player-card.selected { border-color: var(--accent); background: #14532d22; }
-.player-card.clickable { cursor: pointer; }
-.player-card.clickable:active { opacity: 0.9; }
 .player-info { flex: 1; min-width: 0; }
 .player-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .player-club { font-size: 0.72rem; color: var(--muted); }
 .player-price { font-weight: 700; color: var(--accent); white-space: nowrap; font-size: 0.9rem; }
-
-.bombo {
-  display: inline-block;
-  font-size: 0.58rem;
-  padding: 1px 5px;
-  border-radius: 4px;
-  margin-left: 4px;
-  font-weight: 700;
-}
+.bombo { display: inline-block; font-size: 0.58rem; padding: 1px 5px; border-radius: 4px; margin-left: 4px; font-weight: 700; }
 .bombo.b1 { background: #854d0e; color: #fef08a; }
 .bombo.b2 { background: #1e3a8a; color: #bfdbfe; }
 .bombo.b3 { background: #166534; color: #bbf7d0; }
 .bombo.b4 { background: #4c1d95; color: #e9d5ff; }
-
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 th, td { padding: 9px 6px; text-align: left; border-bottom: 1px solid var(--border); }
-th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.3px; }
+th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; }
 .rank { font-weight: 700; color: var(--accent); width: 28px; }
-
 .empty { text-align: center; color: var(--muted); padding: 24px 12px; font-size: 0.9rem; }
 .success { background: #14532d; color: #bbf7d0; padding: 11px; border-radius: 9px; margin-bottom: 12px; font-size: 0.88rem; }
 .warning { background: #713f12; color: #fef08a; padding: 11px; border-radius: 9px; margin-bottom: 12px; font-size: 0.88rem; }
-.info { background: #1e3a8a; color: #bfdbfe; padding: 11px; border-radius: 9px; margin-bottom: 12px; font-size: 0.88rem; }
-
 .section-title {
-  font-size: 0.8rem;
-  color: var(--muted);
-  margin: 14px 0 8px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  font-size: 0.8rem; color: var(--muted); margin: 14px 0 8px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  display: flex; justify-content: space-between; align-items: center;
 }
-
-/* Modal */
 .modal-overlay {
-  position: fixed; inset: 0;
-  background: rgba(0,0,0,0.75);
-  display: none;
-  align-items: flex-end;
-  justify-content: center;
-  z-index: 100;
-  padding: 16px;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none;
+  align-items: flex-end; justify-content: center; z-index: 100; padding: 16px;
 }
 .modal-overlay.show { display: flex; }
 .modal {
-  background: var(--card);
-  border-radius: 18px 18px 14px 14px;
-  width: 100%;
-  max-width: 480px;
-  max-height: 85vh;
-  overflow-y: auto;
-  padding: 20px;
-  border: 1px solid var(--border);
+  background: var(--card); border-radius: 18px 18px 14px 14px; width: 100%;
+  max-width: 480px; max-height: 85vh; overflow-y: auto; padding: 20px; border: 1px solid var(--border);
 }
 .modal h3 { font-size: 1.1rem; margin-bottom: 4px; }
 .modal .club { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; }
-.modal .close {
-  float: right;
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 1.4rem;
-  cursor: pointer;
-  line-height: 1;
-}
-.note-item {
-  background: var(--card2);
-  border-radius: 9px;
-  padding: 10px;
-  margin-bottom: 8px;
-  font-size: 0.88rem;
-  border-left: 3px solid var(--accent);
-}
+.modal .close { float: right; background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; }
+.note-item { background: var(--card2); border-radius: 9px; padding: 10px; margin-bottom: 8px; font-size: 0.88rem; border-left: 3px solid var(--accent); }
 .note-author { font-size: 0.72rem; color: var(--muted); margin-bottom: 3px; }
-
-/* Admin login */
-.admin-login {
-  max-width: 340px;
-  margin: 40px auto;
-  text-align: center;
-}
+.admin-login { max-width: 340px; margin: 40px auto; text-align: center; }
 .admin-login input { margin-bottom: 12px; text-align: center; }
-
 .result-input { width: 72px; text-align: center; padding: 7px; font-size: 0.9rem; }
-
-.badge {
-  display: inline-block;
-  font-size: 0.65rem;
-  padding: 2px 7px;
-  border-radius: 99px;
-  font-weight: 700;
-}
-.badge-pending { background: #713f12; color: #fef08a; }
+.badge { display: inline-block; font-size: 0.65rem; padding: 2px 7px; border-radius: 99px; font-weight: 700; }
 .badge-approved { background: #14532d; color: #bbf7d0; }
-
-footer {
-  text-align: center;
-  margin-top: 28px;
-  padding: 16px 0;
-  font-size: 0.72rem;
-  color: var(--muted);
-  border-top: 1px solid var(--border);
-}
+.badge-pending { background: #713f12; color: #fef08a; }
+footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72rem; color: var(--muted); border-top: 1px solid var(--border); }
+.atab-panel { display: none; }
+.atab-panel.active { display: block; }
 </style>
 </head>
 <body>
 <header>
   <h1 id="mainTitle">⚽ Fantasy Futbolchapas</h1>
-  <div class="sub">Campeonato de España 2025-2026</div>
+  <div class="sub" id="compSub">Cargando...</div>
 </header>
 
 <div class="tabs" id="mainTabs">
@@ -264,34 +118,29 @@ footer {
   <button class="tab" data-tab="global">Global</button>
 </div>
 
-<!-- ========== MI ONCE ========== -->
+<!-- MI ONCE -->
 <div id="panel-once" class="panel active">
   <div class="card">
     <input type="text" id="coachName" placeholder="Tu nombre de entrenador..." maxlength="40">
   </div>
   <div id="alreadySubmitted" class="success" style="display:none;"></div>
-
   <div class="budget-bar card">
-    <div class="budget-item"><label>Presupuesto</label><span>2000</span></div>
+    <div class="budget-item"><label>Presupuesto</label><span id="maxBudgetShow">2000</span></div>
     <div class="budget-item"><label>Gastado</label><span id="spent">0.00</span></div>
     <div class="budget-item"><label>Restante</label><span id="remaining">2000.00</span></div>
     <div class="budget-item"><label>Jugadores</label><span id="count">0 / 11</span></div>
   </div>
-
   <input type="text" id="search" placeholder="Buscar jugador o club..." style="margin-bottom:12px;">
-
   <div class="section-title">Tu once <span id="teamCount">0 jugadores</span></div>
   <div id="teamList"></div>
-
   <div class="section-title">Jugadores disponibles <span id="availableCount"></span></div>
   <div id="playersList" style="max-height:42vh; overflow-y:auto;"></div>
-
   <div class="btn-row">
     <button class="btn btn-primary" id="btnSubmit" style="flex:1">Enviar mi once (solo 1 vez)</button>
   </div>
 </div>
 
-<!-- ========== JORNADA ========== -->
+<!-- JORNADA -->
 <div id="panel-jornada" class="panel">
   <div class="card">
     <div class="section-title">Clasificación de la Jornada</div>
@@ -299,7 +148,7 @@ footer {
   </div>
 </div>
 
-<!-- ========== GLOBAL ========== -->
+<!-- GLOBAL -->
 <div id="panel-global" class="panel">
   <div class="card">
     <div class="section-title">Clasificación Global</div>
@@ -307,68 +156,84 @@ footer {
   </div>
 </div>
 
-<!-- ========== ADMIN (oculto) ========== -->
+<!-- ADMIN -->
 <div id="panel-admin" class="panel">
   <div id="adminLogin" class="admin-login card">
     <p style="margin-bottom:14px; font-weight:600;">Panel de Administración</p>
-    <input type="password" id="adminPass" placeholder="Contraseña de administrador">
+    <input type="password" id="adminPass" placeholder="Contraseña">
     <button class="btn btn-primary" id="btnLogin" style="width:100%">Entrar</button>
-    <button class="btn" id="btnExitAdmin" style="width:100%; margin-top:10px; background:var(--border); color:var(--text);">Volver al público</button>
+    <button class="btn" id="btnExitAdmin" style="width:100%; margin-top:10px; background:var(--border); color:var(--text);">Volver</button>
   </div>
 
   <div id="adminContent" style="display:none;">
-    <!-- Admin internal tabs -->
-    <div class="tabs" style="margin-bottom:14px;" id="adminTabs">
+    <div class="tabs" id="adminTabs" style="margin-bottom:14px;">
       <button class="tab active" data-atab="formaciones">Formaciones</button>
-      <button class="tab" data-atab="jugadores">Jugadores</button>
+      <button class="tab" data-atab="plantilla">Plantilla</button>
+      <button class="tab" data-atab="jornada">Jornada</button>
       <button class="tab" data-atab="resultados">Resultados</button>
       <button class="tab" data-atab="notas">Notas</button>
       <button class="tab" data-atab="config">Config</button>
     </div>
 
-    <!-- TAB FORMACIONES -->
-    <div id="atab-formaciones" class="atab-panel">
+    <!-- Formaciones -->
+    <div id="atab-formaciones" class="atab-panel active">
       <div class="card">
         <div class="section-title">Formaciones enviadas (<span id="formCount">0</span>)</div>
         <div id="adminFormations"></div>
         <div class="btn-row" style="margin-top:10px;">
-          <button class="btn btn-warning" id="btnCloseJornada" style="flex:1">Cerrar jornada (borrar todos los onces)</button>
+          <button class="btn btn-warning" id="btnCloseJornada" style="flex:1">Cerrar jornada (borrar onces)</button>
         </div>
-        <p style="font-size:0.75rem; color:var(--muted); margin-top:6px;">
-          Al cerrar la jornada se eliminan todos los onces. La gente tendrá que enviar uno nuevo.
-        </p>
       </div>
     </div>
 
-    <!-- TAB JUGADORES -->
-    <div id="atab-jugadores" class="atab-panel" style="display:none;">
+    <!-- Plantilla (gestión de jugadores en BD) -->
+    <div id="atab-plantilla" class="atab-panel">
       <div class="card">
-        <div class="section-title">Seleccionar jugadores de la competición</div>
-        <p style="font-size:0.8rem; color:var(--muted); margin-bottom:8px;">
-          Marca los jugadores que participan (máx. ~100 recomendado). También puedes pegar una lista de nombres/IDs.
+        <div class="section-title">Plantilla actual (<span id="dbPlayersCount">0</span> jugadores)</div>
+        <input type="text" id="plantillaSearch" placeholder="Buscar en plantilla..." style="margin-bottom:10px;">
+        <div id="plantillaList" style="max-height:30vh; overflow-y:auto;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Pegar lista de jugadores</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
+          Pega líneas con este formato (una por jugador):<br>
+          <code style="font-size:0.72rem;">{id:1, name:"NOMBRE", club:"CLUB", points:100.00, bombo:"B1"}</code>
         </p>
-        <input type="text" id="playerSelectSearch" placeholder="Buscar jugador para marcar..." style="margin-bottom:10px;">
-        <div id="playerSelectList" style="max-height:35vh; overflow-y:auto; margin-bottom:12px;"></div>
+        <textarea id="bulkPlayersInput" placeholder='{id:1, name:"JUAN LUIS JIMENEZ MORENO", club:"MADRID", points:572.13, bombo:"B1"},&#10;{id:2, name:"DAVID RUIZ REMON", club:"FUENLABRADA", points:529.00, bombo:"B1"},'></textarea>
         <div class="btn-row">
-          <button class="btn btn-blue" id="btnSaveSelectedPlayers" style="flex:1">Guardar selección (<span id="selectedPlayersCount">0</span>)</button>
+          <button class="btn btn-primary" id="btnImportPlayers" style="flex:1">Importar jugadores</button>
+          <button class="btn btn-danger" id="btnClearPlayers">Borrar toda la plantilla</button>
         </div>
-        <div class="section-title" style="margin-top:16px;">O pegar lista rápida</div>
-        <textarea id="jornadaPlayersInput" placeholder="Nombres o IDs, uno por línea..."></textarea>
-        <div class="btn-row">
-          <button class="btn btn-primary" id="btnSaveJornadaPlayers">Procesar lista pegada</button>
-        </div>
-        <div id="jornadaPlayersStatus" style="font-size:0.8rem; color:var(--muted); margin-top:6px;"></div>
-        <div id="disambiguationBox" style="display:none; margin-top:12px;"></div>
+        <div id="importStatus" style="font-size:0.8rem; color:var(--muted); margin-top:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Añadir un jugador</div>
+        <input type="number" id="newId" placeholder="ID" style="margin-bottom:6px;">
+        <input type="text" id="newName" placeholder="Nombre completo" style="margin-bottom:6px;">
+        <input type="text" id="newClub" placeholder="Club" style="margin-bottom:6px;">
+        <input type="number" id="newPoints" placeholder="Puntos / Precio" step="0.01" style="margin-bottom:6px;">
+        <input type="text" id="newBombo" placeholder="Bombo (B1, B2, B3, B4)" style="margin-bottom:6px;">
+        <button class="btn btn-blue" id="btnAddPlayer" style="width:100%">Añadir jugador</button>
       </div>
     </div>
 
-    <!-- TAB RESULTADOS -->
-    <div id="atab-resultados" class="atab-panel" style="display:none;">
+    <!-- Jugadores de la jornada -->
+    <div id="atab-jornada" class="atab-panel">
+      <div class="card">
+        <div class="section-title">Jugadores que participan esta jornada</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">Marca quién juega en esta competición.</p>
+        <input type="text" id="jornadaSearch" placeholder="Buscar..." style="margin-bottom:10px;">
+        <div id="jornadaSelectList" style="max-height:40vh; overflow-y:auto;"></div>
+        <div class="btn-row">
+          <button class="btn btn-blue" id="btnSaveJornadaPlayers" style="flex:1">Guardar selección (<span id="jornadaSelCount">0</span>)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="atab-resultados" class="atab-panel">
       <div class="card">
         <div class="section-title">Resultados de la Jornada</div>
-        <p style="font-size:0.8rem; color:var(--muted); margin-bottom:10px;">
-          Introduce los puntos de cada jugador. Solo aparecen los seleccionados para la jornada.
-        </p>
         <input type="text" id="resultSearch" placeholder="Buscar jugador..." style="margin-bottom:10px;">
         <div id="resultInputs" style="max-height:45vh; overflow-y:auto;"></div>
         <div class="btn-row">
@@ -378,34 +243,37 @@ footer {
       </div>
     </div>
 
-    <!-- TAB NOTAS -->
-    <div id="atab-notas" class="atab-panel" style="display:none;">
+    <!-- Notas -->
+    <div id="atab-notas" class="atab-panel">
       <div class="card">
-        <div class="section-title">Notas pendientes (<span id="pendingNotesCount">0</span>)</div>
+        <div class="section-title">Pendientes (<span id="pendingNotesCount">0</span>)</div>
         <div id="pendingNotes"></div>
       </div>
       <div class="card">
         <div class="section-title">Todas las notas</div>
-        <div id="allNotes" style="max-height:35vh; overflow-y:auto;"></div>
+        <div id="allNotes" style="max-height:30vh; overflow-y:auto;"></div>
       </div>
     </div>
 
-    <!-- TAB CONFIG -->
-    <div id="atab-config" class="atab-panel" style="display:none;">
+    <!-- Config -->
+    <div id="atab-config" class="atab-panel">
       <div class="card">
         <div class="section-title">Nombre de la competición</div>
-        <input type="text" id="compNameInput" placeholder="Ej: Campeonato de España 2025-26" style="margin-bottom:10px;">
+        <input type="text" id="compNameInput" placeholder="Ej: Campeonato de España" style="margin-bottom:10px;">
         <button class="btn btn-primary" id="btnSaveCompName" style="width:100%">Guardar nombre</button>
       </div>
       <div class="card">
-        <div class="section-title">Zona peligrosa</div>
-        <button class="btn btn-danger" id="btnResetAll" style="width:100%; margin-bottom:8px;">Borrar TODO (formaciones + resultados + notas)</button>
-        <p style="font-size:0.75rem; color:var(--muted);">Esta acción no se puede deshacer.</p>
+        <div class="section-title">Presupuesto máximo</div>
+        <input type="number" id="budgetInput" value="2000" style="margin-bottom:10px;">
+        <button class="btn btn-blue" id="btnSaveBudget" style="width:100%">Guardar presupuesto</button>
+      </div>
+      <div class="card">
+        <button class="btn btn-danger" id="btnResetAll" style="width:100%">Borrar TODO (formaciones + resultados + notas)</button>
       </div>
     </div>
 
-    <div class="btn-row" style="margin-top:16px;">
-      <button class="btn" id="btnExitAdmin2" style="flex:1; background:var(--border); color:var(--text);">Salir del panel Admin</button>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn" id="btnExitAdmin2" style="flex:1; background:var(--border); color:var(--text);">Salir del Admin</button>
     </div>
   </div>
 </div>
@@ -424,143 +292,30 @@ footer {
     <div id="modalNotes"></div>
     <div class="section-title" style="margin-top:16px;">Sugerir una nota</div>
     <input type="text" id="noteAuthor" placeholder="Tu nombre (opcional)" style="margin-bottom:8px;">
-    <textarea id="noteText" placeholder="Escribe una nota o descripción sobre este jugador..."></textarea>
+    <textarea id="noteText" placeholder="Nota sobre este jugador..."></textarea>
     <div class="btn-row">
       <button class="btn btn-primary" id="btnSubmitNote" style="flex:1">Enviar sugerencia</button>
     </div>
   </div>
 </div>
 
-<footer>
-  Fantasy Futbolchapas · Campeonato de España<br>
-  Sistema oficial de fantasy
-</footer>
+<footer>Fantasy Futbolchapas · Sistema oficial</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 const SUPABASE_URL = "https://cdzpawcoksvaxgqrxiou.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_XYG6wdRg1RaYfSVjqKwhIA_JL4vhClM";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-const PLAYERS = [
-  {id:1, name:"JUAN LUIS JIMENEZ MORENO", club:"MADRID", points:572.13, bombo:"B1"},
-  {id:2, name:"DAVID RUIZ REMON", club:"FUENLABRADA", points:529.00, bombo:"B1"},
-  {id:3, name:"MARCOS FERNANDEZ DE LUCAS", club:"MADRID", points:499.63, bombo:"B1"},
-  {id:4, name:"DAVID MADERA LOPEZ", club:"MERIDA", points:493.68, bombo:"B1"},
-  {id:5, name:"JOSE FRANCISCO RODRIGUEZ SANCHEZ", club:"ALCALA", points:492.43, bombo:"B1"},
-  {id:6, name:"PEDRO NIETO SERRANO", club:"CACERES", points:482.46, bombo:"B1"},
-  {id:7, name:"JAVIER HERNANDEZ CANO", club:"MADRID", points:472.82, bombo:"B1"},
-  {id:8, name:"JUAN CARLOS RUIZ HERNANDEZ", club:"NVDA-COSLADA", points:470.75, bombo:"B1"},
-  {id:9, name:"ANGEL MANUEL RUIZ RODRIGUEZ", club:"MERIDA", points:460.97, bombo:"B1"},
-  {id:10, name:"JOAQUIN JESUS ROMERO CASARES", club:"CACERES", points:438.97, bombo:"B1"},
-  {id:11, name:"JOSE LUIS ALONSO MORENO", club:"AZUQUECA", points:433.63, bombo:"B1"},
-  {id:12, name:"ROBERTO PLAZA CONTRERAS", club:"MERIDA", points:430.25, bombo:"B1"},
-  {id:13, name:"MIGUEL ANGEL FERNANDEZ GONZALEZ", club:"GETAFE", points:428.44, bombo:"B1"},
-  {id:14, name:"DOMINGO VALLEJO FILLOLA", club:"NVDA-COSLADA", points:420.75, bombo:"B1"},
-  {id:15, name:"RICARDO REY SOBRINO", club:"ALCALA", points:416.12, bombo:"B1"},
-  {id:16, name:"EMILIO BERENGUEL RODRIGUEZ", club:"C. INDALICA", points:401.23, bombo:"B1"},
-  {id:17, name:"ISMAEL PARDO MADRID", club:"MOSTOLES", points:394.94, bombo:"B1"},
-  {id:18, name:"ADRIAN JAVIER IBORRA RUIZ", club:"VALENCIA", points:391.51, bombo:"B1"},
-  {id:19, name:"DAVID GOMEZ SANCHEZ", club:"CACERES", points:389.92, bombo:"B1"},
-  {id:20, name:"ANTONIO GUIJEÑO BARREDO", club:"FUENLABRADA", points:383.28, bombo:"B1"},
-  {id:21, name:"CHRISTOPHER RAMIREZ GUERRERO", club:"TENERIFE", points:379.40, bombo:"B1"},
-  {id:22, name:"PABLO CASAS PIÑA", club:"C. INDALICA", points:379.40, bombo:"B1"},
-  {id:23, name:"GUILLERMO LOPEZ CASABELLA", club:"FUENLABRADA", points:377.08, bombo:"B1"},
-  {id:24, name:"SERGIO PANES MERINO", club:"MIJAS", points:377.06, bombo:"B1"},
-  {id:25, name:"ALBERTO ANTONIO MARTIN RODRIGUEZ", club:"MIJAS", points:374.38, bombo:"B1"},
-  {id:26, name:"ROBERTO SANCHEZ BERMUDEZ", club:"MERIDA", points:374.31, bombo:"B1"},
-  {id:27, name:"ROBERTO PLAZA SANCHO", club:"MERIDA", points:369.15, bombo:"B1"},
-  {id:28, name:"MIGUEL ANGEL ESCRIBANO ORTEGA", club:"NVDA-COSLADA", points:361.66, bombo:"B1"},
-  {id:29, name:"RAYCO GARCIA HERNANDEZ", club:"LA LAGUNA", points:349.88, bombo:"B1"},
-  {id:30, name:"LUIS FERNANDEZ GARCIA", club:"ALCALA", points:349.15, bombo:"B1"},
-  {id:31, name:"JUAN CARLOS PENDOLERO GUTIERREZ", club:"MOSTOLES", points:346.66, bombo:"B1"},
-  {id:32, name:"JOSE MARIA MALDONADO NUÑEZ", club:"NVDA-COSLADA", points:338.32, bombo:"B1"},
-  {id:33, name:"JAVIER ALEJANDRO SILVA GOMEZ", club:"MOSTOLES", points:337.23, bombo:"B2"},
-  {id:34, name:"ANGEL MANUEL RUIZ CARRASCO", club:"MERIDA", points:331.37, bombo:"B2"},
-  {id:35, name:"GERARDO JESUS MARIÑAS MARTINEZ", club:"ALCALA", points:319.68, bombo:"B2"},
-  {id:36, name:"ALEJANDRO PLAZA BARRADO", club:"MERIDA", points:316.18, bombo:"B2"},
-  {id:37, name:"SERGIO CASADO GARCIA", club:"FUENLABRADA", points:316.08, bombo:"B2"},
-  {id:38, name:"PEDRO SEVILLA JAIME", club:"LA SOLANA", points:310.24, bombo:"B2"},
-  {id:39, name:"LUIS JAVIER GONZALEZ GARCIA", club:"MADRID", points:310.15, bombo:"B2"},
-  {id:40, name:"FRANCISCO RODRIGUEZ POMEDIO", club:"C. INDALICA", points:309.74, bombo:"B2"},
-  {id:41, name:"SALVADOR MARTIN ESCAÑO", club:"MIJAS", points:309.66, bombo:"B2"},
-  {id:42, name:"DAVID GONZALEZ SANTOS", club:"MIJAS", points:309.30, bombo:"B2"},
-  {id:43, name:"CARLOS CABEZA GUERRERO", club:"CAMPAMENTO", points:307.47, bombo:"B2"},
-  {id:44, name:"SANTIAGO ORTIZ ROMERO DE AVILA", club:"LA SOLANA", points:307.27, bombo:"B2"},
-  {id:45, name:"MIGUEL ANGEL JIMENA RAMIREZ", club:"MALAGA-BOK.", points:306.23, bombo:"B2"},
-  {id:46, name:"JORGE CALLADO CASTILLO", club:"MADRID", points:304.58, bombo:"B2"},
-  {id:47, name:"JOSE PEREZ ROMAN", club:"EL CORONIL", points:304.32, bombo:"B2"},
-  {id:48, name:"HECTOR BARRUTIA VAZQUEZ", club:"MOSTOLES", points:297.51, bombo:"B2"},
-  {id:49, name:"CARLOS GARRIDO VELAYOS", club:"ALCALA", points:289.74, bombo:"B2"},
-  {id:50, name:"FRANCISCO SOLER RODRIGUEZ", club:"C. INDALICA", points:288.87, bombo:"B2"},
-  {id:51, name:"AGUSTIN CORTES PAVON", club:"CACERES", points:288.16, bombo:"B2"},
-  {id:52, name:"SERGIO LARA DEL VALLE", club:"EL CORONIL", points:287.91, bombo:"B2"},
-  {id:53, name:"ADRIAN PENDOLERO SANCHEZ-PARDO", club:"MOSTOLES", points:286.51, bombo:"B2"},
-  {id:54, name:"RUBEN FERNANDEZ GABALDON", club:"SANSE", points:285.66, bombo:"B2"},
-  {id:55, name:"RAFAEL VEGA RAMOS", club:"GETAFE", points:284.81, bombo:"B2"},
-  {id:56, name:"DAVID JIMENEZ MOLADA", club:"FUENLABRADA", points:284.01, bombo:"B2"},
-  {id:57, name:"ANGEL LUIS FERNANDEZ REDONDO", club:"SANSE", points:281.69, bombo:"B2"},
-  {id:58, name:"DANIEL MANZANO NUÑEZ", club:"GETAFE", points:274.67, bombo:"B2"},
-  {id:59, name:"ALVARO CUEVAS GOMEZ", club:"AZUQUECA", points:273.48, bombo:"B2"},
-  {id:60, name:"IKER SOLER RODRIGUEZ", club:"C. INDALICA", points:269.88, bombo:"B2"},
-  {id:61, name:"ADRIAN SANCHEZ FERNANDEZ", club:"GETAFE", points:268.76, bombo:"B2"},
-  {id:62, name:"ALFONSO MELCHOR PEREZ", club:"ILLESCAS", points:268.03, bombo:"B2"},
-  {id:63, name:"JAVIER SANZ MARTIN", club:"NVDA-COSLADA", points:258.54, bombo:"B2"},
-  {id:64, name:"JOSE DANIEL PENDOLERO HURTADO", club:"MOSTOLES", points:257.08, bombo:"B2"},
-  {id:65, name:"DAVID RODRIGUEZ MARTINEZ", club:"C. INDALICA", points:252.71, bombo:"B3"},
-  {id:66, name:"CESAR MIGUEL MAZO MARTINEZ", club:"BARCELONA", points:250.95, bombo:"B3"},
-  {id:67, name:"ISRAEL MARRERO BATISTA", club:"TENERIFE", points:250.92, bombo:"B3"},
-  {id:68, name:"JOSE LUIS FERNANDEZ MENDEZ DE ANDES", club:"NVDA-COSLADA", points:250.75, bombo:"B3"},
-  {id:69, name:"HUGO LARA MOLINA", club:"EL CORONIL", points:245.43, bombo:"B3"},
-  {id:70, name:"EUSEBIO CALLEJA MORENO", club:"GETAFE", points:235.76, bombo:"B3"},
-  {id:71, name:"FRANCISCO JAVIER GONZALEZ QUINTANA", club:"MERIDA", points:235.41, bombo:"B3"},
-  {id:72, name:"ANDRES MOLINA SOLER", club:"ALMERIA", points:227.64, bombo:"B3"},
-  {id:73, name:"HUGO DOMINGO VALLEJO ARCE", club:"NVDA-COSLADA", points:227.36, bombo:"B3"},
-  {id:74, name:"JOSE LUIS FERNANDEZ RODRIGUEZ", club:"HORTALEZA", points:225.92, bombo:"B3"},
-  {id:75, name:"ANTONIO VALENTIN RAMIREZ ORTEGA", club:"MALAGA-BOK.", points:219.75, bombo:"B3"},
-  {id:76, name:"FRANCISCO JAVIER CASADO GARCIA", club:"FUENLABRADA", points:219.32, bombo:"B3"},
-  {id:77, name:"JAIRO DAVID PEÑA PEREZ", club:"TENERIFE", points:218.88, bombo:"B3"},
-  {id:78, name:"FRANCISCO DE BORJA CASTRILLON MARTINEZ", club:"TENERIFE", points:215.57, bombo:"B3"},
-  {id:79, name:"JUAN JOSE CASARES PERALES", club:"CACERES", points:214.78, bombo:"B3"},
-  {id:80, name:"SERGIO PLANTE RIVA", club:"ZARAGOZA", points:211.85, bombo:"B3"},
-  {id:81, name:"MIGUEL ANGEL ESTRADA VIZUETE", club:"TOMARES", points:209.35, bombo:"B3"},
-  {id:82, name:"ALFONSO PALACIOS PALACIOS", club:"LA SOLANA", points:208.47, bombo:"B3"},
-  {id:83, name:"AGUSTI VILA SUBIROS", club:"SF GUIXOLS", points:203.38, bombo:"B3"},
-  {id:84, name:"MIGUEL ANGEL ESTRADA RAMIREZ", club:"TOMARES", points:202.28, bombo:"B3"},
-  {id:85, name:"GAEL BARRERA ROS", club:"EL CORONIL", points:201.83, bombo:"B3"},
-  {id:86, name:"FRANCISCO JAVIER BALLESTEROS TORRES", club:"SANSE", points:201.28, bombo:"B3"},
-  {id:87, name:"FERNANDO GARCIA MUÑOZ", club:"MOSTOLES", points:200.87, bombo:"B3"},
-  {id:88, name:"CRISTOBAL IMBERNON GARCIA", club:"ALMERIA", points:187.48, bombo:"B3"},
-  {id:89, name:"ROBERTO ARQUIMBAU SOLER", club:"VALENCIA", points:183.65, bombo:"B3"},
-  {id:90, name:"JULIAN SERRANO FERNANDEZ", club:"LA SOLANA", points:176.90, bombo:"B3"},
-  {id:91, name:"CARLOS MIGUEL TERUEL GONZALEZ", club:"NVDA-COSLADA", points:175.20, bombo:"B3"},
-  {id:92, name:"JUAN PEDRO CALLADO SERRANO", club:"MADRID", points:174.31, bombo:"B3"},
-  {id:93, name:"DANIEL ANDRES BRAOJOS", club:"FUENLABRADA", points:173.00, bombo:"B3"},
-  {id:94, name:"RICARDO VICENTE GARCIA", club:"AZUQUECA", points:160.83, bombo:"B3"},
-  {id:95, name:"ALVARO ASENJO TORRICO", club:"MADRID", points:157.26, bombo:"B3"},
-  {id:96, name:"ADRIAN GUTIERREZ NAVARRO", club:"MADRID", points:156.23, bombo:"B3"},
-  {id:97, name:"JOSE MARIA PELAEZ ALVAREZ", club:"MADRID", points:150.08, bombo:"B3"},
-  {id:98, name:"AGUSTIN VELASCO VIDARTE", club:"ILLESCAS", points:145.55, bombo:"B4"},
-  {id:99, name:"VICENTE FERNANDEZ ROS", club:"LA LAGUNA", points:134.58, bombo:"B4"},
-  {id:100, name:"ALEJANDRO HERVAS BUENO", club:"VALENCIA", points:126.12, bombo:"B4"},
-  {id:101, name:"PEDRO JOSE FERRER OLIVER", club:"NVDA-COSLADA", points:117.21, bombo:"B4"},
-  {id:102, name:"LAURA GISBERT JANO", club:"SF GUIXOLS", points:108.85, bombo:"B4"},
-  {id:103, name:"RUBEN ALCALDE GALLEGO", club:"NVDA-COSLADA", points:106.06, bombo:"B4"},
-  {id:104, name:"DAVID ALVAREZ GUIJARRO", club:"ILLESCAS", points:100.36, bombo:"B4"},
-  {id:105, name:"SERGIO DAVID PEÑA GARCIA", club:"TENERIFE", points:90.46, bombo:"B4"},
-  {id:106, name:"CARLOS ARMARIO SERRANO", club:"MERIDA", points:86.93, bombo:"B4"},
-  {id:107, name:"RUBEN GAREA FERNANDEZ", club:"MADRID", points:80.48, bombo:"B4"},
-  {id:108, name:"EDUARDO SEGADO FERNANDEZ", club:"ILLESCAS", points:0.00, bombo:"B4"}
-];
-
-const MAX_BUDGET = 2000;
 const ADMIN_PASSWORD = "ci1gw7j9";
 
+let PLAYERS = [];
 let selected = new Set();
+let jornadaSelected = new Set();
 let isAdmin = false;
 let currentPlayerId = null;
 let titleClicks = 0;
-let jornadaSelectedIds = new Set(); // for checkbox selection
+let MAX_BUDGET = 2000;
+
 let dbData = {
   formations: [],
   results: {},
@@ -569,77 +324,81 @@ let dbData = {
   currentJornada: 1,
   jornadaPlayerIds: [],
   notes: [],
-  competitionName: 'Campeonato de España'
+  competitionName: 'Fantasy Futbolchapas'
 };
 
 function loadData() { return dbData; }
 
 function buildJornadaScores(data) {
-  const scores = data.formations.map(f => {
-    let points = 0;
-    f.players.forEach(id => { points += Number(data.results[id] || 0); });
-    return { coach: f.coach, points, cost: Number(f.cost) };
+  const scores = data.formations.map(function(f) {
+    var points = 0;
+    (f.players || []).forEach(function(id) { points += Number(data.results[id] || 0); });
+    return { coach: f.coach, points: points, cost: Number(f.cost) };
   });
-  scores.sort((a, b) => {
+  scores.sort(function(a, b) {
     if (b.points !== a.points) return b.points - a.points;
     return a.cost - b.cost;
   });
   return scores;
 }
 
+async function loadPlayers() {
+  var res = await supabaseClient.from('players').select('*').order('points', { ascending: false });
+  PLAYERS = (res.data || []).map(function(p) {
+    return { id: p.id, name: p.name, club: p.club, points: Number(p.points), bombo: p.bombo || 'B4' };
+  });
+}
+
 async function loadSupabaseData() {
-  const [formRes, resultRes, globalRes, settingsRes, jornadaPlayersRes, notesRes, compNameRes] = await Promise.all([
+  var results = await Promise.all([
     supabaseClient.from('formations').select('*').order('submitted_at', { ascending: true }),
     supabaseClient.from('jornada_results').select('*'),
     supabaseClient.from('global_scores').select('*'),
-    supabaseClient.from('settings').select('*').eq('key', 'current_jornada').maybeSingle(),
+    supabaseClient.from('settings').select('*'),
     supabaseClient.from('jornada_players').select('*').eq('jornada', 1).maybeSingle(),
     supabaseClient.from('player_notes').select('*').order('created_at', { ascending: false }),
-    supabaseClient.from('settings').select('*').eq('key', 'competition_name').maybeSingle()
+    loadPlayers()
   ]);
 
-  dbData.formations = (formRes.data || []).map(f => ({
-    id: f.id,
-    coach: f.coach,
-    players: Array.isArray(f.players) ? f.players : [],
-    cost: Number(f.cost),
-    submittedAt: f.submitted_at
-  }));
+  var formRes = results[0], resultRes = results[1], globalRes = results[2];
+  var settingsRes = results[3], jornadaPlayersRes = results[4], notesRes = results[5];
+
+  dbData.formations = (formRes.data || []).map(function(f) {
+    return { id: f.id, coach: f.coach, players: Array.isArray(f.players) ? f.players : [], cost: Number(f.cost), submittedAt: f.submitted_at };
+  });
 
   dbData.results = {};
-  (resultRes.data || []).forEach(r => {
-    if (r.jornada === (dbData.currentJornada || 1)) {
-      dbData.results[r.player_id] = Number(r.points);
-    }
+  (resultRes.data || []).forEach(function(r) {
+    if (r.jornada === (dbData.currentJornada || 1)) dbData.results[r.player_id] = Number(r.points);
   });
 
   dbData.global = {};
-  (globalRes.data || []).forEach(g => {
+  (globalRes.data || []).forEach(function(g) {
     dbData.global[g.coach] = { totalPoints: Number(g.total_points || 0), wins: Number(g.wins || 0) };
   });
 
-  if (settingsRes.data) dbData.currentJornada = Number(settingsRes.data.value) || 1;
-  if (jornadaPlayersRes.data) dbData.jornadaPlayerIds = jornadaPlayersRes.data.player_ids || [];
-  dbData.notes = notesRes.data || [];
-  if (compNameRes.data && compNameRes.data.value) {
-    dbData.competitionName = compNameRes.data.value;
+  (settingsRes.data || []).forEach(function(s) {
+    if (s.key === 'current_jornada') dbData.currentJornada = Number(s.value) || 1;
+    if (s.key === 'competition_name') dbData.competitionName = s.value;
+    if (s.key === 'max_budget') MAX_BUDGET = Number(s.value) || 2000;
+  });
+
+  if (jornadaPlayersRes.data) {
+    dbData.jornadaPlayerIds = jornadaPlayersRes.data.player_ids || [];
+    jornadaSelected = new Set(dbData.jornadaPlayerIds);
   }
+  dbData.notes = notesRes.data || [];
   dbData.jornadaScores = buildJornadaScores(dbData);
 
-  // Update header
-  const sub = document.querySelector('header .sub');
-  if (sub) sub.textContent = dbData.competitionName || 'Campeonato de España';
-  const compInput = document.getElementById('compNameInput');
-  if (compInput) compInput.value = dbData.competitionName || '';
+  document.getElementById('compSub').textContent = dbData.competitionName;
+  document.getElementById('maxBudgetShow').textContent = MAX_BUDGET;
+  var ci = document.getElementById('compNameInput');
+  if (ci) ci.value = dbData.competitionName || '';
+  var bi = document.getElementById('budgetInput');
+  if (bi) bi.value = MAX_BUDGET;
 }
 
-async function ensureGlobalCoach(coach) {
-  if (dbData.global[coach]) return;
-  dbData.global[coach] = { totalPoints: 0, wins: 0 };
-  await supabaseClient.from('global_scores').upsert({ coach, total_points: 0, wins: 0 }, { onConflict: 'coach' });
-}
-
-// ========== TABS (solo las públicas) ==========
+// ========== TABS ==========
 document.querySelectorAll('#mainTabs .tab').forEach(function(tab) {
   tab.addEventListener('click', function() {
     document.querySelectorAll('#mainTabs .tab').forEach(function(t) { t.classList.remove('active'); });
@@ -652,44 +411,43 @@ document.querySelectorAll('#mainTabs .tab').forEach(function(tab) {
   });
 });
 
-// Secret admin access: click title 5 times
 document.getElementById('mainTitle').addEventListener('click', function() {
   titleClicks++;
   if (titleClicks >= 5) {
     titleClicks = 0;
     document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
     document.querySelectorAll('#mainTabs .tab').forEach(function(t) { t.classList.remove('active'); });
-    var adminPanel = document.getElementById('panel-admin');
-    if (adminPanel) adminPanel.classList.add('active');
+    document.getElementById('panel-admin').classList.add('active');
   }
   setTimeout(function() { titleClicks = 0; }, 2000);
 });
 
 // ========== MI ONCE ==========
-const coachNameEl = document.getElementById('coachName');
-const searchEl = document.getElementById('search');
+var coachNameEl = document.getElementById('coachName');
+var searchEl = document.getElementById('search');
 searchEl.addEventListener('input', renderOnce);
 document.getElementById('btnSubmit').addEventListener('click', submitFormation);
 
 function getSpent() {
-  return PLAYERS.filter(p => selected.has(p.id)).reduce((s, p) => s + p.points, 0);
+  return PLAYERS.filter(function(p) { return selected.has(p.id); }).reduce(function(s, p) { return s + p.points; }, 0);
 }
 function canAdd(p) {
   return !selected.has(p.id) && selected.size < 11 && getSpent() + p.points <= MAX_BUDGET;
 }
-function addPlayer(id) {
-  if (!canAdd(PLAYERS.find(p => p.id === id))) return;
+window.addPlayer = function(id) {
+  var p = PLAYERS.find(function(x) { return x.id === id; });
+  if (!p || !canAdd(p)) return;
   selected.add(id);
   updateBudget();
   renderOnce();
-}
-function removePlayer(id) {
+};
+window.removePlayer = function(id) {
   selected.delete(id);
   updateBudget();
   renderOnce();
-}
+};
 function updateBudget() {
-  const spent = getSpent();
+  var spent = getSpent();
   document.getElementById('spent').textContent = spent.toFixed(2);
   document.getElementById('remaining').textContent = (MAX_BUDGET - spent).toFixed(2);
   document.getElementById('remaining').style.color = (MAX_BUDGET - spent) < 0 ? 'var(--danger)' : 'var(--accent)';
@@ -697,213 +455,158 @@ function updateBudget() {
   document.getElementById('teamCount').textContent = selected.size + ' jugadores';
 }
 
+function getAvailablePlayers() {
+  // If jornada list is set, only those players; else all
+  if (dbData.jornadaPlayerIds && dbData.jornadaPlayerIds.length > 0) {
+    return PLAYERS.filter(function(p) { return dbData.jornadaPlayerIds.indexOf(p.id) !== -1; });
+  }
+  return PLAYERS;
+}
+
 function renderOnce() {
-  const data = loadData();
-  const coach = coachNameEl.value.trim();
-  const already = data.formations.find(f => f.coach.toLowerCase() === coach.toLowerCase());
-  const alreadyEl = document.getElementById('alreadySubmitted');
-  const btn = document.getElementById('btnSubmit');
+  var data = loadData();
+  var coach = coachNameEl.value.trim();
+  var already = data.formations.find(function(f) { return f.coach.toLowerCase() === coach.toLowerCase(); });
+  var alreadyEl = document.getElementById('alreadySubmitted');
+  var btn = document.getElementById('btnSubmit');
   if (already) {
     alreadyEl.style.display = 'block';
-    alreadyEl.textContent = `Ya has enviado tu once como "${already.coach}". No se puede modificar.`;
+    alreadyEl.textContent = 'Ya has enviado tu once como "' + already.coach + '".';
     btn.disabled = true;
   } else {
     alreadyEl.style.display = 'none';
     btn.disabled = false;
   }
 
-  const q = searchEl.value.trim().toLowerCase();
-  const filtered = PLAYERS.filter(p => !q || p.name.toLowerCase().includes(q) || p.club.toLowerCase().includes(q));
+  var q = searchEl.value.trim().toLowerCase();
+  var pool = getAvailablePlayers();
+  var filtered = pool.filter(function(p) {
+    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+  });
 
-  const team = PLAYERS.filter(p => selected.has(p.id)).sort((a,b) => b.points - a.points);
+  var team = PLAYERS.filter(function(p) { return selected.has(p.id); }).sort(function(a,b) { return b.points - a.points; });
   document.getElementById('teamList').innerHTML = team.length === 0
     ? '<div class="empty">Aún no has seleccionado jugadores</div>'
-    : team.map(p => `
-      <div class="player-card selected">
-        <div class="player-info" onclick="openPlayerModal(${p.id})">
-          <div class="player-name">${p.name} <span class="bombo ${p.bombo.toLowerCase()}">${p.bombo}</span></div>
-          <div class="player-club">${p.club}</div>
-        </div>
-        <div class="player-price">${p.points.toFixed(2)} M</div>
-        <button class="btn btn-sm btn-danger" onclick="removePlayer(${p.id})">Quitar</button>
-      </div>`).join('');
+    : team.map(function(p) {
+      return '<div class="player-card selected"><div class="player-info" onclick="openPlayerModal(' + p.id + ')"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div><button class="btn btn-sm btn-danger" onclick="removePlayer(' + p.id + ')">Quitar</button></div>';
+    }).join('');
 
-  const available = filtered.filter(p => !selected.has(p.id));
+  var available = filtered.filter(function(p) { return !selected.has(p.id); });
   document.getElementById('availableCount').textContent = available.length + ' disponibles';
   document.getElementById('playersList').innerHTML = available.length === 0
-    ? '<div class="empty">No hay jugadores</div>'
-    : available.map(p => `
-      <div class="player-card">
-        <div class="player-info clickable" onclick="openPlayerModal(${p.id})">
-          <div class="player-name">${p.name} <span class="bombo ${p.bombo.toLowerCase()}">${p.bombo}</span></div>
-          <div class="player-club">${p.club}</div>
-        </div>
-        <div class="player-price">${p.points.toFixed(2)} M</div>
-        <button class="btn btn-sm btn-primary" ${canAdd(p) ? '' : 'disabled'} onclick="addPlayer(${p.id})">Añadir</button>
-      </div>`).join('');
+    ? '<div class="empty">' + (PLAYERS.length === 0 ? 'No hay jugadores en la plantilla. El admin debe importarlos.' : 'No hay jugadores') + '</div>'
+    : available.map(function(p) {
+      return '<div class="player-card"><div class="player-info" style="cursor:pointer" onclick="openPlayerModal(' + p.id + ')"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div><button class="btn btn-sm btn-primary" ' + (canAdd(p) ? '' : 'disabled') + ' onclick="addPlayer(' + p.id + ')">Añadir</button></div>';
+    }).join('');
 }
 
 async function submitFormation() {
-  const coach = coachNameEl.value.trim();
+  var coach = coachNameEl.value.trim();
   if (!coach) return alert('Escribe tu nombre de entrenador');
   if (selected.size !== 11) return alert('Debes seleccionar exactamente 11 jugadores');
-
-  const data = loadData();
-  if (data.formations.some(f => f.coach.toLowerCase() === coach.toLowerCase())) {
+  var data = loadData();
+  if (data.formations.some(function(f) { return f.coach.toLowerCase() === coach.toLowerCase(); })) {
     return alert('Ya existe una formación con ese nombre');
   }
-
-  const team = PLAYERS.filter(p => selected.has(p.id));
-  const cost = getSpent();
-  const formation = {
-    coach,
-    players: team.map(p => p.id),
-    cost: +cost.toFixed(2),
-    submittedAt: new Date().toISOString()
-  };
-
+  var team = PLAYERS.filter(function(p) { return selected.has(p.id); });
+  var cost = getSpent();
   try {
-    const { error } = await supabaseClient.from('formations').insert({
-      coach: formation.coach,
-      players: formation.players,
-      cost: formation.cost,
-      submitted_at: formation.submittedAt
-    });
-    if (error) throw error;
-    data.formations.push(formation);
-    await ensureGlobalCoach(coach);
+    var err = (await supabaseClient.from('formations').insert({
+      coach: coach, players: team.map(function(p) { return p.id; }),
+      cost: +cost.toFixed(2), submitted_at: new Date().toISOString()
+    })).error;
+    if (err) throw err;
+    data.formations.push({ coach: coach, players: team.map(function(p) { return p.id; }), cost: +cost.toFixed(2) });
+    if (!data.global[coach]) {
+      data.global[coach] = { totalPoints: 0, wins: 0 };
+      await supabaseClient.from('global_scores').upsert({ coach: coach, total_points: 0, wins: 0 }, { onConflict: 'coach' });
+    }
     alert('¡Once enviado correctamente!');
     renderOnce();
-  } catch (error) {
-    console.error(error);
-    alert('Error al enviar: ' + error.message);
-  }
+  } catch (e) { alert('Error: ' + e.message); }
 }
 
-// ========== PLAYER MODAL + NOTES ==========
-function openPlayerModal(id) {
+// ========== MODAL + NOTES ==========
+window.openPlayerModal = function(id) {
   currentPlayerId = id;
-  const p = PLAYERS.find(x => x.id === id);
+  var p = PLAYERS.find(function(x) { return x.id === id; });
   if (!p) return;
   document.getElementById('modalName').textContent = p.name;
   document.getElementById('modalClub').textContent = p.club;
   document.getElementById('modalPrice').textContent = p.points.toFixed(2) + ' M';
-  const bomboEl = document.getElementById('modalBombo');
-  bomboEl.textContent = p.bombo;
-  bomboEl.className = 'bombo ' + p.bombo.toLowerCase();
-
-  const approved = dbData.notes.filter(n => n.player_id === id && n.status === 'approved');
+  var be = document.getElementById('modalBombo');
+  be.textContent = p.bombo;
+  be.className = 'bombo ' + p.bombo.toLowerCase();
+  var approved = dbData.notes.filter(function(n) { return n.player_id === id && n.status === 'approved'; });
   document.getElementById('modalNotes').innerHTML = approved.length === 0
-    ? '<div class="empty" style="padding:12px;">Aún no hay notas aprobadas</div>'
-    : approved.map(n => `
-      <div class="note-item">
-        <div class="note-author">${n.author || 'Anónimo'}</div>
-        ${n.note}
-      </div>`).join('');
-
+    ? '<div class="empty" style="padding:12px;">Sin notas aprobadas</div>'
+    : approved.map(function(n) {
+      return '<div class="note-item"><div class="note-author">' + (n.author || 'Anónimo') + '</div>' + n.note + '</div>';
+    }).join('');
   document.getElementById('noteAuthor').value = '';
   document.getElementById('noteText').value = '';
   document.getElementById('playerModal').classList.add('show');
-}
-document.getElementById('closeModal').addEventListener('click', () => {
+};
+document.getElementById('closeModal').addEventListener('click', function() {
   document.getElementById('playerModal').classList.remove('show');
 });
-document.getElementById('playerModal').addEventListener('click', (e) => {
+document.getElementById('playerModal').addEventListener('click', function(e) {
   if (e.target.id === 'playerModal') document.getElementById('playerModal').classList.remove('show');
 });
-
-document.getElementById('btnSubmitNote').addEventListener('click', async () => {
-  const note = document.getElementById('noteText').value.trim();
+document.getElementById('btnSubmitNote').addEventListener('click', async function() {
+  var note = document.getElementById('noteText').value.trim();
   if (!note) return alert('Escribe una nota');
-  const author = document.getElementById('noteAuthor').value.trim() || 'Anónimo';
+  var author = document.getElementById('noteAuthor').value.trim() || 'Anónimo';
   try {
-    const { error } = await supabaseClient.from('player_notes').insert({
-      player_id: currentPlayerId,
-      author,
-      note,
-      status: 'pending'
-    });
-    if (error) throw error;
+    var err = (await supabaseClient.from('player_notes').insert({
+      player_id: currentPlayerId, author: author, note: note, status: 'pending'
+    })).error;
+    if (err) throw err;
     alert('Nota enviada. El administrador la revisará.');
     document.getElementById('noteText').value = '';
-  } catch (err) {
-    alert('Error al enviar nota: ' + err.message);
-  }
+  } catch (e) { alert('Error: ' + e.message); }
 });
 
-// ========== JORNADA & GLOBAL ==========
+// ========== RANKINGS ==========
 function renderJornada() {
-  const data = loadData();
-  const el = document.getElementById('jornadaRanking');
+  var data = loadData();
+  var el = document.getElementById('jornadaRanking');
   if (!data.jornadaScores || data.jornadaScores.length === 0) {
     el.innerHTML = '<div class="empty">Aún no se ha calculado ninguna jornada</div>';
     return;
   }
-  el.innerHTML = `<table>
-    <thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Coste</th></tr></thead>
-    <tbody>
-      ${data.jornadaScores.map((s, i) => `
-        <tr>
-          <td class="rank">${i + 1}</td>
-          <td>${s.coach}${i === 0 ? ' 🏆' : ''}</td>
-          <td>${s.points.toFixed(1)}</td>
-          <td>${s.cost.toFixed(2)} M</td>
-        </tr>`).join('')}
-    </tbody>
-  </table>`;
+  el.innerHTML = '<table><thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Coste</th></tr></thead><tbody>' +
+    data.jornadaScores.map(function(s, i) {
+      return '<tr><td class="rank">' + (i+1) + '</td><td>' + s.coach + (i===0?' 🏆':'') + '</td><td>' + s.points.toFixed(1) + '</td><td>' + s.cost.toFixed(2) + ' M</td></tr>';
+    }).join('') + '</tbody></table>';
 }
-
 function renderGlobal() {
-  const data = loadData();
-  const el = document.getElementById('globalRanking');
-  const list = Object.entries(data.global)
-    .map(([coach, g]) => ({ coach, ...g }))
-    .sort((a, b) => {
-      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-      return b.wins - a.wins;
-    });
+  var data = loadData();
+  var el = document.getElementById('globalRanking');
+  var list = Object.keys(data.global).map(function(coach) {
+    return { coach: coach, totalPoints: data.global[coach].totalPoints, wins: data.global[coach].wins };
+  }).sort(function(a, b) {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+    return b.wins - a.wins;
+  });
   if (list.length === 0) {
     el.innerHTML = '<div class="empty">Aún no hay datos globales</div>';
     return;
   }
-  el.innerHTML = `<table>
-    <thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Victorias</th></tr></thead>
-    <tbody>
-      ${list.map((s, i) => `
-        <tr>
-          <td class="rank">${i + 1}</td>
-          <td>${s.coach}</td>
-          <td>${s.totalPoints.toFixed(1)}</td>
-          <td>${s.wins}</td>
-        </tr>`).join('')}
-    </tbody>
-  </table>`;
+  el.innerHTML = '<table><thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Victorias</th></tr></thead><tbody>' +
+    list.map(function(s, i) {
+      return '<tr><td class="rank">' + (i+1) + '</td><td>' + s.coach + '</td><td>' + s.totalPoints.toFixed(1) + '</td><td>' + s.wins + '</td></tr>';
+    }).join('') + '</tbody></table>';
 }
 
 // ========== ADMIN ==========
-document.getElementById('btnLogin').addEventListener('click', () => {
+document.getElementById('btnLogin').addEventListener('click', function() {
   if (document.getElementById('adminPass').value === ADMIN_PASSWORD) {
     isAdmin = true;
     document.getElementById('adminLogin').style.display = 'none';
     document.getElementById('adminContent').style.display = 'block';
     renderAdmin();
-    renderPlayerSelectList();
-  } else {
-    alert('Contraseña incorrecta');
-  }
-});
-
-// Admin internal tabs
-document.querySelectorAll('#adminTabs .tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('#adminTabs .tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.atab-panel').forEach(p => p.style.display = 'none');
-    tab.classList.add('active');
-    document.getElementById('atab-' + tab.dataset.atab).style.display = 'block';
-    if (tab.dataset.atab === 'jugadores') renderPlayerSelectList();
-    if (tab.dataset.atab === 'resultados') renderResultInputs();
-    if (tab.dataset.atab === 'notas') renderAdmin();
-  });
+  } else alert('Contraseña incorrecta');
 });
 
 function exitAdmin() {
@@ -913,410 +616,432 @@ function exitAdmin() {
   document.getElementById('adminPass').value = '';
   document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('#mainTabs .tab').forEach(function(t) { t.classList.remove('active'); });
-  var onceTab = document.querySelector('#mainTabs .tab[data-tab="once"]');
-  if (onceTab) onceTab.classList.add('active');
-  var oncePanel = document.getElementById('panel-once');
-  if (oncePanel) oncePanel.classList.add('active');
+  document.querySelector('#mainTabs .tab[data-tab="once"]').classList.add('active');
+  document.getElementById('panel-once').classList.add('active');
 }
 document.getElementById('btnExitAdmin').addEventListener('click', exitAdmin);
 document.getElementById('btnExitAdmin2').addEventListener('click', exitAdmin);
 
-document.getElementById('resultSearch').addEventListener('input', renderResultInputs);
-
-document.getElementById('btnCalc').addEventListener('click', calculateJornada);
-document.getElementById('btnResetJornada').addEventListener('click', async () => {
-  if (!confirm('¿Borrar los puntos de la jornada actual?')) return;
-  try {
-    await supabaseClient.from('jornada_results').delete().eq('jornada', dbData.currentJornada || 1);
-    dbData.results = {};
-    dbData.jornadaScores = [];
-    renderAdmin();
-    renderJornada();
-    alert('Resultados borrados');
-  } catch (e) { alert(e.message); }
-});
-
-document.getElementById('btnResetAll').addEventListener('click', async () => {
-  if (!confirm('¿Borrar ABSOLUTAMENTE TODO?')) return;
-  try {
-    await Promise.all([
-      supabaseClient.from('formations').delete().neq('coach', '__x__'),
-      supabaseClient.from('jornada_results').delete().neq('id', -1),
-      supabaseClient.from('global_scores').delete().neq('coach', '__x__'),
-      supabaseClient.from('player_notes').delete().neq('id', -1),
-      supabaseClient.from('jornada_players').delete().neq('jornada', -1)
-    ]);
-    dbData = { formations: [], results: {}, jornadaScores: [], global: {}, currentJornada: 1, jornadaPlayerIds: [], notes: [] };
-    selected.clear();
-    renderOnce();
-    renderAdmin();
-    renderJornada();
-    renderGlobal();
-    alert('Todo borrado');
-  } catch (e) { alert(e.message); }
-});
-
-// Cerrar jornada = borrar todos los onces para que la gente haga uno nuevo
-document.getElementById('btnCloseJornada').addEventListener('click', async () => {
-  if (!confirm('¿Cerrar la jornada actual?\n\nSe eliminarán TODOS los onces enviados.\nLa gente tendrá que enviar un once nuevo para la siguiente jornada.\n\nLos puntos globales y victorias se mantienen.')) return;
-  try {
-    await supabaseClient.from('formations').delete().neq('coach', '__x__');
-    dbData.formations = [];
-    selected.clear();
-    renderOnce();
-    renderAdmin();
-    renderJornada();
-    alert('Jornada cerrada. Todos los onces han sido eliminados.\nLos entrenadores deben enviar un once nuevo.');
-  } catch (e) { alert('Error: ' + e.message); }
-});
-
-// Procesar lista de jugadores de la jornada (con desambiguación)
-let pendingAmbiguous = [];
-let resolvedIds = [];
-
-document.getElementById('btnSaveJornadaPlayers').addEventListener('click', () => {
-  const raw = document.getElementById('jornadaPlayersInput').value.trim();
-  if (!raw) return alert('Pega la lista de jugadores');
-
-  const tokens = raw.split(/[\n,;]+/).map(t => t.trim()).filter(Boolean);
-  resolvedIds = [];
-  pendingAmbiguous = [];
-
-  tokens.forEach(t => {
-    if (/^\d+$/.test(t)) {
-      const id = Number(t);
-      if (PLAYERS.find(p => p.id === id)) resolvedIds.push(id);
-    } else {
-      const exact = PLAYERS.filter(p => p.name.toLowerCase() === t.toLowerCase());
-      if (exact.length === 1) {
-        resolvedIds.push(exact[0].id);
-      } else {
-        const partial = PLAYERS.filter(p => p.name.toLowerCase().includes(t.toLowerCase()));
-        if (partial.length === 1) {
-          resolvedIds.push(partial[0].id);
-        } else if (partial.length > 1) {
-          pendingAmbiguous.push({ query: t, options: partial });
-        }
-        // si 0 coincidencias se ignora
-      }
-    }
+// Admin tabs
+document.querySelectorAll('#adminTabs .tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('#adminTabs .tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.atab-panel').forEach(function(p) { p.classList.remove('active'); });
+    tab.classList.add('active');
+    var panel = document.getElementById('atab-' + tab.dataset.atab);
+    if (panel) panel.classList.add('active');
+    if (tab.dataset.atab === 'plantilla') renderPlantilla();
+    if (tab.dataset.atab === 'jornada') renderJornadaSelect();
+    if (tab.dataset.atab === 'resultados') renderResultInputs();
+    if (tab.dataset.atab === 'notas') renderAdmin();
   });
-
-  if (pendingAmbiguous.length > 0) {
-    showDisambiguation();
-  } else {
-    finishSaveJornadaPlayers();
-  }
 });
-
-function showDisambiguation() {
-  const box = document.getElementById('disambiguationBox');
-  box.style.display = 'block';
-  let html = '<div class="warning">Hay nombres ambiguos. Elige el correcto en cada caso:</div>';
-  pendingAmbiguous.forEach((item, idx) => {
-    html += `<div style="margin-bottom:12px;">
-      <div style="font-weight:600; margin-bottom:6px;">“${item.query}” puede ser:</div>
-      ${item.options.map(p => `
-        <label style="display:flex; align-items:center; gap:8px; margin-bottom:4px; font-size:0.9rem;">
-          <input type="radio" name="ambig_${idx}" value="${p.id}">
-          ${p.name} (${p.club}) – ${p.points.toFixed(2)}M
-        </label>`).join('')}
-    </div>`;
-  });
-  html += `<button class="btn btn-primary" id="btnConfirmAmbig" style="width:100%; margin-top:8px;">Confirmar selección</button>`;
-  box.innerHTML = html;
-
-  document.getElementById('btnConfirmAmbig').onclick = () => {
-    let allSelected = true;
-    pendingAmbiguous.forEach((item, idx) => {
-      const selected = document.querySelector(`input[name="ambig_${idx}"]:checked`);
-      if (selected) {
-        resolvedIds.push(Number(selected.value));
-      } else {
-        allSelected = false;
-      }
-    });
-    if (!allSelected) return alert('Debes elegir una opción en cada caso ambiguo');
-    pendingAmbiguous = [];
-    box.style.display = 'none';
-    finishSaveJornadaPlayers();
-  };
-}
-
-async function finishSaveJornadaPlayers() {
-  const unique = [...new Set(resolvedIds)];
-  try {
-    await supabaseClient.from('jornada_players').upsert({
-      jornada: dbData.currentJornada || 1,
-      player_ids: unique
-    }, { onConflict: 'jornada' });
-    dbData.jornadaPlayerIds = unique;
-    document.getElementById('jornadaPlayersStatus').textContent = `✅ Guardados ${unique.length} jugadores para la jornada.`;
-    document.getElementById('disambiguationBox').style.display = 'none';
-    alert(`Lista guardada: ${unique.length} jugadores`);
-    renderResultInputs();
-  } catch (e) {
-    alert('Error: ' + e.message);
-  }
-}
 
 function renderAdmin() {
-  const data = loadData();
+  var data = loadData();
   document.getElementById('formCount').textContent = data.formations.length;
-
-  // Formaciones
-  const formEl = document.getElementById('adminFormations');
+  var formEl = document.getElementById('adminFormations');
   if (data.formations.length === 0) {
     formEl.innerHTML = '<div class="empty">Nadie ha enviado todavía</div>';
   } else {
-    formEl.innerHTML = data.formations.map(f => `
-      <div class="player-card" style="flex-direction:column; align-items:flex-start; gap:6px;">
-        <div style="display:flex; justify-content:space-between; width:100%; align-items:center;">
-          <div style="font-weight:600">${f.coach} · ${f.cost.toFixed(2)} M</div>
-          <button class="btn btn-sm btn-danger" onclick="deleteFormation('${f.coach.replace(/'/g, "\\'")}')">Eliminar</button>
-        </div>
-        <div style="font-size:0.72rem; color:var(--muted);">
-          ${f.players.map(id => {
-            const p = PLAYERS.find(x => x.id === id);
-            return p ? p.name.split(' ').slice(0,2).join(' ') : id;
-          }).join(' · ')}
-        </div>
-      </div>`).join('');
+    formEl.innerHTML = data.formations.map(function(f) {
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;justify-content:space-between;width:100%;"><div style="font-weight:600">' + f.coach + ' · ' + f.cost.toFixed(2) + ' M</div><button class="btn btn-sm btn-danger" onclick="deleteFormation(\'' + f.coach.replace(/'/g, "\\'") + '\')">Eliminar</button></div><div style="font-size:0.72rem;color:var(--muted)">' + (f.players || []).map(function(id) { var p = PLAYERS.find(function(x){return x.id===id;}); return p ? p.name.split(' ').slice(0,2).join(' ') : id; }).join(' · ') + '</div></div>';
+    }).join('');
   }
 
-  // Pending notes
-  const pending = data.notes.filter(n => n.status === 'pending');
+  var pending = data.notes.filter(function(n) { return n.status === 'pending'; });
   document.getElementById('pendingNotesCount').textContent = pending.length;
-  const notesEl = document.getElementById('pendingNotes');
-  if (pending.length === 0) {
-    notesEl.innerHTML = '<div class="empty">No hay notas pendientes</div>';
-  } else {
-    notesEl.innerHTML = pending.map(n => {
-      const p = PLAYERS.find(x => x.id === n.player_id);
-      return `
-        <div class="player-card" style="flex-direction:column; align-items:flex-start; gap:6px;">
-          <div style="font-weight:600">${p ? p.name : 'Jugador ' + n.player_id}</div>
-          <div style="font-size:0.85rem;">${n.note}</div>
-          <div style="font-size:0.72rem; color:var(--muted);">Por: ${n.author || 'Anónimo'}</div>
-          <div class="btn-row" style="margin:0;">
-            <button class="btn btn-sm btn-primary" onclick="approveNote(${n.id})">Aprobar</button>
-            <button class="btn btn-sm btn-danger" onclick="rejectNote(${n.id})">Rechazar</button>
-            <button class="btn btn-sm" style="background:var(--border);color:var(--text);" onclick="deleteNote(${n.id})">Eliminar</button>
-          </div>
-        </div>`;
+  var notesEl = document.getElementById('pendingNotes');
+  notesEl.innerHTML = pending.length === 0 ? '<div class="empty">No hay notas pendientes</div>' :
+    pending.map(function(n) {
+      var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="font-weight:600">' + (p ? p.name : 'Jugador '+n.player_id) + '</div><div style="font-size:0.85rem">' + n.note + '</div><div style="font-size:0.72rem;color:var(--muted)">Por: ' + (n.author||'Anónimo') + '</div><div class="btn-row" style="margin:0"><button class="btn btn-sm btn-primary" onclick="approveNote('+n.id+')">Aprobar</button><button class="btn btn-sm btn-danger" onclick="rejectNote('+n.id+')">Rechazar</button><button class="btn btn-sm" style="background:var(--border);color:var(--text)" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
     }).join('');
-  }
 
-  // All notes (approved + rejected) with delete
-  const allNotesEl = document.getElementById('allNotes');
-  const otherNotes = data.notes.filter(n => n.status !== 'pending');
-  if (otherNotes.length === 0) {
-    allNotesEl.innerHTML = '<div class="empty">No hay notas aprobadas o rechazadas</div>';
-  } else {
-    allNotesEl.innerHTML = otherNotes.map(n => {
-      const p = PLAYERS.find(x => x.id === n.player_id);
-      const statusLabel = n.status === 'approved' ? '<span class="badge badge-approved">Aprobada</span>' : '<span class="badge badge-pending">Rechazada</span>';
-      return `
-        <div class="player-card" style="flex-direction:column; align-items:flex-start; gap:6px;">
-          <div style="display:flex; justify-content:space-between; width:100%;">
-            <div style="font-weight:600">${p ? p.name : 'Jugador ' + n.player_id}</div>
-            ${statusLabel}
-          </div>
-          <div style="font-size:0.85rem;">${n.note}</div>
-          <div style="font-size:0.72rem; color:var(--muted);">Por: ${n.author || 'Anónimo'}</div>
-          <button class="btn btn-sm btn-danger" onclick="deleteNote(${n.id})">Eliminar nota</button>
-        </div>`;
+  var other = data.notes.filter(function(n) { return n.status !== 'pending'; });
+  document.getElementById('allNotes').innerHTML = other.length === 0 ? '<div class="empty">Sin notas</div>' :
+    other.map(function(n) {
+      var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
+      var badge = n.status === 'approved' ? '<span class="badge badge-approved">Aprobada</span>' : '<span class="badge badge-pending">Rechazada</span>';
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;justify-content:space-between;width:100%"><div style="font-weight:600">' + (p?p.name:'Jugador '+n.player_id) + '</div>' + badge + '</div><div style="font-size:0.85rem">' + n.note + '</div><button class="btn btn-sm btn-danger" onclick="deleteNote('+n.id+')">Eliminar</button></div>';
     }).join('');
-  }
-
-  renderResultInputs();
 }
 
 window.deleteFormation = async function(coach) {
-  if (!confirm('¿Eliminar la formación de ' + coach + '?')) return;
+  if (!confirm('¿Eliminar formación de ' + coach + '?')) return;
   try {
     await supabaseClient.from('formations').delete().eq('coach', coach);
-    dbData.formations = dbData.formations.filter(f => f.coach !== coach);
+    dbData.formations = dbData.formations.filter(function(f) { return f.coach !== coach; });
     renderAdmin();
-    alert('Formación eliminada');
   } catch (e) { alert(e.message); }
 };
-
 window.approveNote = async function(id) {
-  try {
-    await supabaseClient.from('player_notes').update({ status: 'approved' }).eq('id', id);
-    const n = dbData.notes.find(x => x.id === id);
-    if (n) n.status = 'approved';
-    renderAdmin();
-  } catch (e) { alert(e.message); }
+  await supabaseClient.from('player_notes').update({ status: 'approved' }).eq('id', id);
+  var n = dbData.notes.find(function(x) { return x.id === id; });
+  if (n) n.status = 'approved';
+  renderAdmin();
 };
-
 window.rejectNote = async function(id) {
-  try {
-    await supabaseClient.from('player_notes').update({ status: 'rejected' }).eq('id', id);
-    const n = dbData.notes.find(x => x.id === id);
-    if (n) n.status = 'rejected';
-    renderAdmin();
-  } catch (e) { alert(e.message); }
+  await supabaseClient.from('player_notes').update({ status: 'rejected' }).eq('id', id);
+  var n = dbData.notes.find(function(x) { return x.id === id; });
+  if (n) n.status = 'rejected';
+  renderAdmin();
 };
-
 window.deleteNote = async function(id) {
-  if (!confirm('¿Eliminar esta nota permanentemente?')) return;
+  if (!confirm('¿Eliminar esta nota?')) return;
+  await supabaseClient.from('player_notes').delete().eq('id', id);
+  dbData.notes = dbData.notes.filter(function(n) { return n.id !== id; });
+  renderAdmin();
+};
+
+// Plantilla management
+function renderPlantilla() {
+  document.getElementById('dbPlayersCount').textContent = PLAYERS.length;
+  var q = (document.getElementById('plantillaSearch').value || '').trim().toLowerCase();
+  var list = PLAYERS.filter(function(p) {
+    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+  });
+  document.getElementById('plantillaList').innerHTML = list.length === 0
+    ? '<div class="empty">Plantilla vacía</div>'
+    : list.map(function(p) {
+      return '<div class="player-card"><div class="player-info"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + ' · ID ' + p.id + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div><button class="btn btn-sm btn-danger" onclick="deletePlayer(' + p.id + ')">X</button></div>';
+    }).join('');
+}
+document.getElementById('plantillaSearch').addEventListener('input', renderPlantilla);
+
+window.deletePlayer = async function(id) {
+  if (!confirm('¿Eliminar este jugador de la plantilla?')) return;
   try {
-    await supabaseClient.from('player_notes').delete().eq('id', id);
-    dbData.notes = dbData.notes.filter(n => n.id !== id);
-    renderAdmin();
+    await supabaseClient.from('players').delete().eq('id', id);
+    PLAYERS = PLAYERS.filter(function(p) { return p.id !== id; });
+    jornadaSelected.delete(id);
+    renderPlantilla();
+    renderOnce();
   } catch (e) { alert(e.message); }
 };
 
-// ========== PLAYER SELECT (checkboxes) ==========
-function renderPlayerSelectList() {
-  const q = (document.getElementById('playerSelectSearch').value || '').trim().toLowerCase();
-  const list = PLAYERS.filter(p => !q || p.name.toLowerCase().includes(q) || p.club.toLowerCase().includes(q));
-  const el = document.getElementById('playerSelectList');
-  if (!el) return;
+document.getElementById('btnImportPlayers').addEventListener('click', async function() {
+  var raw = document.getElementById('bulkPlayersInput').value.trim();
+  if (!raw) return alert('Pega la lista de jugadores');
 
-  // Sync from dbData
-  jornadaSelectedIds = new Set(dbData.jornadaPlayerIds || []);
+  // Parse format: {id:1, name:"...", club:"...", points:100, bombo:"B1"},
+  var players = [];
+  var regex = /\{\s*id\s*:\s*(\d+)\s*,\s*name\s*:\s*"([^"]+)"\s*,\s*club\s*:\s*"([^"]+)"\s*,\s*points\s*:\s*([\d.]+)\s*,\s*bombo\s*:\s*"([^"]+)"\s*\}/gi;
+  var m;
+  while ((m = regex.exec(raw)) !== null) {
+    players.push({
+      id: parseInt(m[1]),
+      name: m[2],
+      club: m[3],
+      points: parseFloat(m[4]),
+      bombo: m[5]
+    });
+  }
 
-  el.innerHTML = list.map(p => {
-    const checked = jornadaSelectedIds.has(p.id) ? 'checked' : '';
-    return `
-      <label class="player-card" style="cursor:pointer; margin-bottom:6px;">
-        <input type="checkbox" data-pid="${p.id}" ${checked} style="width:18px; height:18px; margin-right:8px;" onchange="toggleJornadaPlayer(${p.id}, this.checked)">
-        <div class="player-info" style="flex:1;">
-          <div class="player-name">${p.name} <span class="bombo ${p.bombo.toLowerCase()}">${p.bombo}</span></div>
-          <div class="player-club">${p.club}</div>
-        </div>
-        <div class="player-price">${p.points.toFixed(2)} M</div>
-      </label>`;
+  if (players.length === 0) {
+    return alert('No se pudo parsear ningún jugador.\nRevisa el formato:\n{id:1, name:"NOMBRE", club:"CLUB", points:100.00, bombo:"B1"},');
+  }
+
+  try {
+    // Upsert all
+    var err = (await supabaseClient.from('players').upsert(players, { onConflict: 'id' })).error;
+    if (err) throw err;
+    await loadPlayers();
+    document.getElementById('importStatus').textContent = '✅ Importados ' + players.length + ' jugadores.';
+    document.getElementById('bulkPlayersInput').value = '';
+    renderPlantilla();
+    renderOnce();
+    alert('Importados ' + players.length + ' jugadores correctamente');
+  } catch (e) {
+    alert('Error al importar: ' + e.message);
+  }
+});
+
+document.getElementById('btnClearPlayers').addEventListener('click', async function() {
+  if (!confirm('¿Borrar TODOS los jugadores de la plantilla?')) return;
+  try {
+    await supabaseClient.from('players').delete().neq('id', -99999);
+    PLAYERS = [];
+    jornadaSelected = new Set();
+    renderPlantilla();
+    renderOnce();
+    alert('Plantilla borrada');
+  } catch (e) { alert(e.message); }
+});
+
+document.getElementById('btnAddPlayer').addEventListener('click', async function() {
+  var id = parseInt(document.getElementById('newId').value);
+  var name = document.getElementById('newName').value.trim();
+  var club = document.getElementById('newClub').value.trim();
+  var points = parseFloat(document.getElementById('newPoints').value);
+  var bombo = document.getElementById('newBombo').value.trim() || 'B4';
+  if (!id || !name || !club || isNaN(points)) return alert('Rellena ID, nombre, club y puntos');
+  try {
+    var err = (await supabaseClient.from('players').upsert({ id: id, name: name, club: club, points: points, bombo: bombo }, { onConflict: 'id' })).error;
+    if (err) throw err;
+    await loadPlayers();
+    document.getElementById('newId').value = '';
+    document.getElementById('newName').value = '';
+    document.getElementById('newClub').value = '';
+    document.getElementById('newPoints').value = '';
+    document.getElementById('newBombo').value = '';
+    renderPlantilla();
+    renderOnce();
+    alert('Jugador añadido');
+  } catch (e) { alert(e.message); }
+});
+
+// Jornada player selection
+function renderJornadaSelect() {
+  var q = (document.getElementById('jornadaSearch').value || '').trim().toLowerCase();
+  var list = PLAYERS.filter(function(p) {
+    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+  });
+  document.getElementById('jornadaSelCount').textContent = jornadaSelected.size;
+  document.getElementById('jornadaSelectList').innerHTML = list.map(function(p) {
+    var checked = jornadaSelected.has(p.id) ? 'checked' : '';
+    return '<label class="player-card" style="cursor:pointer"><input type="checkbox" ' + checked + ' style="width:18px;height:18px;margin-right:8px" onchange="toggleJornada(' + p.id + ',this.checked)"><div class="player-info"><div class="player-name">' + p.name + '</div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div></label>';
   }).join('');
-
-  document.getElementById('selectedPlayersCount').textContent = jornadaSelectedIds.size;
 }
+document.getElementById('plantillaSearch').addEventListener('input', renderPlantilla);
 
-window.toggleJornadaPlayer = function(id, checked) {
-  if (checked) jornadaSelectedIds.add(id);
-  else jornadaSelectedIds.delete(id);
-  document.getElementById('selectedPlayersCount').textContent = jornadaSelectedIds.size;
+window.deletePlayer = async function(id) {
+  if (!confirm('¿Eliminar este jugador de la plantilla?')) return;
+  try {
+    await supabaseClient.from('players').delete().eq('id', id);
+    PLAYERS = PLAYERS.filter(function(p) { return p.id !== id; });
+    jornadaSelected.delete(id);
+    renderPlantilla();
+    renderOnce();
+  } catch (e) { alert(e.message); }
 };
 
-(function() {
-  var pss = document.getElementById('playerSelectSearch');
-  if (pss) pss.addEventListener('input', renderPlayerSelectList);
+document.getElementById('btnImportPlayers').addEventListener('click', async function() {
+  var raw = document.getElementById('bulkPlayersInput').value.trim();
+  if (!raw) return alert('Pega la lista de jugadores');
 
-  var bssp = document.getElementById('btnSaveSelectedPlayers');
-  if (bssp) bssp.addEventListener('click', async function() {
-    var unique = Array.from(jornadaSelectedIds);
-    try {
-      await supabaseClient.from('jornada_players').upsert({
-        jornada: dbData.currentJornada || 1,
-        player_ids: unique
-      }, { onConflict: 'jornada' });
-      dbData.jornadaPlayerIds = unique;
-      var st = document.getElementById('jornadaPlayersStatus');
-      if (st) st.textContent = 'Guardados ' + unique.length + ' jugadores.';
-      alert('Seleccion guardada: ' + unique.length + ' jugadores');
-      renderResultInputs();
-    } catch (e) { alert('Error: ' + e.message); }
-  });
-
-  var bscn = document.getElementById('btnSaveCompName');
-  if (bscn) bscn.addEventListener('click', async function() {
-    var inp = document.getElementById('compNameInput');
-    var name = inp ? inp.value.trim() : '';
-    if (!name) return alert('Escribe un nombre');
-    try {
-      await supabaseClient.from('settings').upsert({ key: 'competition_name', value: name }, { onConflict: 'key' });
-      dbData.competitionName = name;
-      var sub = document.querySelector('header .sub');
-      if (sub) sub.textContent = name;
-      alert('Nombre de competicion actualizado');
-    } catch (e) { alert(e.message); }
-  });
-})();
-
-function renderResultInputs() {
-  const data = loadData();
-  const q = document.getElementById('resultSearch').value.trim().toLowerCase();
-  let list = PLAYERS;
-  if (data.jornadaPlayerIds && data.jornadaPlayerIds.length > 0) {
-    list = PLAYERS.filter(p => data.jornadaPlayerIds.includes(p.id));
+  // Parse format: {id:1, name:"...", club:"...", points:100, bombo:"B1"},
+  var players = [];
+  var regex = /\{\s*id\s*:\s*(\d+)\s*,\s*name\s*:\s*"([^"]+)"\s*,\s*club\s*:\s*"([^"]+)"\s*,\s*points\s*:\s*([\d.]+)\s*,\s*bombo\s*:\s*"([^"]+)"\s*\}/gi;
+  var m;
+  while ((m = regex.exec(raw)) !== null) {
+    players.push({
+      id: parseInt(m[1]),
+      name: m[2],
+      club: m[3],
+      points: parseFloat(m[4]),
+      bombo: m[5]
+    });
   }
-  list = list.filter(p => !q || p.name.toLowerCase().includes(q) || p.club.toLowerCase().includes(q));
 
-  document.getElementById('resultInputs').innerHTML = list.map(p => {
-    const val = data.results[p.id] ?? '';
-    return `
-      <div class="player-card">
-        <div class="player-info">
-          <div class="player-name">${p.name}</div>
-          <div class="player-club">${p.club}</div>
-        </div>
-        <input type="number" class="result-input" data-id="${p.id}" value="${val}" placeholder="0" step="0.1" min="0">
-      </div>`;
+  if (players.length === 0) {
+    return alert('No se pudo parsear ningún jugador.\nRevisa el formato:\n{id:1, name:"NOMBRE", club:"CLUB", points:100.00, bombo:"B1"},');
+  }
+
+  try {
+    // Upsert all
+    var err = (await supabaseClient.from('players').upsert(players, { onConflict: 'id' })).error;
+    if (err) throw err;
+    await loadPlayers();
+    document.getElementById('importStatus').textContent = '✅ Importados ' + players.length + ' jugadores.';
+    document.getElementById('bulkPlayersInput').value = '';
+    renderPlantilla();
+    renderOnce();
+    alert('Importados ' + players.length + ' jugadores correctamente');
+  } catch (e) {
+    alert('Error al importar: ' + e.message);
+  }
+});
+
+document.getElementById('btnClearPlayers').addEventListener('click', async function() {
+  if (!confirm('¿Borrar TODOS los jugadores de la plantilla?')) return;
+  try {
+    await supabaseClient.from('players').delete().neq('id', -99999);
+    PLAYERS = [];
+    jornadaSelected = new Set();
+    renderPlantilla();
+    renderOnce();
+    alert('Plantilla borrada');
+  } catch (e) { alert(e.message); }
+});
+
+document.getElementById('btnAddPlayer').addEventListener('click', async function() {
+  var id = parseInt(document.getElementById('newId').value);
+  var name = document.getElementById('newName').value.trim();
+  var club = document.getElementById('newClub').value.trim();
+  var points = parseFloat(document.getElementById('newPoints').value);
+  var bombo = document.getElementById('newBombo').value.trim() || 'B4';
+  if (!id || !name || !club || isNaN(points)) return alert('Rellena ID, nombre, club y puntos');
+  try {
+    var err = (await supabaseClient.from('players').upsert({ id: id, name: name, club: club, points: points, bombo: bombo }, { onConflict: 'id' })).error;
+    if (err) throw err;
+    await loadPlayers();
+    document.getElementById('newId').value = '';
+    document.getElementById('newName').value = '';
+    document.getElementById('newClub').value = '';
+    document.getElementById('newPoints').value = '';
+    document.getElementById('newBombo').value = '';
+    renderPlantilla();
+    renderOnce();
+    alert('Jugador añadido');
+  } catch (e) { alert(e.message); }
+});
+
+// Jornada player selection
+function renderJornadaSelect() {
+  var q = (document.getElementById('jornadaSearch').value || '').trim().toLowerCase();
+  var list = PLAYERS.filter(function(p) {
+    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+  });
+  document.getElementById('jornadaSelCount').textContent = jornadaSelected.size;
+  document.getElementById('jornadaSelectList').innerHTML = list.map(function(p) {
+    var checked = jornadaSelected.has(p.id) ? 'checked' : '';
+    return '<label class="player-card" style="cursor:pointer"><input type="checkbox" ' + checked + ' style="width:18px;height:18px;margin-right:8px" onchange="toggleJornada(' + p.id + ',this.checked)"><div class="player-info"><div class="player-name">' + p.name + '</div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div></label>';
   }).join('');
+}
+document.getElementById('jornadaSearch').addEventListener('input', renderJornadaSelect);
+window.toggleJornada = function(id, checked) {
+  if (checked) jornadaSelected.add(id); else jornadaSelected.delete(id);
+  document.getElementById('jornadaSelCount').textContent = jornadaSelected.size;
+};
+document.getElementById('btnSaveJornadaPlayers').addEventListener('click', async function() {
+  var unique = Array.from(jornadaSelected);
+  try {
+    await supabaseClient.from('jornada_players').upsert({ jornada: dbData.currentJornada || 1, player_ids: unique }, { onConflict: 'jornada' });
+    dbData.jornadaPlayerIds = unique;
+    alert('Guardados ' + unique.length + ' jugadores para la jornada');
+    renderOnce();
+  } catch (e) { alert(e.message); }
+});
 
-  document.querySelectorAll('.result-input').forEach(inp => {
-    inp.addEventListener('change', async () => {
-      const id = +inp.dataset.id;
-      const v = parseFloat(inp.value);
-      if (isNaN(v) || v < 0) {
-        delete dbData.results[id];
-      } else {
-        dbData.results[id] = v;
-      }
-      // Save to supabase
+// Results
+document.getElementById('resultSearch').addEventListener('input', renderResultInputs);
+function renderResultInputs() {
+  var data = loadData();
+  var q = document.getElementById('resultSearch').value.trim().toLowerCase();
+  var list = PLAYERS;
+  if (data.jornadaPlayerIds && data.jornadaPlayerIds.length > 0) {
+    list = PLAYERS.filter(function(p) { return data.jornadaPlayerIds.indexOf(p.id) !== -1; });
+  }
+  list = list.filter(function(p) {
+    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+  });
+  document.getElementById('resultInputs').innerHTML = list.map(function(p) {
+    var val = data.results[p.id] !== undefined ? data.results[p.id] : '';
+    return '<div class="player-card"><div class="player-info"><div class="player-name">' + p.name + '</div><div class="player-club">' + p.club + '</div></div><input type="number" class="result-input" data-id="' + p.id + '" value="' + val + '" placeholder="0" step="0.1" min="0"></div>';
+  }).join('');
+  document.querySelectorAll('.result-input').forEach(function(inp) {
+    inp.addEventListener('change', async function() {
+      var id = +inp.dataset.id;
+      var v = parseFloat(inp.value);
+      var jornada = dbData.currentJornada || 1;
       try {
-        const jornada = dbData.currentJornada || 1;
         await supabaseClient.from('jornada_results').delete().eq('jornada', jornada).eq('player_id', id);
         if (!isNaN(v) && v >= 0) {
-          await supabaseClient.from('jornada_results').insert({ jornada, player_id: id, points: v });
+          dbData.results[id] = v;
+          await supabaseClient.from('jornada_results').insert({ jornada: jornada, player_id: id, points: v });
+        } else {
+          delete dbData.results[id];
         }
       } catch (e) { console.error(e); }
     });
   });
 }
 
-async function calculateJornada() {
-  const data = loadData();
-  if (data.formations.length === 0) return alert('No hay formaciones enviadas');
-
-  const scores = buildJornadaScores(data);
+document.getElementById('btnCalc').addEventListener('click', async function() {
+  var data = loadData();
+  if (data.formations.length === 0) return alert('No hay formaciones');
+  var scores = buildJornadaScores(data);
   data.jornadaScores = scores;
-
-  const newGlobal = { ...data.global };
-  scores.forEach((s, i) => {
+  var newGlobal = {};
+  Object.keys(data.global).forEach(function(c) {
+    newGlobal[c] = { totalPoints: Number(data.global[c].totalPoints || 0), wins: Number(data.global[c].wins || 0) };
+  });
+  scores.forEach(function(s, i) {
     if (!newGlobal[s.coach]) newGlobal[s.coach] = { totalPoints: 0, wins: 0 };
     newGlobal[s.coach].totalPoints += s.points;
     if (i === 0) newGlobal[s.coach].wins += 1;
   });
-
   try {
-    // Update global
-    const rows = Object.entries(newGlobal).map(([coach, g]) => ({
-      coach,
-      total_points: Number(g.totalPoints || 0),
-      wins: Number(g.wins || 0)
-    }));
     await supabaseClient.from('global_scores').delete().neq('coach', '__x__');
+    var rows = Object.keys(newGlobal).map(function(c) {
+      return { coach: c, total_points: newGlobal[c].totalPoints, wins: newGlobal[c].wins };
+    });
     if (rows.length) await supabaseClient.from('global_scores').insert(rows);
     dbData.global = newGlobal;
-
-    alert(`Jornada calculada.\nGanador: ${scores[0].coach} (${scores[0].points.toFixed(1)} pts)`);
+    alert('Jornada calculada.\nGanador: ' + scores[0].coach + ' (' + scores[0].points.toFixed(1) + ' pts)');
     renderJornada();
     renderGlobal();
-  } catch (error) {
-    alert('Error al calcular: ' + error.message);
-  }
-}
+  } catch (e) { alert(e.message); }
+});
+
+document.getElementById('btnResetJornada').addEventListener('click', async function() {
+  if (!confirm('¿Borrar resultados de la jornada?')) return;
+  await supabaseClient.from('jornada_results').delete().eq('jornada', dbData.currentJornada || 1);
+  dbData.results = {};
+  dbData.jornadaScores = [];
+  renderResultInputs();
+  renderJornada();
+  alert('Resultados borrados');
+});
+
+document.getElementById('btnCloseJornada').addEventListener('click', async function() {
+  if (!confirm('¿Cerrar jornada?\nSe borrarán todos los onces. La gente tendrá que enviar uno nuevo.')) return;
+  await supabaseClient.from('formations').delete().neq('coach', '__x__');
+  dbData.formations = [];
+  selected.clear();
+  renderOnce();
+  renderAdmin();
+  alert('Jornada cerrada. Onces eliminados.');
+});
+
+document.getElementById('btnSaveCompName').addEventListener('click', async function() {
+  var name = document.getElementById('compNameInput').value.trim();
+  if (!name) return alert('Escribe un nombre');
+  await supabaseClient.from('settings').upsert({ key: 'competition_name', value: name }, { onConflict: 'key' });
+  dbData.competitionName = name;
+  document.getElementById('compSub').textContent = name;
+  alert('Nombre actualizado');
+});
+
+document.getElementById('btnSaveBudget').addEventListener('click', async function() {
+  var b = parseFloat(document.getElementById('budgetInput').value);
+  if (isNaN(b) || b <= 0) return alert('Presupuesto inválido');
+  await supabaseClient.from('settings').upsert({ key: 'max_budget', value: String(b) }, { onConflict: 'key' });
+  MAX_BUDGET = b;
+  document.getElementById('maxBudgetShow').textContent = b;
+  updateBudget();
+  alert('Presupuesto actualizado: ' + b);
+});
+
+document.getElementById('btnResetAll').addEventListener('click', async function() {
+  if (!confirm('¿Borrar ABSOLUTAMENTE TODO?')) return;
+  await Promise.all([
+    supabaseClient.from('formations').delete().neq('coach', '__x__'),
+    supabaseClient.from('jornada_results').delete().neq('id', -1),
+    supabaseClient.from('global_scores').delete().neq('coach', '__x__'),
+    supabaseClient.from('player_notes').delete().neq('id', -1)
+  ]);
+  dbData.formations = [];
+  dbData.results = {};
+  dbData.jornadaScores = [];
+  dbData.global = {};
+  dbData.notes = [];
+  selected.clear();
+  renderOnce();
+  renderAdmin();
+  renderJornada();
+  renderGlobal();
+  alert('Todo borrado');
+});
 
 // Init
-(async function init() {
+(async function() {
   try {
     await loadSupabaseData();
   } catch (e) {
     console.error(e);
+    document.getElementById('compSub').textContent = 'Error cargando datos';
   }
   updateBudget();
   renderOnce();
