@@ -320,24 +320,31 @@ footer {
     <div class="card">
       <div class="section-title">Formaciones enviadas (<span id="formCount">0</span>)</div>
       <div id="adminFormations"></div>
+      <div class="btn-row" style="margin-top:10px;">
+        <button class="btn btn-warning" id="btnCloseJornada" style="flex:1">Cerrar jornada (borrar todos los onces)</button>
+      </div>
+      <p style="font-size:0.75rem; color:var(--muted); margin-top:6px;">
+        Al cerrar la jornada se eliminan todos los onces enviados. La gente tendrá que hacer uno nuevo para la siguiente.
+      </p>
     </div>
 
     <div class="card">
       <div class="section-title">Jugadores que juegan esta jornada</div>
       <p style="font-size:0.8rem; color:var(--muted); margin-bottom:8px;">
-        Pega la lista de IDs (uno por línea o separados por comas) o nombres.
+        Pega nombres (uno por línea) o IDs. Si hay nombres ambiguos te preguntará cuál es el correcto.
       </p>
-      <textarea id="jornadaPlayersInput" placeholder="Ejemplo:&#10;1&#10;5&#10;12&#10;23"></textarea>
+      <textarea id="jornadaPlayersInput" placeholder="Ejemplo:&#10;JUAN LUIS JIMENEZ MORENO&#10;DAVID RUIZ REMON&#10;MARCOS FERNANDEZ DE LUCAS&#10;1&#10;5"></textarea>
       <div class="btn-row">
-        <button class="btn btn-blue" id="btnSaveJornadaPlayers">Guardar lista de jugadores</button>
+        <button class="btn btn-blue" id="btnSaveJornadaPlayers">Procesar y guardar lista</button>
       </div>
       <div id="jornadaPlayersStatus" style="font-size:0.8rem; color:var(--muted); margin-top:6px;"></div>
+      <div id="disambiguationBox" style="display:none; margin-top:12px;"></div>
     </div>
 
     <div class="card">
       <div class="section-title">Resultados de la Jornada</div>
       <p style="font-size:0.8rem; color:var(--muted); margin-bottom:10px;">
-        Introduce los puntos que ha sacado cada jugador.
+        Introduce los puntos que ha sacado cada jugador (solo aparecen los de la lista de la jornada si la has cargado).
       </p>
       <input type="text" id="resultSearch" placeholder="Buscar jugador..." style="margin-bottom:10px;">
       <div id="resultInputs" style="max-height:40vh; overflow-y:auto;"></div>
@@ -350,6 +357,11 @@ footer {
     <div class="card">
       <div class="section-title">Notas pendientes de aprobación (<span id="pendingNotesCount">0</span>)</div>
       <div id="pendingNotes"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">Todas las notas (aprobadas y rechazadas)</div>
+      <div id="allNotes" style="max-height:30vh; overflow-y:auto;"></div>
     </div>
 
     <div class="card">
@@ -878,34 +890,109 @@ document.getElementById('btnResetAll').addEventListener('click', async () => {
   } catch (e) { alert(e.message); }
 });
 
-document.getElementById('btnSaveJornadaPlayers').addEventListener('click', async () => {
+// Cerrar jornada = borrar todos los onces para que la gente haga uno nuevo
+document.getElementById('btnCloseJornada').addEventListener('click', async () => {
+  if (!confirm('¿Cerrar la jornada actual?\n\nSe eliminarán TODOS los onces enviados.\nLa gente tendrá que enviar un once nuevo para la siguiente jornada.\n\nLos puntos globales y victorias se mantienen.')) return;
+  try {
+    await supabaseClient.from('formations').delete().neq('coach', '__x__');
+    dbData.formations = [];
+    selected.clear();
+    renderOnce();
+    renderAdmin();
+    renderJornada();
+    alert('Jornada cerrada. Todos los onces han sido eliminados.\nLos entrenadores deben enviar un once nuevo.');
+  } catch (e) { alert('Error: ' + e.message); }
+});
+
+// Procesar lista de jugadores de la jornada (con desambiguación)
+let pendingAmbiguous = [];
+let resolvedIds = [];
+
+document.getElementById('btnSaveJornadaPlayers').addEventListener('click', () => {
   const raw = document.getElementById('jornadaPlayersInput').value.trim();
   if (!raw) return alert('Pega la lista de jugadores');
 
   const tokens = raw.split(/[\n,;]+/).map(t => t.trim()).filter(Boolean);
-  const ids = [];
+  resolvedIds = [];
+  pendingAmbiguous = [];
+
   tokens.forEach(t => {
     if (/^\d+$/.test(t)) {
-      ids.push(Number(t));
+      const id = Number(t);
+      if (PLAYERS.find(p => p.id === id)) resolvedIds.push(id);
     } else {
-      const found = PLAYERS.find(p => p.name.toLowerCase() === t.toLowerCase() || p.name.toLowerCase().includes(t.toLowerCase()));
-      if (found) ids.push(found.id);
+      const exact = PLAYERS.filter(p => p.name.toLowerCase() === t.toLowerCase());
+      if (exact.length === 1) {
+        resolvedIds.push(exact[0].id);
+      } else {
+        const partial = PLAYERS.filter(p => p.name.toLowerCase().includes(t.toLowerCase()));
+        if (partial.length === 1) {
+          resolvedIds.push(partial[0].id);
+        } else if (partial.length > 1) {
+          pendingAmbiguous.push({ query: t, options: partial });
+        }
+        // si 0 coincidencias se ignora
+      }
     }
   });
 
-  const unique = [...new Set(ids)];
+  if (pendingAmbiguous.length > 0) {
+    showDisambiguation();
+  } else {
+    finishSaveJornadaPlayers();
+  }
+});
+
+function showDisambiguation() {
+  const box = document.getElementById('disambiguationBox');
+  box.style.display = 'block';
+  let html = '<div class="warning">Hay nombres ambiguos. Elige el correcto en cada caso:</div>';
+  pendingAmbiguous.forEach((item, idx) => {
+    html += `<div style="margin-bottom:12px;">
+      <div style="font-weight:600; margin-bottom:6px;">“${item.query}” puede ser:</div>
+      ${item.options.map(p => `
+        <label style="display:flex; align-items:center; gap:8px; margin-bottom:4px; font-size:0.9rem;">
+          <input type="radio" name="ambig_${idx}" value="${p.id}">
+          ${p.name} (${p.club}) – ${p.points.toFixed(2)}M
+        </label>`).join('')}
+    </div>`;
+  });
+  html += `<button class="btn btn-primary" id="btnConfirmAmbig" style="width:100%; margin-top:8px;">Confirmar selección</button>`;
+  box.innerHTML = html;
+
+  document.getElementById('btnConfirmAmbig').onclick = () => {
+    let allSelected = true;
+    pendingAmbiguous.forEach((item, idx) => {
+      const selected = document.querySelector(`input[name="ambig_${idx}"]:checked`);
+      if (selected) {
+        resolvedIds.push(Number(selected.value));
+      } else {
+        allSelected = false;
+      }
+    });
+    if (!allSelected) return alert('Debes elegir una opción en cada caso ambiguo');
+    pendingAmbiguous = [];
+    box.style.display = 'none';
+    finishSaveJornadaPlayers();
+  };
+}
+
+async function finishSaveJornadaPlayers() {
+  const unique = [...new Set(resolvedIds)];
   try {
     await supabaseClient.from('jornada_players').upsert({
       jornada: dbData.currentJornada || 1,
       player_ids: unique
     }, { onConflict: 'jornada' });
     dbData.jornadaPlayerIds = unique;
-    document.getElementById('jornadaPlayersStatus').textContent = `Guardados ${unique.length} jugadores para la jornada.`;
+    document.getElementById('jornadaPlayersStatus').textContent = `✅ Guardados ${unique.length} jugadores para la jornada.`;
+    document.getElementById('disambiguationBox').style.display = 'none';
     alert(`Lista guardada: ${unique.length} jugadores`);
+    renderResultInputs();
   } catch (e) {
     alert('Error: ' + e.message);
   }
-});
+}
 
 function renderAdmin() {
   const data = loadData();
@@ -948,7 +1035,30 @@ function renderAdmin() {
           <div class="btn-row" style="margin:0;">
             <button class="btn btn-sm btn-primary" onclick="approveNote(${n.id})">Aprobar</button>
             <button class="btn btn-sm btn-danger" onclick="rejectNote(${n.id})">Rechazar</button>
+            <button class="btn btn-sm" style="background:var(--border);color:var(--text);" onclick="deleteNote(${n.id})">Eliminar</button>
           </div>
+        </div>`;
+    }).join('');
+  }
+
+  // All notes (approved + rejected) with delete
+  const allNotesEl = document.getElementById('allNotes');
+  const otherNotes = data.notes.filter(n => n.status !== 'pending');
+  if (otherNotes.length === 0) {
+    allNotesEl.innerHTML = '<div class="empty">No hay notas aprobadas o rechazadas</div>';
+  } else {
+    allNotesEl.innerHTML = otherNotes.map(n => {
+      const p = PLAYERS.find(x => x.id === n.player_id);
+      const statusLabel = n.status === 'approved' ? '<span class="badge badge-approved">Aprobada</span>' : '<span class="badge badge-pending">Rechazada</span>';
+      return `
+        <div class="player-card" style="flex-direction:column; align-items:flex-start; gap:6px;">
+          <div style="display:flex; justify-content:space-between; width:100%;">
+            <div style="font-weight:600">${p ? p.name : 'Jugador ' + n.player_id}</div>
+            ${statusLabel}
+          </div>
+          <div style="font-size:0.85rem;">${n.note}</div>
+          <div style="font-size:0.72rem; color:var(--muted);">Por: ${n.author || 'Anónimo'}</div>
+          <button class="btn btn-sm btn-danger" onclick="deleteNote(${n.id})">Eliminar nota</button>
         </div>`;
     }).join('');
   }
@@ -980,6 +1090,15 @@ window.rejectNote = async function(id) {
     await supabaseClient.from('player_notes').update({ status: 'rejected' }).eq('id', id);
     const n = dbData.notes.find(x => x.id === id);
     if (n) n.status = 'rejected';
+    renderAdmin();
+  } catch (e) { alert(e.message); }
+};
+
+window.deleteNote = async function(id) {
+  if (!confirm('¿Eliminar esta nota permanentemente?')) return;
+  try {
+    await supabaseClient.from('player_notes').delete().eq('id', id);
+    dbData.notes = dbData.notes.filter(n => n.id !== id);
     renderAdmin();
   } catch (e) { alert(e.message); }
 };
