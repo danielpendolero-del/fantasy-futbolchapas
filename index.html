@@ -724,21 +724,28 @@ document.getElementById('btnImportPlayers').addEventListener('click', async func
   var raw = document.getElementById('bulkPlayersInput').value.trim();
   if (!raw) return alert('Pega la lista de jugadores');
 
+  // Normalize: Spanish fields -> English, commas as decimals
+  raw = raw
+    .replace(/nombre\s*:/gi, 'name:')
+    .replace(/puntos\s*:/gi, 'points:')
+    .replace(/points\s*:\s*(\d+),(\d+)/gi, 'points:$1.$2');
+
   var players = [];
+  // Accept: {id:1, name:"X", club:"Y", points:100.00}  (bombo optional)
   var regex = /\{\s*id\s*:\s*(\d+)\s*,\s*name\s*:\s*"([^"]+)"\s*,\s*club\s*:\s*"([^"]+)"\s*,\s*points\s*:\s*([\d.]+)(?:\s*,\s*bombo\s*:\s*"([^"]+)")?\s*\}/gi;
   var m;
   while ((m = regex.exec(raw)) !== null) {
     players.push({
-      id: parseInt(m[1]),
-      name: m[2],
-      club: m[3],
+      id: parseInt(m[1], 10),
+      name: m[2].trim(),
+      club: m[3].trim(),
       points: parseFloat(m[4]),
-      bombo: m[5] || 'B4'
+      bombo: (m[5] || 'B4')
     });
   }
 
   if (players.length === 0) {
-    return alert('No se pudo parsear ningún jugador.\nFormato: {id:1, name:"NOMBRE", club:"CLUB", points:100.00},');
+    return alert('No se pudo parsear ningún jugador.\nUsa:\n{id:1, name:"NOMBRE", club:"CLUB", points:100.00},');
   }
 
   var statusEl = document.getElementById('importStatus');
@@ -747,7 +754,6 @@ document.getElementById('btnImportPlayers').addEventListener('click', async func
   btn.disabled = true;
 
   try {
-    // Import in batches of 80 to avoid Supabase limits
     var batchSize = 80;
     var imported = 0;
     for (var i = 0; i < players.length; i += batchSize) {
