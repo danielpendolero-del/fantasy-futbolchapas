@@ -69,6 +69,7 @@ textarea { min-height: 100px; resize: vertical; }
 .bombo.b2 { background: #1e3a8a; color: #bfdbfe; }
 .bombo.b3 { background: #166534; color: #bbf7d0; }
 .bombo.b4 { background: #4c1d95; color: #e9d5ff; }
+.bombo.b5 { background: #374151; color: #d1d5db; }
 table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
 th, td { padding: 9px 6px; text-align: left; border-bottom: 1px solid var(--border); }
 th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; }
@@ -172,6 +173,7 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
       <button class="tab" data-atab="jornada">Jornada</button>
       <button class="tab" data-atab="resultados">Resultados</button>
       <button class="tab" data-atab="notas">Notas</button>
+      <button class="tab" data-atab="editar">Editar</button>
       <button class="tab" data-atab="config">Config</button>
     </div>
 
@@ -222,26 +224,45 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
       <div class="card">
         <div class="section-title">Pegar lista de participantes</div>
         <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
-          Un nombre por línea. Opcional: indica el bombo al final.<br>
-          <b>Ejemplo:</b><br>
-          <code style="font-size:0.72rem;">1. JUAN LUIS JIMENEZ MORENO B1<br>
-2. DAVID RUIZ REMON B2<br>
-MARCOS FERNANDEZ DE LUCAS B1<br>
-PEDRO NIETO SERRANO</code>
+          Un nombre por línea. Opcional: bombo al final (B1-B5).<br>
+          <code style="font-size:0.72rem;">1. JUAN LUIS JIMENEZ MORENO B1<br>2. DAVID RUIZ REMON B2</code>
         </p>
-        <textarea id="jornadaPasteList" placeholder="1. JUAN LUIS JIMENEZ MORENO B1&#10;2. DAVID RUIZ REMON B2&#10;MARCOS FERNANDEZ DE LUCAS B1" style="min-height:120px;"></textarea>
+        <textarea id="jornadaPasteList" placeholder="1. JUAN LUIS JIMENEZ MORENO B1&#10;2. DAVID RUIZ REMON B2" style="min-height:100px;"></textarea>
         <div class="btn-row">
           <button class="btn btn-primary" id="btnParseJornadaList" style="flex:1">Seleccionar de la lista</button>
         </div>
         <div id="jornadaParseStatus" style="font-size:0.8rem; color:var(--muted); margin-top:8px;"></div>
       </div>
       <div class="card">
-        <div class="section-title">Jugadores seleccionados (<span id="jornadaSelCount">0</span>)</div>
-        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">También puedes marcar/desmarcar a mano.</p>
+        <div class="section-title">Asignar bombos</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
+          Divide automáticamente a los seleccionados por puntos (más puntos = B1).
+          Libre = B5.
+        </p>
+        <div class="btn-row">
+          <button class="btn btn-blue" id="btnAutoBombos" style="flex:1">Auto: 4 bombos iguales</button>
+        </div>
+        <p style="font-size:0.75rem; color:var(--muted); margin:8px 0 4px;">O por rango (posición en ranking de la selección):</p>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+          <input type="number" id="bomboFrom" placeholder="Desde" style="width:70px;" min="1">
+          <input type="number" id="bomboTo" placeholder="Hasta" style="width:70px;" min="1">
+          <select id="bomboValue" style="width:80px; background:#0f172a; color:var(--text); border:1px solid var(--border); border-radius:9px; padding:8px;">
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="B3">B3</option>
+            <option value="B4">B4</option>
+            <option value="B5">B5</option>
+          </select>
+          <button class="btn btn-primary btn-sm" id="btnRangeBombo">Asignar rango</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Seleccionados (<span id="jornadaSelCount">0</span>)</div>
         <input type="text" id="jornadaSearch" placeholder="Buscar..." style="margin-bottom:10px;">
-        <div id="jornadaSelectList" style="max-height:35vh; overflow-y:auto;"></div>
+        <div id="jornadaSelectList" style="max-height:30vh; overflow-y:auto;"></div>
         <div class="btn-row">
           <button class="btn btn-blue" id="btnSaveJornadaPlayers" style="flex:1">Guardar selección</button>
+          <button class="btn btn-danger" id="btnClearJornadaPlayers">Borrar inscritos</button>
         </div>
       </div>
     </div>
@@ -249,9 +270,20 @@ PEDRO NIETO SERRANO</code>
     <!-- Resultados -->
     <div id="atab-resultados" class="atab-panel">
       <div class="card">
+        <div class="section-title">Pegar resultados</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
+          Formato: <code>1. NOMBRE 40</code> o <code>NOMBRE 40</code> (un jugador por línea)
+        </p>
+        <textarea id="resultsPasteList" placeholder="1. JUAN LUIS JIMENEZ MORENO 42&#10;2. DAVID RUIZ REMON 38&#10;PEDRO NIETO SERRANO 30" style="min-height:100px;"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnParseResults" style="flex:1">Cargar resultados</button>
+        </div>
+        <div id="resultsParseStatus" style="font-size:0.8rem; color:var(--muted); margin-top:8px;"></div>
+      </div>
+      <div class="card">
         <div class="section-title">Resultados de la Jornada</div>
         <input type="text" id="resultSearch" placeholder="Buscar jugador..." style="margin-bottom:10px;">
-        <div id="resultInputs" style="max-height:45vh; overflow-y:auto;"></div>
+        <div id="resultInputs" style="max-height:35vh; overflow-y:auto;"></div>
         <div class="btn-row">
           <button class="btn btn-primary" id="btnCalc">Calcular Jornada</button>
           <button class="btn btn-danger" id="btnResetJornada">Resetear resultados</button>
@@ -268,6 +300,23 @@ PEDRO NIETO SERRANO</code>
       <div class="card">
         <div class="section-title">Todas las notas</div>
         <div id="allNotes" style="max-height:30vh; overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <!-- Editar clasificaciones -->
+    <div id="atab-editar" class="atab-panel">
+      <div class="card">
+        <div class="section-title">Editar Global</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">Cambia puntos totales o victorias de un entrenador.</p>
+        <div id="editGlobalList" style="max-height:30vh; overflow-y:auto;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Editar Jornada actual</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">Ajusta los puntos de jornada de cada entrenador (solo visual/recalculo manual).</p>
+        <div id="editJornadaList" style="max-height:30vh; overflow-y:auto;"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnRecalcFromEdit" style="flex:1">Recalcular orden jornada</button>
+        </div>
       </div>
     </div>
 
@@ -650,6 +699,7 @@ document.querySelectorAll('#adminTabs .tab').forEach(function(tab) {
     if (tab.dataset.atab === 'jornada') renderJornadaSelect();
     if (tab.dataset.atab === 'resultados') renderResultInputs();
     if (tab.dataset.atab === 'notas') renderAdmin();
+    if (tab.dataset.atab === 'editar') renderEditPanel();
   });
 });
 
@@ -861,10 +911,10 @@ document.getElementById('btnParseJornadaList').addEventListener('click', functio
 
     // Bombo opcional al final: B1 B2 B3 B4 o bombo1
     var bombo = null;
-    var bm = line.match(/\s+(?:bombo\s*)?([Bb][1-4])\s*$/);
+    var bm = line.match(/\s+(?:bombo\s*)?([Bb][1-5])\s*$/);
     if (bm) {
       bombo = bm[1].toUpperCase();
-      line = line.slice(0, bm.index).trim();
+      line = line.slice(0, bm.index).trim(); // B1-B5
     }
 
     var name = line.replace(/\s*-\s*$/, '').trim().toUpperCase();
@@ -1028,6 +1078,184 @@ document.getElementById('btnResetAll').addEventListener('click', async function(
   renderGlobal();
   alert('Todo borrado');
 });
+
+
+// ========== BOMBOS ==========
+document.getElementById('btnAutoBombos') && document.getElementById('btnAutoBombos').addEventListener('click', function() {
+  var selected = PLAYERS.filter(function(p) { return jornadaSelected.has(p.id); })
+    .sort(function(a,b) { return b.points - a.points; });
+  if (selected.length === 0) return alert('No hay jugadores seleccionados');
+
+  var n = selected.length;
+  // 4 bombos iguales; sobrantes al final van a B4. Libres (0 pts) -> B5
+  var withPoints = selected.filter(function(p) { return p.points > 0; });
+  var libres = selected.filter(function(p) { return p.points <= 0; });
+
+  var size = Math.ceil(withPoints.length / 4) || 1;
+  withPoints.forEach(function(p, i) {
+    var b = Math.min(4, Math.floor(i / size) + 1);
+    p.bombo = 'B' + b;
+  });
+  libres.forEach(function(p) { p.bombo = 'B5'; });
+
+  renderJornadaSelect();
+  alert('Bombos asignados: ' + withPoints.length + ' en B1-B4, ' + libres.length + ' libres (B5)');
+});
+
+document.getElementById('btnRangeBombo') && document.getElementById('btnRangeBombo').addEventListener('click', function() {
+  var from = parseInt(document.getElementById('bomboFrom').value, 10);
+  var to = parseInt(document.getElementById('bomboTo').value, 10);
+  var bombo = document.getElementById('bomboValue').value;
+  if (!from || !to || from > to) return alert('Rango inválido (desde ≤ hasta)');
+
+  var selected = PLAYERS.filter(function(p) { return jornadaSelected.has(p.id); })
+    .sort(function(a,b) { return b.points - a.points; });
+
+  var count = 0;
+  for (var i = from - 1; i < to && i < selected.length; i++) {
+    selected[i].bombo = bombo;
+    count++;
+  }
+  renderJornadaSelect();
+  alert('Asignado ' + bombo + ' a ' + count + ' jugadores (posiciones ' + from + '-' + to + ')');
+});
+
+document.getElementById('btnClearJornadaPlayers') && document.getElementById('btnClearJornadaPlayers').addEventListener('click', async function() {
+  if (!confirm('¿Borrar todos los inscritos de esta jornada/torneo?')) return;
+  try {
+    jornadaSelected.clear();
+    dbData.jornadaPlayerIds = [];
+    await supabaseClient.from('jornada_players').upsert({
+      jornada: dbData.currentJornada || 1,
+      player_ids: []
+    }, { onConflict: 'jornada' });
+    document.getElementById('jornadaSelCount').textContent = '0';
+    renderJornadaSelect();
+    renderOnce();
+    alert('Inscritos borrados. Listo para el siguiente torneo.');
+  } catch (e) { alert(e.message); }
+});
+
+// ========== PASTE RESULTS ==========
+document.getElementById('btnParseResults') && document.getElementById('btnParseResults').addEventListener('click', async function() {
+  var raw = document.getElementById('resultsPasteList').value.trim();
+  if (!raw) return alert('Pega la lista de resultados');
+
+  var lines = raw.split(/\n+/);
+  var ok = 0, fail = [];
+  var jornada = dbData.currentJornada || 1;
+
+  var norm = function(s) {
+    return s.toUpperCase()
+      .replace(/[ÁÀÄÂ]/g,'A').replace(/[ÉÈËÊ]/g,'E')
+      .replace(/[ÍÌÏÎ]/g,'I').replace(/[ÓÒÖÔ]/g,'O')
+      .replace(/[ÚÙÜÛ]/g,'U').replace(/Ñ/g,'N');
+  };
+
+  for (var li = 0; li < lines.length; li++) {
+    var line = lines[li].trim();
+    if (!line) continue;
+    // Remove leading number
+    line = line.replace(/^\d+[\.\)\-\:]\s*/, '').replace(/^\d+\s+/, '');
+    // Last number is points
+    var pm = line.match(/(.+?)\s+([\d]+(?:[.,]\d+)?)\s*$/);
+    if (!pm) { fail.push(line); continue; }
+    var name = pm[1].trim().toUpperCase();
+    var pts = parseFloat(pm[2].replace(',', '.'));
+
+    var p = PLAYERS.find(function(x) { return x.name.toUpperCase() === name; });
+    if (!p) p = PLAYERS.find(function(x) { return norm(x.name) === norm(name); });
+    if (!p) p = PLAYERS.find(function(x) { return norm(x.name).indexOf(norm(name)) !== -1; });
+
+    if (!p || isNaN(pts)) { fail.push(name || line); continue; }
+
+    try {
+      await supabaseClient.from('jornada_results').delete().eq('jornada', jornada).eq('player_id', p.id);
+      await supabaseClient.from('jornada_results').insert({ jornada: jornada, player_id: p.id, points: pts });
+      dbData.results[p.id] = pts;
+      ok++;
+    } catch (e) { fail.push(name); }
+  }
+
+  var st = document.getElementById('resultsParseStatus');
+  st.textContent = 'Cargados: ' + ok + (fail.length ? ' | Fallos: ' + fail.length : '');
+  renderResultInputs();
+  alert('Resultados cargados: ' + ok + (fail.length ? '\nNo encontrados: ' + fail.slice(0,8).join(', ') : ''));
+});
+
+// ========== EDIT PANEL ==========
+function renderEditPanel() {
+  var data = loadData();
+  var gEl = document.getElementById('editGlobalList');
+  var jEl = document.getElementById('editJornadaList');
+  if (!gEl || !jEl) return;
+
+  var globalList = Object.keys(data.global).map(function(c) {
+    return { coach: c, totalPoints: data.global[c].totalPoints, wins: data.global[c].wins };
+  }).sort(function(a,b) { return b.totalPoints - a.totalPoints; });
+
+  gEl.innerHTML = globalList.length === 0 ? '<div class="empty">Sin datos globales</div>' :
+    globalList.map(function(g) {
+      return '<div class="player-card" style="flex-wrap:wrap;gap:8px;">' +
+        '<div class="player-info" style="min-width:120px;"><div class="player-name">' + g.coach + '</div></div>' +
+        '<label style="font-size:0.75rem;color:var(--muted);">Puntos <input type="number" class="result-input" data-edit-global="' + g.coach.replace(/"/g,'&quot;') + '" data-field="pts" value="' + g.totalPoints + '" step="0.1"></label>' +
+        '<label style="font-size:0.75rem;color:var(--muted);">Victorias <input type="number" class="result-input" data-edit-global="' + g.coach.replace(/"/g,'&quot;') + '" data-field="wins" value="' + g.wins + '" step="1" min="0"></label>' +
+        '<button class="btn btn-sm btn-primary" onclick="saveGlobalEdit(\'' + g.coach.replace(/'/g,"\\'") + '\')">Guardar</button>' +
+        '</div>';
+    }).join('');
+
+  var scores = data.jornadaScores || [];
+  jEl.innerHTML = scores.length === 0 ? '<div class="empty">No hay jornada calculada</div>' :
+    scores.map(function(s, i) {
+      return '<div class="player-card" style="flex-wrap:wrap;gap:8px;">' +
+        '<div class="player-info" style="min-width:120px;"><div class="player-name">' + (i+1) + '. ' + s.coach + '</div><div class="player-club">Coste: ' + s.cost.toFixed(2) + ' M</div></div>' +
+        '<label style="font-size:0.75rem;color:var(--muted);">Puntos jornada <input type="number" class="result-input" data-edit-jornada="' + s.coach.replace(/"/g,'&quot;') + '" value="' + s.points + '" step="0.1"></label>' +
+        '</div>';
+    }).join('');
+}
+
+window.saveGlobalEdit = async function(coach) {
+  var ptsInp = document.querySelector('input[data-edit-global="' + coach + '"][data-field="pts"]');
+  var winsInp = document.querySelector('input[data-edit-global="' + coach + '"][data-field="wins"]');
+  // querySelector with special chars may fail - use filter
+  var inputs = document.querySelectorAll('input[data-edit-global]');
+  var pts = 0, wins = 0;
+  inputs.forEach(function(inp) {
+    if (inp.getAttribute('data-edit-global') === coach) {
+      if (inp.getAttribute('data-field') === 'pts') pts = parseFloat(inp.value) || 0;
+      if (inp.getAttribute('data-field') === 'wins') wins = parseInt(inp.value, 10) || 0;
+    }
+  });
+  try {
+    await supabaseClient.from('global_scores').upsert({
+      coach: coach, total_points: pts, wins: wins
+    }, { onConflict: 'coach' });
+    dbData.global[coach] = { totalPoints: pts, wins: wins };
+    alert('Guardado: ' + coach);
+    renderEditPanel();
+    renderGlobal();
+  } catch (e) { alert(e.message); }
+};
+
+document.getElementById('btnRecalcFromEdit') && document.getElementById('btnRecalcFromEdit').addEventListener('click', function() {
+  var inputs = document.querySelectorAll('input[data-edit-jornada]');
+  var scores = [];
+  inputs.forEach(function(inp) {
+    var coach = inp.getAttribute('data-edit-jornada');
+    var pts = parseFloat(inp.value) || 0;
+    var f = dbData.formations.find(function(x) { return x.coach === coach; });
+    scores.push({ coach: coach, points: pts, cost: f ? Number(f.cost) : 0 });
+  });
+  scores.sort(function(a,b) {
+    if (b.points !== a.points) return b.points - a.points;
+    return a.cost - b.cost;
+  });
+  dbData.jornadaScores = scores;
+  renderEditPanel();
+  renderJornada();
+  alert('Orden de jornada actualizado (solo en esta sesión / hasta recalcular)');
+});
+
 
 // Init
 (async function() {
