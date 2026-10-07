@@ -236,8 +236,7 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
       <div class="card">
         <div class="section-title">Asignar bombos</div>
         <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
-          Divide automáticamente a los seleccionados por puntos (más puntos = B1).
-          Libre = B5.
+          Divide por puntos en B1-B4 (más puntos = B1). Sin club = B5 (libres).
         </p>
         <div class="btn-row">
           <button class="btn btn-blue" id="btnAutoBombos" style="flex:1">Auto: 4 bombos iguales</button>
@@ -1086,20 +1085,24 @@ document.getElementById('btnAutoBombos') && document.getElementById('btnAutoBomb
     .sort(function(a,b) { return b.points - a.points; });
   if (selected.length === 0) return alert('No hay jugadores seleccionados');
 
-  var n = selected.length;
-  // 4 bombos iguales; sobrantes al final van a B4. Libres (0 pts) -> B5
-  var withPoints = selected.filter(function(p) { return p.points > 0; });
-  var libres = selected.filter(function(p) { return p.points <= 0; });
+  // Libres = sin club (B5). El resto se reparte en B1-B4 por puntos
+  function sinClub(p) {
+    var c = (p.club || '').trim().toUpperCase();
+    return !c || c === '-' || c === 'S.C.' || c === 'SC' || c === 'LIBRE' || c === 'SIN CLUB';
+  }
 
-  var size = Math.ceil(withPoints.length / 4) || 1;
-  withPoints.forEach(function(p, i) {
+  var libres = selected.filter(sinClub);
+  var conClub = selected.filter(function(p) { return !sinClub(p); });
+
+  var size = Math.ceil(conClub.length / 4) || 1;
+  conClub.forEach(function(p, i) {
     var b = Math.min(4, Math.floor(i / size) + 1);
     p.bombo = 'B' + b;
   });
   libres.forEach(function(p) { p.bombo = 'B5'; });
 
   renderJornadaSelect();
-  alert('Bombos asignados: ' + withPoints.length + ' en B1-B4, ' + libres.length + ' libres (B5)');
+  alert('Bombos: ' + conClub.length + ' en B1-B4, ' + libres.length + ' libres sin club (B5)');
 });
 
 document.getElementById('btnRangeBombo') && document.getElementById('btnRangeBombo').addEventListener('click', function() {
