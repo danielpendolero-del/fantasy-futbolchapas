@@ -220,12 +220,28 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
     <!-- Jugadores de la jornada -->
     <div id="atab-jornada" class="atab-panel">
       <div class="card">
-        <div class="section-title">Jugadores que participan esta jornada</div>
-        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">Marca quién juega en esta competición.</p>
-        <input type="text" id="jornadaSearch" placeholder="Buscar..." style="margin-bottom:10px;">
-        <div id="jornadaSelectList" style="max-height:40vh; overflow-y:auto;"></div>
+        <div class="section-title">Pegar lista de participantes</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
+          Un nombre por línea. Opcional: indica el bombo al final.<br>
+          <b>Ejemplo:</b><br>
+          <code style="font-size:0.72rem;">1. JUAN LUIS JIMENEZ MORENO B1<br>
+2. DAVID RUIZ REMON B2<br>
+MARCOS FERNANDEZ DE LUCAS B1<br>
+PEDRO NIETO SERRANO</code>
+        </p>
+        <textarea id="jornadaPasteList" placeholder="1. JUAN LUIS JIMENEZ MORENO B1&#10;2. DAVID RUIZ REMON B2&#10;MARCOS FERNANDEZ DE LUCAS B1" style="min-height:120px;"></textarea>
         <div class="btn-row">
-          <button class="btn btn-blue" id="btnSaveJornadaPlayers" style="flex:1">Guardar selección (<span id="jornadaSelCount">0</span>)</button>
+          <button class="btn btn-primary" id="btnParseJornadaList" style="flex:1">Seleccionar de la lista</button>
+        </div>
+        <div id="jornadaParseStatus" style="font-size:0.8rem; color:var(--muted); margin-top:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Jugadores seleccionados (<span id="jornadaSelCount">0</span>)</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">También puedes marcar/desmarcar a mano.</p>
+        <input type="text" id="jornadaSearch" placeholder="Buscar..." style="margin-bottom:10px;">
+        <div id="jornadaSelectList" style="max-height:35vh; overflow-y:auto;"></div>
+        <div class="btn-row">
+          <button class="btn btn-blue" id="btnSaveJornadaPlayers" style="flex:1">Guardar selección</button>
         </div>
       </div>
     </div>
@@ -827,6 +843,61 @@ window.toggleJornada = function(id, checked) {
   if (checked) jornadaSelected.add(id); else jornadaSelected.delete(id);
   document.getElementById('jornadaSelCount').textContent = jornadaSelected.size;
 };
+
+document.getElementById('btnParseJornadaList').addEventListener('click', function() {
+  var raw = document.getElementById('jornadaPasteList').value.trim();
+  if (!raw) return alert('Pega la lista de nombres');
+
+  var lines = raw.split(/\n+/);
+  var found = 0;
+  var notFound = [];
+
+  lines.forEach(function(line) {
+    line = line.trim();
+    if (!line) return;
+
+    // Quitar numero al inicio: 1.  1)  1-  1:
+    line = line.replace(/^\d+[\.\)\-\:]\s*/, '').replace(/^\d+\s+/, '');
+
+    // Bombo opcional al final: B1 B2 B3 B4 o bombo1
+    var bombo = null;
+    var bm = line.match(/\s+(?:bombo\s*)?([Bb][1-4])\s*$/);
+    if (bm) {
+      bombo = bm[1].toUpperCase();
+      line = line.slice(0, bm.index).trim();
+    }
+
+    var name = line.replace(/\s*-\s*$/, '').trim().toUpperCase();
+    if (!name) return;
+
+    var norm = function(s) {
+      return s.toUpperCase()
+        .replace(/[ÁÀÄÂ]/g,'A').replace(/[ÉÈËÊ]/g,'E')
+        .replace(/[ÍÌÏÎ]/g,'I').replace(/[ÓÒÖÔ]/g,'O')
+        .replace(/[ÚÙÜÛ]/g,'U').replace(/Ñ/g,'N');
+    };
+
+    var p = PLAYERS.find(function(x) { return x.name.toUpperCase() === name; });
+    if (!p) p = PLAYERS.find(function(x) { return norm(x.name) === norm(name); });
+    if (!p) p = PLAYERS.find(function(x) { return norm(x.name).indexOf(norm(name)) !== -1; });
+    if (!p) p = PLAYERS.find(function(x) { return norm(name).indexOf(norm(x.name)) !== -1; });
+
+    if (p) {
+      jornadaSelected.add(p.id);
+      if (bombo) p.bombo = bombo;
+      found++;
+    } else {
+      notFound.push(name);
+    }
+  });
+
+  var st = document.getElementById('jornadaParseStatus');
+  st.textContent = 'Seleccionados: ' + found + (notFound.length ? ' | No encontrados: ' + notFound.length + ' → ' + notFound.slice(0,8).join(', ') : '');
+  document.getElementById('jornadaSelCount').textContent = jornadaSelected.size;
+  renderJornadaSelect();
+  alert('Seleccionados ' + found + ' jugadores' + (notFound.length ? '\nNo encontrados: ' + notFound.length : ''));
+});
+
 document.getElementById('btnSaveJornadaPlayers').addEventListener('click', async function() {
   var unique = Array.from(jornadaSelected);
   try {
