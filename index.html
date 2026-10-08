@@ -358,8 +358,11 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
     <div class="section-title" style="margin-top:16px;">Sugerir una nota</div>
     <input type="text" id="noteAuthor" placeholder="Tu nombre (opcional)" style="margin-bottom:8px;">
     <textarea id="noteText" placeholder="Nota sobre este jugador..."></textarea>
-    <input type="url" id="noteImageUrl" placeholder="URL de imagen (opcional, ej: https://...)" style="margin-top:8px; margin-bottom:8px;">
-    <p style="font-size:0.72rem; color:var(--muted); margin-bottom:8px;">Puedes pegar el enlace de una foto (Imgur, Google Drive público, etc.)</p>
+    <div style="margin-top:8px; margin-bottom:8px;">
+      <label style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:4px;">Foto (opcional, de tu galería)</label>
+      <input type="file" id="noteImageFile" accept="image/*" style="padding:8px;">
+      <div id="noteImagePreview" style="margin-top:8px;"></div>
+    </div>
     <div class="btn-row">
       <button class="btn btn-primary" id="btnSubmitNote" style="flex:1">Enviar sugerencia</button>
     </div>
@@ -613,8 +616,11 @@ window.openPlayerModal = function(id) {
     }).join('');
   document.getElementById('noteAuthor').value = '';
   document.getElementById('noteText').value = '';
-  var imgInp = document.getElementById('noteImageUrl');
-  if (imgInp) imgInp.value = '';
+  noteImageData = null;
+  var fi = document.getElementById('noteImageFile');
+  if (fi) fi.value = '';
+  var prev = document.getElementById('noteImagePreview');
+  if (prev) prev.innerHTML = '';
   document.getElementById('playerModal').classList.add('show');
 };
 document.getElementById('closeModal').addEventListener('click', function() {
@@ -623,20 +629,63 @@ document.getElementById('closeModal').addEventListener('click', function() {
 document.getElementById('playerModal').addEventListener('click', function(e) {
   if (e.target.id === 'playerModal') document.getElementById('playerModal').classList.remove('show');
 });
+function compressImage(file, maxW, quality) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+var noteImageData = null;
+document.getElementById('noteImageFile') && document.getElementById('noteImageFile').addEventListener('change', async function(ev) {
+  var file = ev.target.files && ev.target.files[0];
+  noteImageData = null;
+  var prev = document.getElementById('noteImagePreview');
+  if (!file) { if (prev) prev.innerHTML = ''; return; }
+  if (!file.type.match(/^image\//)) { alert('Solo imágenes'); ev.target.value = ''; return; }
+  try {
+    if (prev) prev.innerHTML = '<span style="color:var(--muted);font-size:0.8rem;">Comprimiendo...</span>';
+    noteImageData = await compressImage(file, 700, 0.65);
+    if (prev) prev.innerHTML = '<img class="note-img" src="' + noteImageData + '" alt="Vista previa">';
+  } catch (e) {
+    alert('No se pudo leer la imagen');
+    noteImageData = null;
+    if (prev) prev.innerHTML = '';
+  }
+});
+
 document.getElementById('btnSubmitNote').addEventListener('click', async function() {
   var note = document.getElementById('noteText').value.trim();
-  var imageUrl = (document.getElementById('noteImageUrl') && document.getElementById('noteImageUrl').value.trim()) || '';
-  if (!note && !imageUrl) return alert('Escribe una nota o pon una URL de imagen');
-  if (!note) note = '(Imagen)';
+  if (!note && !noteImageData) return alert('Escribe una nota o sube una foto');
+  if (!note) note = '(Foto)';
   var author = document.getElementById('noteAuthor').value.trim() || 'Anónimo';
   try {
     var payload = { player_id: currentPlayerId, author: author, note: note, status: 'pending' };
-    if (imageUrl) payload.image_url = imageUrl;
+    if (noteImageData) payload.image_url = noteImageData;
     var err = (await supabaseClient.from('player_notes').insert(payload)).error;
     if (err) throw err;
     alert('Nota enviada. El administrador la revisará.');
     document.getElementById('noteText').value = '';
-    if (document.getElementById('noteImageUrl')) document.getElementById('noteImageUrl').value = '';
+    noteImageData = null;
+    var fi = document.getElementById('noteImageFile');
+    if (fi) fi.value = '';
+    var prev = document.getElementById('noteImagePreview');
+    if (prev) prev.innerHTML = '';
   } catch (e) { alert('Error: ' + e.message); }
 });
 
