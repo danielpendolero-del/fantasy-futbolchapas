@@ -96,6 +96,7 @@ th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: 
 .modal .close { float: right; background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; }
 .note-item { background: var(--card2); border-radius: 9px; padding: 10px; margin-bottom: 8px; font-size: 0.88rem; border-left: 3px solid var(--accent); }
 .note-author { font-size: 0.72rem; color: var(--muted); margin-bottom: 3px; }
+.note-img { max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 8px; display: block; object-fit: contain; background: #0f172a; }
 .admin-login { max-width: 340px; margin: 40px auto; text-align: center; }
 .admin-login input { margin-bottom: 12px; text-align: center; }
 .result-input { width: 72px; text-align: center; padding: 7px; font-size: 0.9rem; }
@@ -357,6 +358,8 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
     <div class="section-title" style="margin-top:16px;">Sugerir una nota</div>
     <input type="text" id="noteAuthor" placeholder="Tu nombre (opcional)" style="margin-bottom:8px;">
     <textarea id="noteText" placeholder="Nota sobre este jugador..."></textarea>
+    <input type="url" id="noteImageUrl" placeholder="URL de imagen (opcional, ej: https://...)" style="margin-top:8px; margin-bottom:8px;">
+    <p style="font-size:0.72rem; color:var(--muted); margin-bottom:8px;">Puedes pegar el enlace de una foto (Imgur, Google Drive público, etc.)</p>
     <div class="btn-row">
       <button class="btn btn-primary" id="btnSubmitNote" style="flex:1">Enviar sugerencia</button>
     </div>
@@ -605,10 +608,13 @@ window.openPlayerModal = function(id) {
   document.getElementById('modalNotes').innerHTML = approved.length === 0
     ? '<div class="empty" style="padding:12px;">Sin notas aprobadas</div>'
     : approved.map(function(n) {
-      return '<div class="note-item"><div class="note-author">' + (n.author || 'Anónimo') + '</div>' + n.note + '</div>';
+      var img = n.image_url ? '<img class="note-img" src="' + n.image_url.replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+      return '<div class="note-item"><div class="note-author">' + (n.author || 'Anónimo') + '</div>' + n.note + img + '</div>';
     }).join('');
   document.getElementById('noteAuthor').value = '';
   document.getElementById('noteText').value = '';
+  var imgInp = document.getElementById('noteImageUrl');
+  if (imgInp) imgInp.value = '';
   document.getElementById('playerModal').classList.add('show');
 };
 document.getElementById('closeModal').addEventListener('click', function() {
@@ -619,15 +625,18 @@ document.getElementById('playerModal').addEventListener('click', function(e) {
 });
 document.getElementById('btnSubmitNote').addEventListener('click', async function() {
   var note = document.getElementById('noteText').value.trim();
-  if (!note) return alert('Escribe una nota');
+  var imageUrl = (document.getElementById('noteImageUrl') && document.getElementById('noteImageUrl').value.trim()) || '';
+  if (!note && !imageUrl) return alert('Escribe una nota o pon una URL de imagen');
+  if (!note) note = '(Imagen)';
   var author = document.getElementById('noteAuthor').value.trim() || 'Anónimo';
   try {
-    var err = (await supabaseClient.from('player_notes').insert({
-      player_id: currentPlayerId, author: author, note: note, status: 'pending'
-    })).error;
+    var payload = { player_id: currentPlayerId, author: author, note: note, status: 'pending' };
+    if (imageUrl) payload.image_url = imageUrl;
+    var err = (await supabaseClient.from('player_notes').insert(payload)).error;
     if (err) throw err;
     alert('Nota enviada. El administrador la revisará.');
     document.getElementById('noteText').value = '';
+    if (document.getElementById('noteImageUrl')) document.getElementById('noteImageUrl').value = '';
   } catch (e) { alert('Error: ' + e.message); }
 });
 
@@ -720,7 +729,8 @@ function renderAdmin() {
   notesEl.innerHTML = pending.length === 0 ? '<div class="empty">No hay notas pendientes</div>' :
     pending.map(function(n) {
       var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
-      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="font-weight:600">' + (p ? p.name : 'Jugador '+n.player_id) + '</div><div style="font-size:0.85rem">' + n.note + '</div><div style="font-size:0.72rem;color:var(--muted)">Por: ' + (n.author||'Anónimo') + '</div><div class="btn-row" style="margin:0"><button class="btn btn-sm btn-primary" onclick="approveNote('+n.id+')">Aprobar</button><button class="btn btn-sm btn-danger" onclick="rejectNote('+n.id+')">Rechazar</button><button class="btn btn-sm" style="background:var(--border);color:var(--text)" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
+      var imgHtml = n.image_url ? '<img class="note-img" src="' + String(n.image_url).replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="font-weight:600">' + (p ? p.name : 'Jugador '+n.player_id) + '</div><div style="font-size:0.85rem">' + n.note + '</div>' + imgHtml + '<div style="font-size:0.72rem;color:var(--muted)">Por: ' + (n.author||'Anónimo') + (n.image_url ? ' · Con imagen' : '') + '</div><div class="btn-row" style="margin:0"><button class="btn btn-sm btn-primary" onclick="approveNote('+n.id+')">Aprobar</button><button class="btn btn-sm btn-danger" onclick="rejectNote('+n.id+')">Rechazar</button><button class="btn btn-sm" style="background:var(--border);color:var(--text)" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
     }).join('');
 
   var other = data.notes.filter(function(n) { return n.status !== 'pending'; });
@@ -728,7 +738,8 @@ function renderAdmin() {
     other.map(function(n) {
       var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
       var badge = n.status === 'approved' ? '<span class="badge badge-approved">Aprobada</span>' : '<span class="badge badge-pending">Rechazada</span>';
-      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;justify-content:space-between;width:100%"><div style="font-weight:600">' + (p?p.name:'Jugador '+n.player_id) + '</div>' + badge + '</div><div style="font-size:0.85rem">' + n.note + '</div><button class="btn btn-sm btn-danger" onclick="deleteNote('+n.id+')">Eliminar</button></div>';
+      var imgHtml2 = n.image_url ? '<img class="note-img" src="' + String(n.image_url).replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;justify-content:space-between;width:100%"><div style="font-weight:600">' + (p?p.name:'Jugador '+n.player_id) + '</div>' + badge + '</div><div style="font-size:0.85rem">' + n.note + '</div>' + imgHtml2 + '<button class="btn btn-sm btn-danger" onclick="deleteNote('+n.id+')">Eliminar</button></div>';
     }).join('');
 }
 
