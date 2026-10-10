@@ -1,1 +1,1551 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fantasy Futbolchapas</title>
+<style>
+:root {
+  --bg: #0b1120; --card: #1e293b; --card2: #162032; --accent: #22c55e;
+  --blue: #3b82f6; --danger: #ef4444; --warning: #f59e0b;
+  --text: #f1f5f9; --muted: #94a3b8; --border: #334155;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text); padding: 12px;
+  max-width: 980px; margin: 0 auto; min-height: 100vh; line-height: 1.4;
+}
+header { text-align: center; margin-bottom: 16px; padding: 12px 0 8px; }
+header h1 { font-size: 1.45rem; color: var(--accent); font-weight: 800; user-select: none; }
+header .sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+.tabs {
+  display: flex; gap: 6px; margin-bottom: 16px; background: var(--card);
+  padding: 6px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap;
+}
+.tab {
+  flex: 1; min-width: 70px; padding: 10px 6px; background: transparent; border: none;
+  border-radius: 8px; color: var(--muted); font-size: 0.8rem; font-weight: 600; cursor: pointer;
+}
+.tab.active { background: var(--accent); color: #000; }
+.panel { display: none; }
+.panel.active { display: block; }
+.card {
+  background: var(--card); border-radius: 14px; padding: 14px;
+  border: 1px solid var(--border); margin-bottom: 12px;
+}
+.btn {
+  border: none; border-radius: 9px; padding: 10px 14px; font-weight: 600;
+  font-size: 0.85rem; cursor: pointer;
+}
+.btn-primary { background: var(--accent); color: #000; }
+.btn-blue { background: var(--blue); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-warning { background: var(--warning); color: #000; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+.btn-sm { padding: 6px 10px; font-size: 0.75rem; border-radius: 6px; }
+input, textarea {
+  background: #0f172a; border: 1px solid var(--border); border-radius: 9px;
+  color: var(--text); padding: 10px 12px; font-size: 0.95rem; width: 100%; font-family: inherit;
+}
+input:focus, textarea:focus { outline: 2px solid var(--accent); }
+textarea { min-height: 100px; resize: vertical; }
+.budget-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
+.budget-item { text-align: center; }
+.budget-item label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; display: block; }
+.budget-item span { font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+.player-card {
+  background: var(--card2); border-radius: 11px; padding: 10px 12px;
+  display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); margin-bottom: 7px;
+}
+.player-card.selected { border-color: var(--accent); background: #14532d22; }
+.player-info { flex: 1; min-width: 0; }
+.player-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-club { font-size: 0.72rem; color: var(--muted); }
+.player-price { font-weight: 700; color: var(--accent); white-space: nowrap; font-size: 0.9rem; }
+.bombo { display: inline-block; font-size: 0.58rem; padding: 1px 5px; border-radius: 4px; margin-left: 4px; font-weight: 700; }
+.bombo.b1 { background: #854d0e; color: #fef08a; }
+.bombo.b2 { background: #1e3a8a; color: #bfdbfe; }
+.bombo.b3 { background: #166534; color: #bbf7d0; }
+.bombo.b4 { background: #4c1d95; color: #e9d5ff; }
+.bombo.b5 { background: #374151; color: #d1d5db; }
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+th, td { padding: 9px 6px; text-align: left; border-bottom: 1px solid var(--border); }
+th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; }
+.rank { font-weight: 700; color: var(--accent); width: 28px; }
+.empty { text-align: center; color: var(--muted); padding: 24px 12px; font-size: 0.9rem; }
+.success { background: #14532d; color: #bbf7d0; padding: 11px; border-radius: 9px; margin-bottom: 12px; font-size: 0.88rem; }
+.warning { background: #713f12; color: #fef08a; padding: 11px; border-radius: 9px; margin-bottom: 12px; font-size: 0.88rem; }
+.section-title {
+  font-size: 0.8rem; color: var(--muted); margin: 14px 0 8px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none;
+  align-items: flex-end; justify-content: center; z-index: 100; padding: 16px;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: var(--card); border-radius: 18px 18px 14px 14px; width: 100%;
+  max-width: 480px; max-height: 85vh; overflow-y: auto; padding: 20px; border: 1px solid var(--border);
+}
+.modal h3 { font-size: 1.1rem; margin-bottom: 4px; }
+.modal .club { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; }
+.modal .close { float: right; background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; }
+.note-item { background: var(--card2); border-radius: 9px; padding: 10px; margin-bottom: 8px; font-size: 0.88rem; border-left: 3px solid var(--accent); }
+.note-author { font-size: 0.72rem; color: var(--muted); margin-bottom: 3px; }
+.note-img { max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 8px; display: block; object-fit: contain; background: #0f172a; }
+.admin-login { max-width: 340px; margin: 40px auto; text-align: center; }
+.admin-login input { margin-bottom: 12px; text-align: center; }
+.result-input { width: 72px; text-align: center; padding: 7px; font-size: 0.9rem; }
+.badge { display: inline-block; font-size: 0.65rem; padding: 2px 7px; border-radius: 99px; font-weight: 700; }
+.badge-approved { background: #14532d; color: #bbf7d0; }
+.badge-pending { background: #713f12; color: #fef08a; }
+footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72rem; color: var(--muted); border-top: 1px solid var(--border); }
+.atab-panel { display: none; }
+.atab-panel.active { display: block; }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="mainTitle">⚽ Fantasy Futbolchapas</h1>
+  <div class="sub" id="compSub">Cargando...</div>
+</header>
+
+<div class="tabs" id="mainTabs">
+  <button class="tab active" data-tab="once">Mi Once</button>
+  <button class="tab" data-tab="jornada">Jornada</button>
+  <button class="tab" data-tab="global">Global</button>
+</div>
+
+<!-- MI ONCE -->
+<div id="panel-once" class="panel active">
+  <div class="card">
+    <input type="text" id="coachName" placeholder="Tu nombre de entrenador..." maxlength="40">
+  </div>
+  <div id="alreadySubmitted" class="success" style="display:none;"></div>
+  <div class="budget-bar card">
+    <div class="budget-item"><label>Presupuesto</label><span id="maxBudgetShow">2000</span></div>
+    <div class="budget-item"><label>Gastado</label><span id="spent">0.00</span></div>
+    <div class="budget-item"><label>Restante</label><span id="remaining">2000.00</span></div>
+    <div class="budget-item"><label>Jugadores</label><span id="count">0 / 11</span></div>
+  </div>
+  <input type="text" id="search" placeholder="Buscar jugador o club..." style="margin-bottom:12px;">
+  <div class="section-title">Tu once <span id="teamCount">0 jugadores</span></div>
+  <div id="teamList"></div>
+  <div class="section-title">Jugadores disponibles <span id="availableCount"></span></div>
+  <div id="playersList" style="max-height:42vh; overflow-y:auto;"></div>
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btnSubmit" style="flex:1">Enviar mi once (solo 1 vez)</button>
+  </div>
+</div>
+
+<!-- JORNADA -->
+<div id="panel-jornada" class="panel">
+  <div class="card">
+    <div class="section-title">Clasificación de la Jornada</div>
+    <div id="jornadaRanking"></div>
+  </div>
+</div>
+
+<!-- GLOBAL -->
+<div id="panel-global" class="panel">
+  <div class="card">
+    <div class="section-title">Clasificación Global</div>
+    <div id="globalRanking"></div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="panel-admin" class="panel">
+  <div id="adminLogin" class="admin-login card">
+    <p style="margin-bottom:14px; font-weight:600;">Panel de Administración</p>
+    <input type="password" id="adminPass" placeholder="Contraseña">
+    <button class="btn btn-primary" id="btnLogin" style="width:100%">Entrar</button>
+    <button class="btn" id="btnExitAdmin" style="width:100%; margin-top:10px; background:var(--border); color:var(--text);">Volver</button>
+  </div>
+
+  <div id="adminContent" style="display:none;">
+    <div class="tabs" id="adminTabs" style="margin-bottom:14px;">
+      <button class="tab active" data-atab="formaciones">Formaciones</button>
+      <button class="tab" data-atab="plantilla">Plantilla</button>
+      <button class="tab" data-atab="jornada">Jornada</button>
+      <button class="tab" data-atab="resultados">Resultados</button>
+      <button class="tab" data-atab="notas">Notas</button>
+      <button class="tab" data-atab="editar">Editar</button>
+      <button class="tab" data-atab="config">Config</button>
+    </div>
+
+    <!-- Formaciones -->
+    <div id="atab-formaciones" class="atab-panel active">
+      <div class="card">
+        <div class="section-title">Formaciones enviadas (<span id="formCount">0</span>)</div>
+        <div id="adminFormations"></div>
+        <div class="btn-row" style="margin-top:10px;">
+          <button class="btn btn-warning" id="btnCloseJornada" style="flex:1">Cerrar jornada (borrar onces)</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plantilla (gestión de jugadores en BD) -->
+    <div id="atab-plantilla" class="atab-panel">
+      <div class="card">
+        <div class="section-title">Plantilla actual (<span id="dbPlayersCount">0</span> jugadores)</div>
+        <input type="text" id="plantillaSearch" placeholder="Buscar en plantilla..." style="margin-bottom:10px;">
+        <div id="plantillaList" style="max-height:30vh; overflow-y:auto;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Pegar lista de jugadores</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
+          Pega líneas con este formato (una por jugador):<br>
+          <code style="font-size:0.72rem;">{id:1, name:"NOMBRE", club:"CLUB", points:100.00}</code>
+        </p>
+        <textarea id="bulkPlayersInput" placeholder='{id:1, name:"JUAN LUIS JIMENEZ MORENO", club:"MADRID", points:572.13},&#10;{id:2, name:"DAVID RUIZ REMON", club:"FUENLABRADA", points:529.00},'></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnImportPlayers" style="flex:1">Importar jugadores</button>
+          <button class="btn btn-danger" id="btnClearPlayers">Borrar toda la plantilla</button>
+        </div>
+        <div id="importStatus" style="font-size:0.8rem; color:var(--muted); margin-top:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Añadir un jugador</div>
+        <input type="number" id="newId" placeholder="ID" style="margin-bottom:6px;">
+        <input type="text" id="newName" placeholder="Nombre completo" style="margin-bottom:6px;">
+        <input type="text" id="newClub" placeholder="Club" style="margin-bottom:6px;">
+        <input type="number" id="newPoints" placeholder="Puntos / Precio" step="0.01" style="margin-bottom:6px;">
+        <input type="text" id="newBombo" placeholder="Bombo (B1, B2, B3, B4)" style="margin-bottom:6px;">
+        <button class="btn btn-blue" id="btnAddPlayer" style="width:100%">Añadir jugador</button>
+      </div>
+    </div>
+
+    <!-- Jugadores de la jornada -->
+    <div id="atab-jornada" class="atab-panel">
+      <div class="card">
+        <div class="section-title">Pegar lista de participantes</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
+          Un nombre por línea. Opcional: bombo al final (B1-B5).<br>
+          <code style="font-size:0.72rem;">1. JUAN LUIS JIMENEZ MORENO B1<br>2. DAVID RUIZ REMON B2</code>
+        </p>
+        <textarea id="jornadaPasteList" placeholder="1. JUAN LUIS JIMENEZ MORENO B1&#10;2. DAVID RUIZ REMON B2" style="min-height:100px;"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnParseJornadaList" style="flex:1">Seleccionar de la lista</button>
+        </div>
+        <div id="jornadaParseStatus" style="font-size:0.8rem; color:var(--muted); margin-top:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Asignar bombos</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
+          Divide por puntos en B1-B4 (más puntos = B1). Sin club = B5 (libres).
+        </p>
+        <div class="btn-row">
+          <button class="btn btn-blue" id="btnAutoBombos" style="flex:1">Auto: 4 bombos iguales</button>
+        </div>
+        <p style="font-size:0.75rem; color:var(--muted); margin:8px 0 4px;">O por rango (posición en ranking de la selección):</p>
+        <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin-bottom:8px;">
+          <input type="number" id="bomboFrom" placeholder="Desde" style="width:70px;" min="1">
+          <input type="number" id="bomboTo" placeholder="Hasta" style="width:70px;" min="1">
+          <select id="bomboValue" style="width:80px; background:#0f172a; color:var(--text); border:1px solid var(--border); border-radius:9px; padding:8px;">
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="B3">B3</option>
+            <option value="B4">B4</option>
+            <option value="B5">B5</option>
+          </select>
+          <button class="btn btn-primary btn-sm" id="btnRangeBombo">Asignar rango</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title">Seleccionados (<span id="jornadaSelCount">0</span>)</div>
+        <input type="text" id="jornadaSearch" placeholder="Buscar..." style="margin-bottom:10px;">
+        <div id="jornadaSelectList" style="max-height:30vh; overflow-y:auto;"></div>
+        <div class="btn-row">
+          <button class="btn btn-blue" id="btnSaveJornadaPlayers" style="flex:1">Guardar selección</button>
+          <button class="btn btn-danger" id="btnClearJornadaPlayers">Borrar inscritos</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultados -->
+    <div id="atab-resultados" class="atab-panel">
+      <div class="card">
+        <div class="section-title">Pegar resultados</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
+          Formato: <code>1. NOMBRE 40</code> o <code>NOMBRE 40</code> (un jugador por línea)
+        </p>
+        <textarea id="resultsPasteList" placeholder="1. JUAN LUIS JIMENEZ MORENO 42&#10;2. DAVID RUIZ REMON 38&#10;PEDRO NIETO SERRANO 30" style="min-height:100px;"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnParseResults" style="flex:1">Cargar resultados</button>
+        </div>
+        <div id="resultsParseStatus" style="font-size:0.8rem; color:var(--muted); margin-top:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Resultados de la Jornada</div>
+        <input type="text" id="resultSearch" placeholder="Buscar jugador..." style="margin-bottom:10px;">
+        <div id="resultInputs" style="max-height:35vh; overflow-y:auto;"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnCalc">Calcular Jornada</button>
+          <button class="btn btn-danger" id="btnResetJornada">Resetear resultados</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notas -->
+    <div id="atab-notas" class="atab-panel">
+      <div class="card">
+        <div class="section-title">Pendientes (<span id="pendingNotesCount">0</span>)</div>
+        <div id="pendingNotes"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Todas las notas</div>
+        <div id="allNotes" style="max-height:30vh; overflow-y:auto;"></div>
+      </div>
+    </div>
+
+    <!-- Editar clasificaciones -->
+    <div id="atab-editar" class="atab-panel">
+      <div class="card">
+        <div class="section-title">Editar Global</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">Cambia puntos totales o victorias de un entrenador.</p>
+        <div id="editGlobalList" style="max-height:30vh; overflow-y:auto;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Editar Jornada actual</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">Ajusta los puntos de jornada de cada entrenador (solo visual/recalculo manual).</p>
+        <div id="editJornadaList" style="max-height:30vh; overflow-y:auto;"></div>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnRecalcFromEdit" style="flex:1">Recalcular orden jornada</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Config -->
+    <div id="atab-config" class="atab-panel">
+      <div class="card">
+        <div class="section-title">Nombre de la competición</div>
+        <input type="text" id="compNameInput" placeholder="Ej: Campeonato de España" style="margin-bottom:10px;">
+        <button class="btn btn-primary" id="btnSaveCompName" style="width:100%">Guardar nombre</button>
+      </div>
+      <div class="card">
+        <div class="section-title">Presupuesto máximo</div>
+        <input type="number" id="budgetInput" value="2000" style="margin-bottom:10px;">
+        <button class="btn btn-blue" id="btnSaveBudget" style="width:100%">Guardar presupuesto</button>
+      </div>
+      <div class="card">
+        <button class="btn btn-danger" id="btnResetAll" style="width:100%">Borrar TODO (formaciones + resultados + notas)</button>
+      </div>
+    </div>
+
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn" id="btnExitAdmin2" style="flex:1; background:var(--border); color:var(--text);">Salir del Admin</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal jugador -->
+<div class="modal-overlay" id="playerModal">
+  <div class="modal">
+    <button class="close" id="closeModal">×</button>
+    <h3 id="modalName"></h3>
+    <div class="club" id="modalClub"></div>
+    <div style="margin-bottom:14px;">
+      <span id="modalPrice" style="font-weight:700; color:var(--accent); font-size:1.15rem;"></span>
+      <span id="modalBombo" class="bombo" style="margin-left:8px;"></span>
+    </div>
+    <div class="section-title">Notas de la comunidad</div>
+    <div id="modalNotes"></div>
+    <div class="section-title" style="margin-top:16px;">Sugerir una nota</div>
+    <input type="text" id="noteAuthor" placeholder="Tu nombre (opcional)" style="margin-bottom:8px;">
+    <textarea id="noteText" placeholder="Nota sobre este jugador..."></textarea>
+    <div style="margin-top:8px; margin-bottom:8px;">
+      <label style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:4px;">Foto (opcional, de tu galería)</label>
+      <input type="file" id="noteImageFile" accept="image/*" style="padding:8px;">
+      <div id="noteImagePreview" style="margin-top:8px;"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btnSubmitNote" style="flex:1">Enviar sugerencia</button>
+    </div>
+    <div class="section-title" style="margin-top:16px;">Formación (chapas)</div>
+    <p style="font-size:0.75rem; color:var(--muted); margin-bottom:8px;">
+      Abre el generador, monta la jugada y pulsa Guardar. Se descarga el PNG y se envía al admin para aprobar.
+    </p>
+    <button class="btn btn-blue" id="btnOpenFormation" style="width:100%">Crear formación con chapas</button>
+  </div>
+</div>
+
+<!-- Modal generador de formaciones chapas -->
+<div class="modal-overlay" id="formationModal" style="align-items:stretch; padding:0; z-index:200;">
+  <div style="background:#1a1a1a; width:100%; height:100%; max-width:100%; max-height:100%; border-radius:0; display:flex; flex-direction:column; border:none;">
+    <div style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:#222; border-bottom:1px solid #444; flex-shrink:0;">
+      <button class="btn btn-sm" id="btnCloseFormation" style="background:#3a3a3a; color:#fff;">← Cerrar</button>
+      <span style="font-size:0.8rem; color:#aaa; flex:1;">Guarda en el generador → PNG + envío al admin</span>
+    </div>
+    <iframe id="formationFrame" src="chapas-generator.html" style="flex:1; width:100%; border:none; background:#1a1a1a;" title="Generador de formaciones"></iframe>
+  </div>
+</div>
+
+<footer>Fantasy Futbolchapas · Sistema oficial</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = "https://cdzpawcoksvaxgqrxiou.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_XYG6wdRg1RaYfSVjqKwhIA_JL4vhClM";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const ADMIN_PASSWORD = "ci1gw7j9";
+
+let PLAYERS = [];
+let selected = new Set();
+let jornadaSelected = new Set();
+let isAdmin = false;
+let currentPlayerId = null;
+let titleClicks = 0;
+let MAX_BUDGET = 2000;
+
+let dbData = {
+  formations: [],
+  results: {},
+  jornadaScores: [],
+  global: {},
+  currentJornada: 1,
+  jornadaPlayerIds: [],
+  notes: [],
+  competitionName: 'Fantasy Futbolchapas'
+};
+
+function loadData() { return dbData; }
+
+function buildJornadaScores(data) {
+  const scores = data.formations.map(function(f) {
+    var points = 0;
+    (f.players || []).forEach(function(id) { points += Number(data.results[id] || 0); });
+    return { coach: f.coach, points: points, cost: Number(f.cost) };
+  });
+  scores.sort(function(a, b) {
+    if (b.points !== a.points) return b.points - a.points;
+    return a.cost - b.cost;
+  });
+  return scores;
+}
+
+async function loadPlayers() {
+  var res = await supabaseClient.from('players').select('*').order('points', { ascending: false });
+  PLAYERS = (res.data || []).map(function(p) {
+    return { id: p.id, name: p.name, club: p.club, points: Number(p.points), bombo: p.bombo || 'B4' };
+  });
+}
+
+async function loadSupabaseData() {
+  var results = await Promise.all([
+    supabaseClient.from('formations').select('*').order('submitted_at', { ascending: true }),
+    supabaseClient.from('jornada_results').select('*'),
+    supabaseClient.from('global_scores').select('*'),
+    supabaseClient.from('settings').select('*'),
+    supabaseClient.from('jornada_players').select('*').eq('jornada', 1).maybeSingle(),
+    supabaseClient.from('player_notes').select('*').order('created_at', { ascending: false }),
+    loadPlayers()
+  ]);
+
+  var formRes = results[0], resultRes = results[1], globalRes = results[2];
+  var settingsRes = results[3], jornadaPlayersRes = results[4], notesRes = results[5];
+
+  dbData.formations = (formRes.data || []).map(function(f) {
+    return { id: f.id, coach: f.coach, players: Array.isArray(f.players) ? f.players : [], cost: Number(f.cost), submittedAt: f.submitted_at };
+  });
+
+  dbData.results = {};
+  (resultRes.data || []).forEach(function(r) {
+    if (r.jornada === (dbData.currentJornada || 1)) dbData.results[r.player_id] = Number(r.points);
+  });
+
+  dbData.global = {};
+  (globalRes.data || []).forEach(function(g) {
+    dbData.global[g.coach] = { totalPoints: Number(g.total_points || 0), wins: Number(g.wins || 0) };
+  });
+
+  (settingsRes.data || []).forEach(function(s) {
+    if (s.key === 'current_jornada') dbData.currentJornada = Number(s.value) || 1;
+    if (s.key === 'competition_name') dbData.competitionName = s.value;
+    if (s.key === 'max_budget') MAX_BUDGET = Number(s.value) || 2000;
+  });
+
+  if (jornadaPlayersRes.data) {
+    dbData.jornadaPlayerIds = jornadaPlayersRes.data.player_ids || [];
+    jornadaSelected = new Set(dbData.jornadaPlayerIds);
+  }
+  dbData.notes = notesRes.data || [];
+  dbData.jornadaScores = buildJornadaScores(dbData);
+
+  document.getElementById('compSub').textContent = dbData.competitionName;
+  document.getElementById('maxBudgetShow').textContent = MAX_BUDGET;
+  var ci = document.getElementById('compNameInput');
+  if (ci) ci.value = dbData.competitionName || '';
+  var bi = document.getElementById('budgetInput');
+  if (bi) bi.value = MAX_BUDGET;
+}
+
+// ========== TABS ==========
+document.querySelectorAll('#mainTabs .tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('#mainTabs .tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+    tab.classList.add('active');
+    var panel = document.getElementById('panel-' + tab.dataset.tab);
+    if (panel) panel.classList.add('active');
+    if (tab.dataset.tab === 'jornada') renderJornada();
+    if (tab.dataset.tab === 'global') renderGlobal();
+  });
+});
+
+document.getElementById('mainTitle').addEventListener('click', function() {
+  titleClicks++;
+  if (titleClicks >= 5) {
+    titleClicks = 0;
+    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('#mainTabs .tab').forEach(function(t) { t.classList.remove('active'); });
+    document.getElementById('panel-admin').classList.add('active');
+  }
+  setTimeout(function() { titleClicks = 0; }, 2000);
+});
+
+// ========== MI ONCE ==========
+var coachNameEl = document.getElementById('coachName');
+var searchEl = document.getElementById('search');
+searchEl.addEventListener('input', renderOnce);
+document.getElementById('btnSubmit').addEventListener('click', submitFormation);
+
+function getSpent() {
+  return PLAYERS.filter(function(p) { return selected.has(p.id); }).reduce(function(s, p) { return s + p.points; }, 0);
+}
+function canAdd(p) {
+  return !selected.has(p.id) && selected.size < 11 && getSpent() + p.points <= MAX_BUDGET;
+}
+window.addPlayer = function(id) {
+  var p = PLAYERS.find(function(x) { return x.id === id; });
+  if (!p || !canAdd(p)) return;
+  selected.add(id);
+  updateBudget();
+  renderOnce();
+};
+window.removePlayer = function(id) {
+  selected.delete(id);
+  updateBudget();
+  renderOnce();
+};
+function updateBudget() {
+  var spent = getSpent();
+  document.getElementById('spent').textContent = spent.toFixed(2);
+  document.getElementById('remaining').textContent = (MAX_BUDGET - spent).toFixed(2);
+  document.getElementById('remaining').style.color = (MAX_BUDGET - spent) < 0 ? 'var(--danger)' : 'var(--accent)';
+  document.getElementById('count').textContent = selected.size + ' / 11';
+  document.getElementById('teamCount').textContent = selected.size + ' jugadores';
+}
+
+function getAvailablePlayers() {
+  // If jornada list is set, only those players; else all
+  if (dbData.jornadaPlayerIds && dbData.jornadaPlayerIds.length > 0) {
+    return PLAYERS.filter(function(p) { return dbData.jornadaPlayerIds.indexOf(p.id) !== -1; });
+  }
+  return PLAYERS;
+}
+
+function renderOnce() {
+  var data = loadData();
+  var coach = coachNameEl.value.trim();
+  var already = data.formations.find(function(f) { return f.coach.toLowerCase() === coach.toLowerCase(); });
+  var alreadyEl = document.getElementById('alreadySubmitted');
+  var btn = document.getElementById('btnSubmit');
+  if (already) {
+    alreadyEl.style.display = 'block';
+    alreadyEl.textContent = 'Ya has enviado tu once como "' + already.coach + '".';
+    btn.disabled = true;
+  } else {
+    alreadyEl.style.display = 'none';
+    btn.disabled = false;
+  }
+
+  var q = searchEl.value.trim().toLowerCase();
+  var pool = getAvailablePlayers();
+  var filtered = pool.filter(function(p) {
+    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+  });
+
+  var team = PLAYERS.filter(function(p) { return selected.has(p.id); }).sort(function(a,b) { return b.points - a.points; });
+  document.getElementById('teamList').innerHTML = team.length === 0
+    ? '<div class="empty">Aún no has seleccionado jugadores</div>'
+    : team.map(function(p) {
+      return '<div class="player-card selected"><div class="player-info" onclick="openPlayerModal(' + p.id + ')"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div><button class="btn btn-sm btn-danger" onclick="removePlayer(' + p.id + ')">Quitar</button></div>';
+    }).join('');
+
+  var available = filtered.filter(function(p) { return !selected.has(p.id); });
+  document.getElementById('availableCount').textContent = available.length + ' disponibles';
+  document.getElementById('playersList').innerHTML = available.length === 0
+    ? '<div class="empty">' + (PLAYERS.length === 0 ? 'No hay jugadores en la plantilla. El admin debe importarlos.' : 'No hay jugadores') + '</div>'
+    : available.map(function(p) {
+      return '<div class="player-card"><div class="player-info" style="cursor:pointer" onclick="openPlayerModal(' + p.id + ')"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div><button class="btn btn-sm btn-primary" ' + (canAdd(p) ? '' : 'disabled') + ' onclick="addPlayer(' + p.id + ')">Añadir</button></div>';
+    }).join('');
+}
+
+async function submitFormation() {
+  var coach = coachNameEl.value.trim();
+  if (!coach) return alert('Escribe tu nombre de entrenador');
+  if (selected.size !== 11) return alert('Debes seleccionar exactamente 11 jugadores');
+  var data = loadData();
+  if (data.formations.some(function(f) { return f.coach.toLowerCase() === coach.toLowerCase(); })) {
+    return alert('Ya existe una formación con ese nombre');
+  }
+  var team = PLAYERS.filter(function(p) { return selected.has(p.id); });
+  var cost = getSpent();
+  try {
+    var err = (await supabaseClient.from('formations').insert({
+      coach: coach, players: team.map(function(p) { return p.id; }),
+      cost: +cost.toFixed(2), submitted_at: new Date().toISOString()
+    })).error;
+    if (err) throw err;
+    data.formations.push({ coach: coach, players: team.map(function(p) { return p.id; }), cost: +cost.toFixed(2) });
+    if (!data.global[coach]) {
+      data.global[coach] = { totalPoints: 0, wins: 0 };
+      await supabaseClient.from('global_scores').upsert({ coach: coach, total_points: 0, wins: 0 }, { onConflict: 'coach' });
+    }
+    alert('¡Once enviado correctamente!');
+    renderOnce();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ========== MODAL + NOTES ==========
+window.openPlayerModal = function(id) {
+  currentPlayerId = id;
+  var p = PLAYERS.find(function(x) { return x.id === id; });
+  if (!p) return;
+  document.getElementById('modalName').textContent = p.name;
+  document.getElementById('modalClub').textContent = p.club;
+  document.getElementById('modalPrice').textContent = p.points.toFixed(2) + ' M';
+  var be = document.getElementById('modalBombo');
+  be.textContent = p.bombo;
+  be.className = 'bombo ' + p.bombo.toLowerCase();
+  var approved = dbData.notes.filter(function(n) { return n.player_id === id && n.status === 'approved'; });
+  document.getElementById('modalNotes').innerHTML = approved.length === 0
+    ? '<div class="empty" style="padding:12px;">Sin notas aprobadas</div>'
+    : approved.map(function(n) {
+      var img = n.image_url ? '<img class="note-img" src="' + n.image_url.replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+      return '<div class="note-item"><div class="note-author">' + (n.author || 'Anónimo') + '</div>' + n.note + img + '</div>';
+    }).join('');
+  document.getElementById('noteAuthor').value = '';
+  document.getElementById('noteText').value = '';
+  noteImageData = null;
+  var fi = document.getElementById('noteImageFile');
+  if (fi) fi.value = '';
+  var prev = document.getElementById('noteImagePreview');
+  if (prev) prev.innerHTML = '';
+  formSelected = new Set();
+  var fc = document.getElementById('formCanvas');
+  if (fc) fc.style.display = 'none';
+  if (typeof renderFormPicker === 'function') renderFormPicker();
+  document.getElementById('playerModal').classList.add('show');
+};
+document.getElementById('closeModal').addEventListener('click', function() {
+  document.getElementById('playerModal').classList.remove('show');
+});
+document.getElementById('playerModal').addEventListener('click', function(e) {
+  if (e.target.id === 'playerModal') document.getElementById('playerModal').classList.remove('show');
+});
+function compressImage(file, maxW, quality) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      var img = new Image();
+      img.onload = function() {
+        var w = img.width, h = img.height;
+        if (w > maxW) { h = Math.round(h * maxW / w); w = maxW; }
+        var canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+var noteImageData = null;
+document.getElementById('noteImageFile') && document.getElementById('noteImageFile').addEventListener('change', async function(ev) {
+  var file = ev.target.files && ev.target.files[0];
+  noteImageData = null;
+  var prev = document.getElementById('noteImagePreview');
+  if (!file) { if (prev) prev.innerHTML = ''; return; }
+  if (!file.type.match(/^image\//)) { alert('Solo imágenes'); ev.target.value = ''; return; }
+  try {
+    if (prev) prev.innerHTML = '<span style="color:var(--muted);font-size:0.8rem;">Comprimiendo...</span>';
+    noteImageData = await compressImage(file, 700, 0.65);
+    if (prev) prev.innerHTML = '<img class="note-img" src="' + noteImageData + '" alt="Vista previa">';
+  } catch (e) {
+    alert('No se pudo leer la imagen');
+    noteImageData = null;
+    if (prev) prev.innerHTML = '';
+  }
+});
+
+document.getElementById('btnSubmitNote').addEventListener('click', async function() {
+  var note = document.getElementById('noteText').value.trim();
+  if (!note && !noteImageData) return alert('Escribe una nota o sube una foto');
+  if (!note) note = '(Foto)';
+  var author = document.getElementById('noteAuthor').value.trim() || 'Anónimo';
+  try {
+    var payload = { player_id: currentPlayerId, author: author, note: note, status: 'pending' };
+    if (noteImageData) payload.image_url = noteImageData;
+    var err = (await supabaseClient.from('player_notes').insert(payload)).error;
+    if (err) throw err;
+    alert('Nota enviada. El administrador la revisará.');
+    document.getElementById('noteText').value = '';
+    noteImageData = null;
+    var fi = document.getElementById('noteImageFile');
+    if (fi) fi.value = '';
+    var prev = document.getElementById('noteImagePreview');
+    if (prev) prev.innerHTML = '';
+  } catch (e) { alert('Error: ' + e.message); }
+});
+
+// ========== RANKINGS ==========
+function renderJornada() {
+  var data = loadData();
+  var el = document.getElementById('jornadaRanking');
+  if (!data.jornadaScores || data.jornadaScores.length === 0) {
+    el.innerHTML = '<div class="empty">Aún no se ha calculado ninguna jornada</div>';
+    return;
+  }
+  el.innerHTML = '<table><thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Coste</th></tr></thead><tbody>' +
+    data.jornadaScores.map(function(s, i) {
+      return '<tr><td class="rank">' + (i+1) + '</td><td>' + s.coach + (i===0?' 🏆':'') + '</td><td>' + s.points.toFixed(1) + '</td><td>' + s.cost.toFixed(2) + ' M</td></tr>';
+    }).join('') + '</tbody></table>';
+}
+function renderGlobal() {
+  var data = loadData();
+  var el = document.getElementById('globalRanking');
+  var list = Object.keys(data.global).map(function(coach) {
+    return { coach: coach, totalPoints: data.global[coach].totalPoints, wins: data.global[coach].wins };
+  }).sort(function(a, b) {
+    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+    return b.wins - a.wins;
+  });
+  if (list.length === 0) {
+    el.innerHTML = '<div class="empty">Aún no hay datos globales</div>';
+    return;
+  }
+  el.innerHTML = '<table><thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Victorias</th></tr></thead><tbody>' +
+    list.map(function(s, i) {
+      return '<tr><td class="rank">' + (i+1) + '</td><td>' + s.coach + '</td><td>' + s.totalPoints.toFixed(1) + '</td><td>' + s.wins + '</td></tr>';
+    }).join('') + '</tbody></table>';
+}
+
+// ========== ADMIN ==========
+document.getElementById('btnLogin').addEventListener('click', function() {
+  if (document.getElementById('adminPass').value === ADMIN_PASSWORD) {
+    isAdmin = true;
+    document.getElementById('adminLogin').style.display = 'none';
+    document.getElementById('adminContent').style.display = 'block';
+    renderAdmin();
+  } else alert('Contraseña incorrecta');
+});
+
+function exitAdmin() {
+  isAdmin = false;
+  document.getElementById('adminLogin').style.display = 'block';
+  document.getElementById('adminContent').style.display = 'none';
+  document.getElementById('adminPass').value = '';
+  document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+  document.querySelectorAll('#mainTabs .tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelector('#mainTabs .tab[data-tab="once"]').classList.add('active');
+  document.getElementById('panel-once').classList.add('active');
+}
+document.getElementById('btnExitAdmin').addEventListener('click', exitAdmin);
+document.getElementById('btnExitAdmin2').addEventListener('click', exitAdmin);
+
+// Admin tabs
+document.querySelectorAll('#adminTabs .tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('#adminTabs .tab').forEach(function(t) { t.classList.remove('active'); });
+    document.querySelectorAll('.atab-panel').forEach(function(p) { p.classList.remove('active'); });
+    tab.classList.add('active');
+    var panel = document.getElementById('atab-' + tab.dataset.atab);
+    if (panel) panel.classList.add('active');
+    if (tab.dataset.atab === 'plantilla') renderPlantilla();
+    if (tab.dataset.atab === 'jornada') renderJornadaSelect();
+    if (tab.dataset.atab === 'resultados') renderResultInputs();
+    if (tab.dataset.atab === 'notas') renderAdmin();
+    if (tab.dataset.atab === 'editar') renderEditPanel();
+  });
+});
+
+function renderAdmin() {
+  var data = loadData();
+  document.getElementById('formCount').textContent = data.formations.length;
+  var formEl = document.getElementById('adminFormations');
+  if (data.formations.length === 0) {
+    formEl.innerHTML = '<div class="empty">Nadie ha enviado todavía</div>';
+  } else {
+    formEl.innerHTML = data.formations.map(function(f) {
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;justify-content:space-between;width:100%;"><div style="font-weight:600">' + f.coach + ' · ' + f.cost.toFixed(2) + ' M</div><button class="btn btn-sm btn-danger" onclick="deleteFormation(\'' + f.coach.replace(/'/g, "\\'") + '\')">Eliminar</button></div><div style="font-size:0.72rem;color:var(--muted)">' + (f.players || []).map(function(id) { var p = PLAYERS.find(function(x){return x.id===id;}); return p ? p.name.split(' ').slice(0,2).join(' ') : id; }).join(' · ') + '</div></div>';
+    }).join('');
+  }
+
+  var pending = data.notes.filter(function(n) { return n.status === 'pending'; });
+  document.getElementById('pendingNotesCount').textContent = pending.length;
+  var notesEl = document.getElementById('pendingNotes');
+  notesEl.innerHTML = pending.length === 0 ? '<div class="empty">No hay notas pendientes</div>' :
+    pending.map(function(n) {
+      var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
+      var imgHtml = n.image_url ? '<img class="note-img" src="' + String(n.image_url).replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="font-weight:600">' + (p ? p.name : 'Jugador '+n.player_id) + '</div><div style="font-size:0.85rem">' + n.note + '</div>' + imgHtml + '<div style="font-size:0.72rem;color:var(--muted)">Por: ' + (n.author||'Anónimo') + (n.image_url ? ' · Con imagen' : '') + '</div><div class="btn-row" style="margin:0"><button class="btn btn-sm btn-primary" onclick="approveNote('+n.id+')">Aprobar</button><button class="btn btn-sm btn-danger" onclick="rejectNote('+n.id+')">Rechazar</button><button class="btn btn-sm" style="background:var(--border);color:var(--text)" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
+    }).join('');
+
+  var other = data.notes.filter(function(n) { return n.status !== 'pending'; });
+  document.getElementById('allNotes').innerHTML = other.length === 0 ? '<div class="empty">Sin notas</div>' :
+    other.map(function(n) {
+      var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
+      var badge = n.status === 'approved' ? '<span class="badge badge-approved">Aprobada</span>' : '<span class="badge badge-pending">Rechazada</span>';
+      var imgHtml2 = n.image_url ? '<img class="note-img" src="' + String(n.image_url).replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;justify-content:space-between;width:100%"><div style="font-weight:600">' + (p?p.name:'Jugador '+n.player_id) + '</div>' + badge + '</div><div style="font-size:0.85rem">' + n.note + '</div>' + imgHtml2 + '<button class="btn btn-sm btn-danger" onclick="deleteNote('+n.id+')">Eliminar</button></div>';
+    }).join('');
+}
+
+window.deleteFormation = async function(coach) {
+  if (!confirm('¿Eliminar formación de ' + coach + '?')) return;
+  try {
+    await supabaseClient.from('formations').delete().eq('coach', coach);
+    dbData.formations = dbData.formations.filter(function(f) { return f.coach !== coach; });
+    renderAdmin();
+  } catch (e) { alert(e.message); }
+};
+window.approveNote = async function(id) {
+  await supabaseClient.from('player_notes').update({ status: 'approved' }).eq('id', id);
+  var n = dbData.notes.find(function(x) { return x.id === id; });
+  if (n) n.status = 'approved';
+  renderAdmin();
+};
+window.rejectNote = async function(id) {
+  await supabaseClient.from('player_notes').update({ status: 'rejected' }).eq('id', id);
+  var n = dbData.notes.find(function(x) { return x.id === id; });
+  if (n) n.status = 'rejected';
+  renderAdmin();
+};
+window.deleteNote = async function(id) {
+  if (!confirm('¿Eliminar esta nota?')) return;
+  await supabaseClient.from('player_notes').delete().eq('id', id);
+  dbData.notes = dbData.notes.filter(function(n) { return n.id !== id; });
+  renderAdmin();
+};
+
+// Plantilla management
+function renderPlantilla() {
+  document.getElementById('dbPlayersCount').textContent = PLAYERS.length;
+  var q = (document.getElementById('plantillaSearch').value || '').trim().toLowerCase();
+  var list = PLAYERS.filter(function(p) {
+    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+  });
+  document.getElementById('plantillaList').innerHTML = list.length === 0
+    ? '<div class="empty">Plantilla vacía</div>'
+    : list.map(function(p) {
+      return '<div class="player-card"><div class="player-info"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + ' · ID ' + p.id + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div><button class="btn btn-sm btn-danger" onclick="deletePlayer(' + p.id + ')">X</button></div>';
+    }).join('');
+}
+document.getElementById('plantillaSearch').addEventListener('input', renderPlantilla);
+
+window.deletePlayer = async function(id) {
+  if (!confirm('¿Eliminar este jugador de la plantilla?')) return;
+  try {
+    await supabaseClient.from('players').delete().eq('id', id);
+    PLAYERS = PLAYERS.filter(function(p) { return p.id !== id; });
+    jornadaSelected.delete(id);
+    renderPlantilla();
+    renderOnce();
+  } catch (e) { alert(e.message); }
+};
+
+document.getElementById('btnImportPlayers').addEventListener('click', async function() {
+  var raw = document.getElementById('bulkPlayersInput').value.trim();
+  if (!raw) return alert('Pega la lista de jugadores');
+
+  // Normalize: Spanish fields -> English, commas as decimals
+  raw = raw
+    .replace(/nombre\s*:/gi, 'name:')
+    .replace(/puntos\s*:/gi, 'points:')
+    .replace(/points\s*:\s*(\d+),(\d+)/gi, 'points:$1.$2');
+
+  var players = [];
+  // Accept: {id:1, name:"X", club:"Y", points:100.00}  (bombo optional)
+  var regex = /\{\s*id\s*:\s*(\d+)\s*,\s*name\s*:\s*"([^"]+)"\s*,\s*club\s*:\s*"([^"]+)"\s*,\s*points\s*:\s*([\d.]+)(?:\s*,\s*bombo\s*:\s*"([^"]+)")?\s*\}/gi;
+  var m;
+  while ((m = regex.exec(raw)) !== null) {
+    players.push({
+      id: parseInt(m[1], 10),
+      name: m[2].trim(),
+      club: m[3].trim(),
+      points: parseFloat(m[4]),
+      bombo: (m[5] || 'B4')
+    });
+  }
+
+  if (players.length === 0) {
+    return alert('No se pudo parsear ningún jugador.\nUsa:\n{id:1, name:"NOMBRE", club:"CLUB", points:100.00},');
+  }
+
+  var statusEl = document.getElementById('importStatus');
+  statusEl.textContent = 'Importando ' + players.length + ' jugadores...';
+  var btn = document.getElementById('btnImportPlayers');
+  btn.disabled = true;
+
+  try {
+    var batchSize = 80;
+    var imported = 0;
+    for (var i = 0; i < players.length; i += batchSize) {
+      var batch = players.slice(i, i + batchSize);
+      var res = await supabaseClient.from('players').upsert(batch, { onConflict: 'id' });
+      if (res.error) throw res.error;
+      imported += batch.length;
+      statusEl.textContent = 'Importados ' + imported + ' / ' + players.length + '...';
+    }
+    await loadPlayers();
+    statusEl.textContent = 'Listo: ' + imported + ' jugadores importados.';
+    document.getElementById('bulkPlayersInput').value = '';
+    renderPlantilla();
+    renderOnce();
+    alert('Importados ' + imported + ' jugadores correctamente');
+  } catch (e) {
+    statusEl.textContent = 'Error: ' + e.message;
+    alert('Error al importar: ' + e.message);
+  }
+  btn.disabled = false;
+});
+
+document.getElementById('btnClearPlayers').addEventListener('click', async function() {
+  if (!confirm('¿Borrar TODOS los jugadores de la plantilla?')) return;
+  try {
+    await supabaseClient.from('players').delete().neq('id', -99999);
+    PLAYERS = [];
+    jornadaSelected = new Set();
+    renderPlantilla();
+    renderOnce();
+    alert('Plantilla borrada');
+  } catch (e) { alert(e.message); }
+});
+
+document.getElementById('btnAddPlayer').addEventListener('click', async function() {
+  var id = parseInt(document.getElementById('newId').value);
+  var name = document.getElementById('newName').value.trim();
+  var club = document.getElementById('newClub').value.trim();
+  var points = parseFloat(document.getElementById('newPoints').value);
+  var bombo = document.getElementById('newBombo').value.trim() || 'B4';
+  if (!id || !name || !club || isNaN(points)) return alert('Rellena ID, nombre, club y puntos');
+  try {
+    var err = (await supabaseClient.from('players').upsert({ id: id, name: name, club: club, points: points, bombo: bombo }, { onConflict: 'id' })).error;
+    if (err) throw err;
+    await loadPlayers();
+    document.getElementById('newId').value = '';
+    document.getElementById('newName').value = '';
+    document.getElementById('newClub').value = '';
+    document.getElementById('newPoints').value = '';
+    document.getElementById('newBombo').value = '';
+    renderPlantilla();
+    renderOnce();
+    alert('Jugador añadido');
+  } catch (e) { alert(e.message); }
+});
+
+// Jornada player selection
+function renderJornadaSelect() {
+  var q = (document.getElementById('jornadaSearch').value || '').trim().toLowerCase();
+  var list = PLAYERS.filter(function(p) {
+    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+  });
+  document.getElementById('jornadaSelCount').textContent = jornadaSelected.size;
+  document.getElementById('jornadaSelectList').innerHTML = list.map(function(p) {
+    var checked = jornadaSelected.has(p.id) ? 'checked' : '';
+    return '<label class="player-card" style="cursor:pointer"><input type="checkbox" ' + checked + ' style="width:18px;height:18px;margin-right:8px" onchange="toggleJornada(' + p.id + ',this.checked)"><div class="player-info"><div class="player-name">' + p.name + '</div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div></label>';
+  }).join('');
+}
+document.getElementById('jornadaSearch').addEventListener('input', renderJornadaSelect);
+window.toggleJornada = function(id, checked) {
+  if (checked) jornadaSelected.add(id); else jornadaSelected.delete(id);
+  document.getElementById('jornadaSelCount').textContent = jornadaSelected.size;
+};
+
+document.getElementById('btnParseJornadaList').addEventListener('click', function() {
+  var raw = document.getElementById('jornadaPasteList').value.trim();
+  if (!raw) return alert('Pega la lista de nombres');
+
+  var lines = raw.split(/\n+/);
+  var found = 0;
+  var notFound = [];
+
+  lines.forEach(function(line) {
+    line = line.trim();
+    if (!line) return;
+
+    // Quitar numero al inicio: 1.  1)  1-  1:
+    line = line.replace(/^\d+[\.\)\-\:]\s*/, '').replace(/^\d+\s+/, '');
+
+    // Bombo opcional al final: B1 B2 B3 B4 o bombo1
+    var bombo = null;
+    var bm = line.match(/\s+(?:bombo\s*)?([Bb][1-5])\s*$/);
+    if (bm) {
+      bombo = bm[1].toUpperCase();
+      line = line.slice(0, bm.index).trim(); // B1-B5
+    }
+
+    var name = line.replace(/\s*-\s*$/, '').trim().toUpperCase();
+    if (!name) return;
+
+    var norm = function(s) {
+      return s.toUpperCase()
+        .replace(/[ÁÀÄÂ]/g,'A').replace(/[ÉÈËÊ]/g,'E')
+        .replace(/[ÍÌÏÎ]/g,'I').replace(/[ÓÒÖÔ]/g,'O')
+        .replace(/[ÚÙÜÛ]/g,'U').replace(/Ñ/g,'N');
+    };
+
+    var p = PLAYERS.find(function(x) { return x.name.toUpperCase() === name; });
+    if (!p) p = PLAYERS.find(function(x) { return norm(x.name) === norm(name); });
+    if (!p) p = PLAYERS.find(function(x) { return norm(x.name).indexOf(norm(name)) !== -1; });
+    if (!p) p = PLAYERS.find(function(x) { return norm(name).indexOf(norm(x.name)) !== -1; });
+
+    if (p) {
+      jornadaSelected.add(p.id);
+      if (bombo) p.bombo = bombo;
+      found++;
+    } else {
+      notFound.push(name);
+    }
+  });
+
+  var st = document.getElementById('jornadaParseStatus');
+  st.textContent = 'Seleccionados: ' + found + (notFound.length ? ' | No encontrados: ' + notFound.length + ' → ' + notFound.slice(0,8).join(', ') : '');
+  document.getElementById('jornadaSelCount').textContent = jornadaSelected.size;
+  renderJornadaSelect();
+  alert('Seleccionados ' + found + ' jugadores' + (notFound.length ? '\nNo encontrados: ' + notFound.length : ''));
+});
+
+document.getElementById('btnSaveJornadaPlayers').addEventListener('click', async function() {
+  var unique = Array.from(jornadaSelected);
+  try {
+    await supabaseClient.from('jornada_players').upsert({ jornada: dbData.currentJornada || 1, player_ids: unique }, { onConflict: 'jornada' });
+    dbData.jornadaPlayerIds = unique;
+    alert('Guardados ' + unique.length + ' jugadores para la jornada');
+    renderOnce();
+  } catch (e) { alert(e.message); }
+});
+
+// Results
+document.getElementById('resultSearch').addEventListener('input', renderResultInputs);
+function renderResultInputs() {
+  var data = loadData();
+  var q = document.getElementById('resultSearch').value.trim().toLowerCase();
+  var list = PLAYERS;
+  if (data.jornadaPlayerIds && data.jornadaPlayerIds.length > 0) {
+    list = PLAYERS.filter(function(p) { return data.jornadaPlayerIds.indexOf(p.id) !== -1; });
+  }
+  list = list.filter(function(p) {
+    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+  });
+  document.getElementById('resultInputs').innerHTML = list.map(function(p) {
+    var val = data.results[p.id] !== undefined ? data.results[p.id] : '';
+    return '<div class="player-card"><div class="player-info"><div class="player-name">' + p.name + '</div><div class="player-club">' + p.club + '</div></div><input type="number" class="result-input" data-id="' + p.id + '" value="' + val + '" placeholder="0" step="0.1" min="0"></div>';
+  }).join('');
+  document.querySelectorAll('.result-input').forEach(function(inp) {
+    inp.addEventListener('change', async function() {
+      var id = +inp.dataset.id;
+      var v = parseFloat(inp.value);
+      var jornada = dbData.currentJornada || 1;
+      try {
+        await supabaseClient.from('jornada_results').delete().eq('jornada', jornada).eq('player_id', id);
+        if (!isNaN(v) && v >= 0) {
+          dbData.results[id] = v;
+          await supabaseClient.from('jornada_results').insert({ jornada: jornada, player_id: id, points: v });
+        } else {
+          delete dbData.results[id];
+        }
+      } catch (e) { console.error(e); }
+    });
+  });
+}
+
+document.getElementById('btnCalc').addEventListener('click', async function() {
+  var data = loadData();
+  if (data.formations.length === 0) return alert('No hay formaciones');
+  var scores = buildJornadaScores(data);
+  data.jornadaScores = scores;
+  var newGlobal = {};
+  Object.keys(data.global).forEach(function(c) {
+    newGlobal[c] = { totalPoints: Number(data.global[c].totalPoints || 0), wins: Number(data.global[c].wins || 0) };
+  });
+  scores.forEach(function(s, i) {
+    if (!newGlobal[s.coach]) newGlobal[s.coach] = { totalPoints: 0, wins: 0 };
+    newGlobal[s.coach].totalPoints += s.points;
+    if (i === 0) newGlobal[s.coach].wins += 1;
+  });
+  try {
+    await supabaseClient.from('global_scores').delete().neq('coach', '__x__');
+    var rows = Object.keys(newGlobal).map(function(c) {
+      return { coach: c, total_points: newGlobal[c].totalPoints, wins: newGlobal[c].wins };
+    });
+    if (rows.length) await supabaseClient.from('global_scores').insert(rows);
+    dbData.global = newGlobal;
+    alert('Jornada calculada.\nGanador: ' + scores[0].coach + ' (' + scores[0].points.toFixed(1) + ' pts)');
+    renderJornada();
+    renderGlobal();
+  } catch (e) { alert(e.message); }
+});
+
+document.getElementById('btnResetJornada').addEventListener('click', async function() {
+  if (!confirm('¿Borrar resultados de la jornada?')) return;
+  await supabaseClient.from('jornada_results').delete().eq('jornada', dbData.currentJornada || 1);
+  dbData.results = {};
+  dbData.jornadaScores = [];
+  renderResultInputs();
+  renderJornada();
+  alert('Resultados borrados');
+});
+
+document.getElementById('btnCloseJornada').addEventListener('click', async function() {
+  if (!confirm('¿Cerrar jornada?\nSe borrarán todos los onces. La gente tendrá que enviar uno nuevo.')) return;
+  await supabaseClient.from('formations').delete().neq('coach', '__x__');
+  dbData.formations = [];
+  selected.clear();
+  renderOnce();
+  renderAdmin();
+  alert('Jornada cerrada. Onces eliminados.');
+});
+
+document.getElementById('btnSaveCompName').addEventListener('click', async function() {
+  var name = document.getElementById('compNameInput').value.trim();
+  if (!name) return alert('Escribe un nombre');
+  await supabaseClient.from('settings').upsert({ key: 'competition_name', value: name }, { onConflict: 'key' });
+  dbData.competitionName = name;
+  document.getElementById('compSub').textContent = name;
+  alert('Nombre actualizado');
+});
+
+document.getElementById('btnSaveBudget').addEventListener('click', async function() {
+  var b = parseFloat(document.getElementById('budgetInput').value);
+  if (isNaN(b) || b <= 0) return alert('Presupuesto inválido');
+  await supabaseClient.from('settings').upsert({ key: 'max_budget', value: String(b) }, { onConflict: 'key' });
+  MAX_BUDGET = b;
+  document.getElementById('maxBudgetShow').textContent = b;
+  updateBudget();
+  alert('Presupuesto actualizado: ' + b);
+});
+
+document.getElementById('btnResetAll').addEventListener('click', async function() {
+  if (!confirm('¿Borrar ABSOLUTAMENTE TODO?')) return;
+  await Promise.all([
+    supabaseClient.from('formations').delete().neq('coach', '__x__'),
+    supabaseClient.from('jornada_results').delete().neq('id', -1),
+    supabaseClient.from('global_scores').delete().neq('coach', '__x__'),
+    supabaseClient.from('player_notes').delete().neq('id', -1)
+  ]);
+  dbData.formations = [];
+  dbData.results = {};
+  dbData.jornadaScores = [];
+  dbData.global = {};
+  dbData.notes = [];
+  selected.clear();
+  renderOnce();
+  renderAdmin();
+  renderJornada();
+  renderGlobal();
+  alert('Todo borrado');
+});
+
+
+// ========== BOMBOS ==========
+document.getElementById('btnAutoBombos') && document.getElementById('btnAutoBombos').addEventListener('click', function() {
+  var selected = PLAYERS.filter(function(p) { return jornadaSelected.has(p.id); })
+    .sort(function(a,b) { return b.points - a.points; });
+  if (selected.length === 0) return alert('No hay jugadores seleccionados');
+
+  // Libres = sin club (B5). El resto se reparte en B1-B4 por puntos
+  function sinClub(p) {
+    var c = (p.club || '').trim().toUpperCase();
+    return !c || c === '-' || c === 'S.C.' || c === 'SC' || c === 'LIBRE' || c === 'SIN CLUB';
+  }
+
+  var libres = selected.filter(sinClub);
+  var conClub = selected.filter(function(p) { return !sinClub(p); });
+
+  var size = Math.ceil(conClub.length / 4) || 1;
+  conClub.forEach(function(p, i) {
+    var b = Math.min(4, Math.floor(i / size) + 1);
+    p.bombo = 'B' + b;
+  });
+  libres.forEach(function(p) { p.bombo = 'B5'; });
+
+  renderJornadaSelect();
+  alert('Bombos: ' + conClub.length + ' en B1-B4, ' + libres.length + ' libres sin club (B5)');
+});
+
+document.getElementById('btnRangeBombo') && document.getElementById('btnRangeBombo').addEventListener('click', function() {
+  var from = parseInt(document.getElementById('bomboFrom').value, 10);
+  var to = parseInt(document.getElementById('bomboTo').value, 10);
+  var bombo = document.getElementById('bomboValue').value;
+  if (!from || !to || from > to) return alert('Rango inválido (desde ≤ hasta)');
+
+  var selected = PLAYERS.filter(function(p) { return jornadaSelected.has(p.id); })
+    .sort(function(a,b) { return b.points - a.points; });
+
+  var count = 0;
+  for (var i = from - 1; i < to && i < selected.length; i++) {
+    selected[i].bombo = bombo;
+    count++;
+  }
+  renderJornadaSelect();
+  alert('Asignado ' + bombo + ' a ' + count + ' jugadores (posiciones ' + from + '-' + to + ')');
+});
+
+document.getElementById('btnClearJornadaPlayers') && document.getElementById('btnClearJornadaPlayers').addEventListener('click', async function() {
+  if (!confirm('¿Borrar todos los inscritos de esta jornada/torneo?')) return;
+  try {
+    jornadaSelected.clear();
+    dbData.jornadaPlayerIds = [];
+    await supabaseClient.from('jornada_players').upsert({
+      jornada: dbData.currentJornada || 1,
+      player_ids: []
+    }, { onConflict: 'jornada' });
+    document.getElementById('jornadaSelCount').textContent = '0';
+    renderJornadaSelect();
+    renderOnce();
+    alert('Inscritos borrados. Listo para el siguiente torneo.');
+  } catch (e) { alert(e.message); }
+});
+
+// ========== PASTE RESULTS ==========
+document.getElementById('btnParseResults') && document.getElementById('btnParseResults').addEventListener('click', async function() {
+  var raw = document.getElementById('resultsPasteList').value.trim();
+  if (!raw) return alert('Pega la lista de resultados');
+
+  var lines = raw.split(/\n+/);
+  var ok = 0, fail = [];
+  var jornada = dbData.currentJornada || 1;
+
+  var norm = function(s) {
+    return s.toUpperCase()
+      .replace(/[ÁÀÄÂ]/g,'A').replace(/[ÉÈËÊ]/g,'E')
+      .replace(/[ÍÌÏÎ]/g,'I').replace(/[ÓÒÖÔ]/g,'O')
+      .replace(/[ÚÙÜÛ]/g,'U').replace(/Ñ/g,'N');
+  };
+
+  for (var li = 0; li < lines.length; li++) {
+    var line = lines[li].trim();
+    if (!line) continue;
+    // Remove leading number
+    line = line.replace(/^\d+[\.\)\-\:]\s*/, '').replace(/^\d+\s+/, '');
+    // Last number is points
+    var pm = line.match(/(.+?)\s+([\d]+(?:[.,]\d+)?)\s*$/);
+    if (!pm) { fail.push(line); continue; }
+    var name = pm[1].trim().toUpperCase();
+    var pts = parseFloat(pm[2].replace(',', '.'));
+
+    var p = PLAYERS.find(function(x) { return x.name.toUpperCase() === name; });
+    if (!p) p = PLAYERS.find(function(x) { return norm(x.name) === norm(name); });
+    if (!p) p = PLAYERS.find(function(x) { return norm(x.name).indexOf(norm(name)) !== -1; });
+
+    if (!p || isNaN(pts)) { fail.push(name || line); continue; }
+
+    try {
+      await supabaseClient.from('jornada_results').delete().eq('jornada', jornada).eq('player_id', p.id);
+      await supabaseClient.from('jornada_results').insert({ jornada: jornada, player_id: p.id, points: pts });
+      dbData.results[p.id] = pts;
+      ok++;
+    } catch (e) { fail.push(name); }
+  }
+
+  var st = document.getElementById('resultsParseStatus');
+  st.textContent = 'Cargados: ' + ok + (fail.length ? ' | Fallos: ' + fail.length : '');
+  renderResultInputs();
+  alert('Resultados cargados: ' + ok + (fail.length ? '\nNo encontrados: ' + fail.slice(0,8).join(', ') : ''));
+});
+
+// ========== EDIT PANEL ==========
+function renderEditPanel() {
+  var data = loadData();
+  var gEl = document.getElementById('editGlobalList');
+  var jEl = document.getElementById('editJornadaList');
+  if (!gEl || !jEl) return;
+
+  var globalList = Object.keys(data.global).map(function(c) {
+    return { coach: c, totalPoints: data.global[c].totalPoints, wins: data.global[c].wins };
+  }).sort(function(a,b) { return b.totalPoints - a.totalPoints; });
+
+  gEl.innerHTML = globalList.length === 0 ? '<div class="empty">Sin datos globales</div>' :
+    globalList.map(function(g) {
+      return '<div class="player-card" style="flex-wrap:wrap;gap:8px;">' +
+        '<div class="player-info" style="min-width:120px;"><div class="player-name">' + g.coach + '</div></div>' +
+        '<label style="font-size:0.75rem;color:var(--muted);">Puntos <input type="number" class="result-input" data-edit-global="' + g.coach.replace(/"/g,'&quot;') + '" data-field="pts" value="' + g.totalPoints + '" step="0.1"></label>' +
+        '<label style="font-size:0.75rem;color:var(--muted);">Victorias <input type="number" class="result-input" data-edit-global="' + g.coach.replace(/"/g,'&quot;') + '" data-field="wins" value="' + g.wins + '" step="1" min="0"></label>' +
+        '<button class="btn btn-sm btn-primary" onclick="saveGlobalEdit(\'' + g.coach.replace(/'/g,"\\'") + '\')">Guardar</button>' +
+        '</div>';
+    }).join('');
+
+  var scores = data.jornadaScores || [];
+  jEl.innerHTML = scores.length === 0 ? '<div class="empty">No hay jornada calculada</div>' :
+    scores.map(function(s, i) {
+      return '<div class="player-card" style="flex-wrap:wrap;gap:8px;">' +
+        '<div class="player-info" style="min-width:120px;"><div class="player-name">' + (i+1) + '. ' + s.coach + '</div><div class="player-club">Coste: ' + s.cost.toFixed(2) + ' M</div></div>' +
+        '<label style="font-size:0.75rem;color:var(--muted);">Puntos jornada <input type="number" class="result-input" data-edit-jornada="' + s.coach.replace(/"/g,'&quot;') + '" value="' + s.points + '" step="0.1"></label>' +
+        '</div>';
+    }).join('');
+}
+
+window.saveGlobalEdit = async function(coach) {
+  var ptsInp = document.querySelector('input[data-edit-global="' + coach + '"][data-field="pts"]');
+  var winsInp = document.querySelector('input[data-edit-global="' + coach + '"][data-field="wins"]');
+  // querySelector with special chars may fail - use filter
+  var inputs = document.querySelectorAll('input[data-edit-global]');
+  var pts = 0, wins = 0;
+  inputs.forEach(function(inp) {
+    if (inp.getAttribute('data-edit-global') === coach) {
+      if (inp.getAttribute('data-field') === 'pts') pts = parseFloat(inp.value) || 0;
+      if (inp.getAttribute('data-field') === 'wins') wins = parseInt(inp.value, 10) || 0;
+    }
+  });
+  try {
+    await supabaseClient.from('global_scores').upsert({
+      coach: coach, total_points: pts, wins: wins
+    }, { onConflict: 'coach' });
+    dbData.global[coach] = { totalPoints: pts, wins: wins };
+    alert('Guardado: ' + coach);
+    renderEditPanel();
+    renderGlobal();
+  } catch (e) { alert(e.message); }
+};
+
+document.getElementById('btnRecalcFromEdit') && document.getElementById('btnRecalcFromEdit').addEventListener('click', function() {
+  var inputs = document.querySelectorAll('input[data-edit-jornada]');
+  var scores = [];
+  inputs.forEach(function(inp) {
+    var coach = inp.getAttribute('data-edit-jornada');
+    var pts = parseFloat(inp.value) || 0;
+    var f = dbData.formations.find(function(x) { return x.coach === coach; });
+    scores.push({ coach: coach, points: pts, cost: f ? Number(f.cost) : 0 });
+  });
+  scores.sort(function(a,b) {
+    if (b.points !== a.points) return b.points - a.points;
+    return a.cost - b.cost;
+  });
+  dbData.jornadaScores = scores;
+  renderEditPanel();
+  renderJornada();
+  alert('Orden de jornada actualizado (solo en esta sesión / hasta recalcular)');
+});
+
+
+
+// ========== FORMACIÓN EN NOTAS ==========
+var formSelected = new Set();
+
+function renderFormPicker() {
+  var q = (document.getElementById('formSearch') && document.getElementById('formSearch').value || '').trim().toLowerCase();
+  var list = PLAYERS.filter(function(p) {
+    if (formSelected.has(p.id)) return false;
+    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+  }).slice(0, 40);
+  var el = document.getElementById('formPickList');
+  if (!el) return;
+  el.innerHTML = list.map(function(p) {
+    var dis = formSelected.size >= 11 ? 'disabled' : '';
+    return '<div class="player-card"><div class="player-info"><div class="player-name">' + p.name + '</div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(1) + '</div><button class="btn btn-sm btn-primary" ' + dis + ' onclick="addFormPlayer(' + p.id + ')">+</button></div>';
+  }).join('') || '<div class="empty" style="padding:8px;">Sin resultados</div>';
+
+  var team = PLAYERS.filter(function(p) { return formSelected.has(p.id); }).sort(function(a,b) { return b.points - a.points; });
+  document.getElementById('formCount').textContent = team.length;
+  document.getElementById('formSelectedList').innerHTML = team.map(function(p) {
+    return '<div class="player-card selected"><div class="player-info"><div class="player-name">' + p.name + '</div></div><button class="btn btn-sm btn-danger" onclick="removeFormPlayer(' + p.id + ')">×</button></div>';
+  }).join('') || '<div class="empty" style="padding:8px;">Ninguno aún</div>';
+}
+
+window.addFormPlayer = function(id) {
+  if (formSelected.size >= 11) return;
+  formSelected.add(id);
+  renderFormPicker();
+};
+window.removeFormPlayer = function(id) {
+  formSelected.delete(id);
+  renderFormPicker();
+};
+
+function drawFormationCanvas() {
+  var canvas = document.getElementById('formCanvas');
+  if (!canvas) return null;
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  // pitch
+  ctx.fillStyle = '#166534';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(12, 12, W-24, H-24);
+  ctx.beginPath(); ctx.moveTo(12, H/2); ctx.lineTo(W-12, H/2); ctx.stroke();
+  ctx.beginPath(); ctx.arc(W/2, H/2, 40, 0, Math.PI*2); ctx.stroke();
+
+  var team = PLAYERS.filter(function(p) { return formSelected.has(p.id); }).sort(function(a,b) { return b.points - a.points; });
+  var playerName = (document.getElementById('modalName') || {}).textContent || 'Jugador';
+  var author = (document.getElementById('noteAuthor') && document.getElementById('noteAuthor').value.trim()) || 'Anónimo';
+
+  ctx.fillStyle = '#fff';
+  ctx.font = 'bold 16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('Formación · ' + playerName, W/2, 36);
+  ctx.font = '11px sans-serif';
+  ctx.fillStyle = 'rgba(255,255,255,0.7)';
+  ctx.fillText('Por: ' + author, W/2, 54);
+
+  // layout positions for up to 11 (4-3-3 style rows)
+  var rows = [
+    [0.5],
+    [0.2, 0.4, 0.6, 0.8],
+    [0.25, 0.5, 0.75],
+    [0.2, 0.4, 0.6, 0.8]
+  ];
+  var idx = 0;
+  for (var r = 0; r < rows.length && idx < team.length; r++) {
+    var y = 90 + r * ((H - 120) / 4);
+    for (var c = 0; c < rows[r].length && idx < team.length; c++) {
+      var x = rows[r][c] * W;
+      var p = team[idx++];
+      // chip
+      ctx.fillStyle = '#22c55e';
+      ctx.beginPath(); ctx.arc(x, y, 18, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#000';
+      ctx.font = 'bold 10px sans-serif';
+      ctx.fillText(String(idx), x, y + 4);
+      // name
+      ctx.fillStyle = '#fff';
+      ctx.font = '9px sans-serif';
+      var short = p.name.split(' ').slice(0, 2).join(' ');
+      if (short.length > 18) short = short.slice(0, 16) + '…';
+      ctx.fillText(short, x, y + 32);
+    }
+  }
+  // leftover list at bottom if any
+  while (idx < team.length) {
+    var p2 = team[idx];
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.font = '10px sans-serif';
+    ctx.fillText((idx+1) + '. ' + p2.name.split(' ').slice(0,2).join(' '), W/2, H - 20 - (team.length - 1 - idx) * 12);
+    idx++;
+  }
+
+  canvas.style.display = 'block';
+  return canvas;
+}
+
+document.getElementById('formSearch') && document.getElementById('formSearch').addEventListener('input', renderFormPicker);
+
+document.getElementById('btnPreviewForm') && document.getElementById('btnPreviewForm').addEventListener('click', function() {
+  if (formSelected.size === 0) return alert('Selecciona al menos un jugador');
+  drawFormationCanvas();
+});
+
+document.getElementById('btnSaveForm') && document.getElementById('btnSaveForm').addEventListener('click', async function() {
+  if (formSelected.size === 0) return alert('Selecciona jugadores para la formación');
+  var canvas = drawFormationCanvas();
+  if (!canvas) return;
+
+  var dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+  // Download
+  var a = document.createElement('a');
+  a.href = dataUrl;
+  var pname = (document.getElementById('modalName') || {}).textContent || 'formacion';
+  a.download = 'formacion-' + pname.replace(/\s+/g, '-').slice(0, 30) + '.jpg';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  // Send to admin as pending note with image
+  var author = (document.getElementById('noteAuthor') && document.getElementById('noteAuthor').value.trim()) || 'Anónimo';
+  var team = PLAYERS.filter(function(p) { return formSelected.has(p.id); }).sort(function(a,b) { return b.points - a.points; });
+  var noteText = 'Formación: ' + team.map(function(p) { return p.name; }).join(', ');
+  try {
+    var err = (await supabaseClient.from('player_notes').insert({
+      player_id: currentPlayerId,
+      author: author,
+      note: noteText,
+      image_url: dataUrl,
+      status: 'pending'
+    })).error;
+    if (err) throw err;
+    alert('Formación descargada y enviada al admin para aprobar.');
+  } catch (e) {
+    alert('Imagen descargada, pero error al enviar al admin: ' + e.message);
+  }
+});
+
+
+
+// ========== FORMACIÓN CHAPAS ==========
+document.getElementById('btnOpenFormation') && document.getElementById('btnOpenFormation').addEventListener('click', function() {
+  if (!currentPlayerId) return alert('Abre primero la ficha de un jugador');
+  document.getElementById('formationModal').classList.add('show');
+});
+document.getElementById('btnCloseFormation') && document.getElementById('btnCloseFormation').addEventListener('click', function() {
+  document.getElementById('formationModal').classList.remove('show');
+});
+
+window.addEventListener('message', async function(ev) {
+  if (!ev.data || ev.data.type !== 'chapas-formation') return;
+  var name = ev.data.name || 'Formación';
+  var image = ev.data.image;
+  if (!image || !currentPlayerId) return;
+
+  document.getElementById('formationModal').classList.remove('show');
+
+  // Rellenar nota con la imagen de la formación
+  noteImageData = image;
+  var noteEl = document.getElementById('noteText');
+  if (noteEl && !noteEl.value.trim()) {
+    noteEl.value = 'Formación: ' + name;
+  }
+  var prev = document.getElementById('noteImagePreview');
+  if (prev) prev.innerHTML = '<img class="note-img" src="' + image + '" alt="Formación">';
+
+  // Enviar automáticamente al admin como nota pendiente
+  var author = (document.getElementById('noteAuthor') && document.getElementById('noteAuthor').value.trim()) || 'Anónimo';
+  var noteText = (noteEl && noteEl.value.trim()) || ('Formación: ' + name);
+  try {
+    var payload = {
+      player_id: currentPlayerId,
+      author: author,
+      note: noteText,
+      status: 'pending',
+      image_url: image
+    };
+    var err = (await supabaseClient.from('player_notes').insert(payload)).error;
+    if (err) throw err;
+    alert('Formación "' + name + '" enviada al admin para aprobar.\nTambién se ha descargado el PNG.');
+    if (noteEl) noteEl.value = '';
+    noteImageData = null;
+    if (prev) prev.innerHTML = '';
+    var fi = document.getElementById('noteImageFile');
+    if (fi) fi.value = '';
+  } catch (e) {
+    alert('La imagen está lista en la nota. Pulsa "Enviar sugerencia" o revisa el error: ' + e.message);
+  }
+});
+
+
+// Init
+(async function() {
+  try {
+    await loadSupabaseData();
+  } catch (e) {
+    console.error(e);
+    document.getElementById('compSub').textContent = 'Error cargando datos';
+  }
+  updateBudget();
+  renderOnce();
+})();
+</script>
+</body>
+</html>
