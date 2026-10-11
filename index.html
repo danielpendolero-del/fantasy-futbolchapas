@@ -447,7 +447,7 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
 
     <div class="section-title" style="margin-top:4px;">📐 Crear formación (chapas)</div>
     <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
-      Monta la jugada de este jugador. Al guardar se descarga el PNG y se envía al admin para aprobar.
+      Monta la jugada de este jugador. Al guardar se envía siempre al admin. La descarga de la imagen es opcional.
     </p>
     <button class="btn btn-blue" id="btnOpenFormation" style="width:100%; margin-bottom:14px;">Crear formación con chapas</button>
 
@@ -473,7 +473,7 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
   <div style="background:#1a1a1a; width:100%; height:100%; max-width:100%; max-height:100%; border-radius:0; display:flex; flex-direction:column; border:none;">
     <div style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:#222; border-bottom:1px solid #444; flex-shrink:0;">
       <button class="btn btn-sm" id="btnCloseFormation" style="background:#3a3a3a; color:#fff;">← Cerrar</button>
-      <span style="font-size:0.8rem; color:#aaa; flex:1;">Guarda en el generador → PNG + envío al admin</span>
+      <span style="font-size:0.8rem; color:#aaa; flex:1;">Guardar → se envía al admin (descarga opcional)</span>
     </div>
     <iframe id="formationFrame" src="https://danielpendolero-del.github.io/fantasy-futbolchapas/chapas-generator.html" style="flex:1; width:100%; border:none; background:#1a1a1a;" title="Generador de formaciones"></iframe>
   </div>
@@ -1762,22 +1762,20 @@ window.addEventListener('message', async function(ev) {
   if (!ev.data || ev.data.type !== 'chapas-formation') return;
   var name = ev.data.name || 'Formación';
   var image = ev.data.image;
-  if (!image || !currentPlayerId) return;
+  var downloaded = !!ev.data.downloaded;
+  if (!image) {
+    alert('No se recibió la imagen de la formación');
+    return;
+  }
+  if (!currentPlayerId) {
+    alert('No hay jugador seleccionado. Abre la ficha del jugador y vuelve a guardar la formación.');
+    return;
+  }
 
   document.getElementById('formationModal').classList.remove('show');
 
-  // Rellenar nota con la imagen de la formación
-  noteImageData = image;
-  var noteEl = document.getElementById('noteText');
-  if (noteEl && !noteEl.value.trim()) {
-    noteEl.value = 'Formación: ' + name;
-  }
-  var prev = document.getElementById('noteImagePreview');
-  if (prev) prev.innerHTML = '<img class="note-img" src="' + image + '" alt="Formación">';
-
-  // Enviar automáticamente al admin como nota pendiente
   var author = (document.getElementById('noteAuthor') && document.getElementById('noteAuthor').value.trim()) || 'Anónimo';
-  var noteText = (noteEl && noteEl.value.trim()) || ('Formación: ' + name);
+  var noteText = 'Formación: ' + name;
   try {
     var payload = {
       player_id: currentPlayerId,
@@ -1788,14 +1786,15 @@ window.addEventListener('message', async function(ev) {
     };
     var err = (await supabaseClient.from('player_notes').insert(payload)).error;
     if (err) throw err;
-    alert('Formación "' + name + '" enviada al admin para aprobar.\nTambién se ha descargado el PNG.');
-    if (noteEl) noteEl.value = '';
-    noteImageData = null;
-    if (prev) prev.innerHTML = '';
-    var fi = document.getElementById('noteImageFile');
-    if (fi) fi.value = '';
+    // refrescar notas en memoria si hay loader
+    try {
+      if (typeof loadSupabaseData === 'function') await loadSupabaseData();
+      else if (typeof loadNotes === 'function') await loadNotes();
+    } catch (e2) {}
+    var extra = downloaded ? '\nTambién se ha descargado la imagen.' : '';
+    alert('Formación "' + name + '" enviada al admin para aprobar o rechazar.' + extra);
   } catch (e) {
-    alert('La imagen está lista en la nota. Pulsa "Enviar sugerencia" o revisa el error: ' + e.message);
+    alert('Error al enviar al admin: ' + e.message + '\nComprueba que la columna image_url existe en player_notes.');
   }
 });
 
