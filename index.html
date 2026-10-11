@@ -51,10 +51,41 @@ input, textarea {
 }
 input:focus, textarea:focus { outline: 2px solid var(--accent); }
 textarea { min-height: 100px; resize: vertical; }
-.budget-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 12px; }
+.budget-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 10px; }
 .budget-item { text-align: center; }
 .budget-item label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; display: block; }
 .budget-item span { font-size: 1.05rem; font-weight: 700; color: var(--accent); }
+.progress-wrap { margin-bottom: 12px; }
+.progress-label {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.72rem; color: var(--muted); margin-bottom: 5px; font-weight: 600;
+}
+.progress-track {
+  height: 12px; background: #0f172a; border-radius: 99px; overflow: hidden;
+  border: 1px solid var(--border);
+}
+.progress-fill {
+  height: 100%; border-radius: 99px; transition: width 0.25s ease;
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+}
+.progress-fill.warn { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+.progress-fill.danger { background: linear-gradient(90deg, #ef4444, #f87171); }
+.players-progress-row {
+  display: flex; align-items: stretch; gap: 12px; margin-bottom: 12px;
+}
+.players-vbar {
+  width: 28px; background: #0f172a; border-radius: 10px; border: 1px solid var(--border);
+  display: flex; flex-direction: column-reverse; overflow: hidden; min-height: 88px;
+}
+.players-vfill {
+  width: 100%; background: linear-gradient(180deg, #4ade80, #22c55e);
+  transition: height 0.25s ease; border-radius: 8px 8px 0 0;
+}
+.players-vbar.warn .players-vfill { background: linear-gradient(180deg, #fbbf24, #f59e0b); }
+.players-vbar.full .players-vfill { background: linear-gradient(180deg, #4ade80, #16a34a); }
+.players-vmeta { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.players-vmeta .big { font-size: 1.25rem; font-weight: 800; color: var(--accent); }
+.players-vmeta .sub { font-size: 0.72rem; color: var(--muted); }
 .player-card {
   background: var(--card2); border-radius: 11px; padding: 10px 12px;
   display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); margin-bottom: 7px;
@@ -64,6 +95,24 @@ textarea { min-height: 100px; resize: vertical; }
 .player-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .player-club { font-size: 0.72rem; color: var(--muted); }
 .player-price { font-weight: 700; color: var(--accent); white-space: nowrap; font-size: 0.9rem; }
+.player-price.unaffordable { color: var(--muted) !important; opacity: 0.75; }
+.bombo-filters {
+  display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
+}
+.bombo-filters button {
+  border: 1px solid var(--border); background: var(--card2); color: var(--muted);
+  border-radius: 99px; padding: 6px 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer;
+}
+.bombo-filters button.active { color: #000; border-color: transparent; }
+.bombo-filters button[data-bombo="all"].active { background: var(--accent); }
+.bombo-filters button[data-bombo="B1"].active { background: #fef08a; color: #854d0e; }
+.bombo-filters button[data-bombo="B2"].active { background: #bfdbfe; color: #1e3a8a; }
+.bombo-filters button[data-bombo="B3"].active { background: #bbf7d0; color: #166534; }
+.bombo-filters button[data-bombo="B4"].active { background: #e9d5ff; color: #4c1d95; }
+.bombo-filters button[data-bombo="B5"].active { background: #d1d5db; color: #374151; }
+.btn.btn-disabled, .btn:disabled {
+  background: #475569 !important; color: #94a3b8 !important; cursor: not-allowed; opacity: 0.85;
+}
 .bombo { display: inline-block; font-size: 0.58rem; padding: 1px 5px; border-radius: 4px; margin-left: 4px; font-weight: 700; }
 .bombo.b1 { background: #854d0e; color: #fef08a; }
 .bombo.b2 { background: #1e3a8a; color: #bfdbfe; }
@@ -126,13 +175,38 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
     <input type="text" id="coachName" placeholder="Tu nombre de entrenador..." maxlength="40">
   </div>
   <div id="alreadySubmitted" class="success" style="display:none;"></div>
-  <div class="budget-bar card">
-    <div class="budget-item"><label>Presupuesto</label><span id="maxBudgetShow">2000</span></div>
-    <div class="budget-item"><label>Gastado</label><span id="spent">0.00</span></div>
-    <div class="budget-item"><label>Restante</label><span id="remaining">2000.00</span></div>
-    <div class="budget-item"><label>Jugadores</label><span id="count">0 / 11</span></div>
+  <div class="card" style="padding:12px;">
+    <div class="progress-wrap" style="margin-bottom:14px;">
+      <div class="progress-label">
+        <span>Presupuesto</span>
+        <span id="budgetPctLabel">0 / 2000 M</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="budgetBar" style="width:0%"></div></div>
+      <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:0.75rem;">
+        <span style="color:var(--muted);">Gastado: <b id="spent" style="color:var(--accent);">0.00</b> M</span>
+        <span style="color:var(--muted);">Restante: <b id="remaining" style="color:var(--accent);">2000.00</b> M</span>
+      </div>
+    </div>
+    <div class="players-progress-row">
+      <div class="players-vbar" id="playersVBar"><div class="players-vfill" id="playersBar" style="height:0%"></div></div>
+      <div class="players-vmeta">
+        <div class="big" id="playersBig">0 / 11</div>
+        <div class="sub">Jugadores en el once</div>
+        <div class="sub" id="playersHint">Faltan 11 para poder enviar</div>
+      </div>
+    </div>
   </div>
-  <input type="text" id="search" placeholder="Buscar jugador o club..." style="margin-bottom:12px;">
+  <span id="maxBudgetShow" style="display:none;">2000</span>
+  <span id="count" style="display:none;">0 / 11</span>
+  <input type="text" id="search" placeholder="Buscar jugador o club..." style="margin-bottom:8px;">
+  <div class="bombo-filters" id="bomboFilters">
+    <button type="button" data-bombo="all" class="active">Todos</button>
+    <button type="button" data-bombo="B1">B1</button>
+    <button type="button" data-bombo="B2">B2</button>
+    <button type="button" data-bombo="B3">B3</button>
+    <button type="button" data-bombo="B4">B4</button>
+    <button type="button" data-bombo="B5">B5</button>
+  </div>
   <div class="section-title">Tu once <span id="teamCount">0 jugadores</span></div>
   <div id="teamList"></div>
   <div class="section-title">Jugadores disponibles <span id="availableCount"></span></div>
@@ -208,6 +282,21 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
           <button class="btn btn-danger" id="btnClearPlayers">Borrar toda la plantilla</button>
         </div>
         <div id="importStatus" style="font-size:0.8rem; color:var(--muted); margin-top:8px;"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Actualizar club y puntos (rápido)</div>
+        <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
+          Una línea por jugador. Formatos válidos:<br>
+          <code style="font-size:0.72rem;">NOMBRE - CLUB - PUNTOS</code><br>
+          <code style="font-size:0.72rem;">NOMBRE; CLUB; 123.45</code><br>
+          <code style="font-size:0.72rem;">1. NOMBRE CLUB 123.45</code> (el último número = puntos)<br>
+          Busca por nombre en la plantilla y actualiza club + puntos (no crea jugadores nuevos).
+        </p>
+        <textarea id="bulkUpdateInput" placeholder="JUAN LUIS JIMENEZ MORENO - MADRID - 572.13&#10;DAVID RUIZ REMON - FUENLABRADA - 529.00&#10;MARCOS FERNANDEZ DE LUCAS - MADRID - 499.63" style="min-height:120px;"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnBulkUpdatePlayers" style="flex:1">Actualizar club y puntos</button>
+        </div>
+        <div id="bulkUpdateStatus" style="font-size:0.8rem; color:var(--muted); margin-top:8px;"></div>
       </div>
       <div class="card">
         <div class="section-title">Añadir un jugador</div>
@@ -349,28 +438,33 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
     <button class="close" id="closeModal">×</button>
     <h3 id="modalName"></h3>
     <div class="club" id="modalClub"></div>
-    <div style="margin-bottom:14px;">
+    <div style="margin-bottom:10px;">
       <span id="modalPrice" style="font-weight:700; color:var(--accent); font-size:1.15rem;"></span>
       <span id="modalBombo" class="bombo" style="margin-left:8px;"></span>
     </div>
-    <div class="section-title">Notas de la comunidad</div>
-    <div id="modalNotes"></div>
-    <div class="section-title" style="margin-top:16px;">Sugerir una nota</div>
+
+    <button class="btn btn-primary" id="btnModalOnce" style="width:100%; margin-bottom:14px;">Añadir al once</button>
+
+    <div class="section-title" style="margin-top:4px;">📐 Crear formación (chapas)</div>
+    <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
+      Monta la jugada de este jugador. Al guardar se descarga el PNG y se envía al admin para aprobar.
+    </p>
+    <button class="btn btn-blue" id="btnOpenFormation" style="width:100%; margin-bottom:14px;">Crear formación con chapas</button>
+
+    <div class="section-title">📝 Añadir nota o foto</div>
     <input type="text" id="noteAuthor" placeholder="Tu nombre (opcional)" style="margin-bottom:8px;">
-    <textarea id="noteText" placeholder="Nota sobre este jugador..."></textarea>
+    <textarea id="noteText" placeholder="Escribe una nota sobre este jugador..."></textarea>
     <div style="margin-top:8px; margin-bottom:8px;">
-      <label style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:4px;">Foto (opcional, de tu galería)</label>
+      <label style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:4px;">Foto de galería (opcional)</label>
       <input type="file" id="noteImageFile" accept="image/*" style="padding:8px;">
       <div id="noteImagePreview" style="margin-top:8px;"></div>
     </div>
-    <div class="btn-row">
-      <button class="btn btn-primary" id="btnSubmitNote" style="flex:1">Enviar sugerencia</button>
+    <div class="btn-row" style="margin-bottom:14px;">
+      <button class="btn btn-primary" id="btnSubmitNote" style="flex:1">Enviar nota / foto</button>
     </div>
-    <div class="section-title" style="margin-top:16px;">Formación (chapas)</div>
-    <p style="font-size:0.75rem; color:var(--muted); margin-bottom:8px;">
-      Abre el generador, monta la jugada y pulsa Guardar. Se descarga el PNG y se envía al admin para aprobar.
-    </p>
-    <button class="btn btn-blue" id="btnOpenFormation" style="width:100%">Crear formación con chapas</button>
+
+    <div class="section-title">💬 Notas de la comunidad</div>
+    <div id="modalNotes" style="margin-bottom:14px;"></div>
   </div>
 </div>
 
@@ -381,7 +475,7 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
       <button class="btn btn-sm" id="btnCloseFormation" style="background:#3a3a3a; color:#fff;">← Cerrar</button>
       <span style="font-size:0.8rem; color:#aaa; flex:1;">Guarda en el generador → PNG + envío al admin</span>
     </div>
-    <iframe id="formationFrame" src="chapas-generator.html" style="flex:1; width:100%; border:none; background:#1a1a1a;" title="Generador de formaciones"></iframe>
+    <iframe id="formationFrame" src="https://danielpendolero-del.github.io/fantasy-futbolchapas/chapas-generator.html" style="flex:1; width:100%; border:none; background:#1a1a1a;" title="Generador de formaciones"></iframe>
   </div>
 </div>
 
@@ -514,6 +608,17 @@ var searchEl = document.getElementById('search');
 searchEl.addEventListener('input', renderOnce);
 document.getElementById('btnSubmit').addEventListener('click', submitFormation);
 
+var bomboFilter = 'all';
+document.getElementById('bomboFilters').addEventListener('click', function(e) {
+  var btn = e.target.closest('button[data-bombo]');
+  if (!btn) return;
+  bomboFilter = btn.getAttribute('data-bombo');
+  document.querySelectorAll('#bomboFilters button').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-bombo') === bomboFilter);
+  });
+  renderOnce();
+});
+
 function getSpent() {
   return PLAYERS.filter(function(p) { return selected.has(p.id); }).reduce(function(s, p) { return s + p.points; }, 0);
 }
@@ -539,14 +644,47 @@ function updateBudget() {
   document.getElementById('remaining').style.color = (MAX_BUDGET - spent) < 0 ? 'var(--danger)' : 'var(--accent)';
   document.getElementById('count').textContent = selected.size + ' / 11';
   document.getElementById('teamCount').textContent = selected.size + ' jugadores';
+
+  // Barra horizontal presupuesto
+  var pct = MAX_BUDGET > 0 ? Math.min(100, (spent / MAX_BUDGET) * 100) : 0;
+  var bbar = document.getElementById('budgetBar');
+  var blab = document.getElementById('budgetPctLabel');
+  if (bbar) {
+    bbar.style.width = pct.toFixed(1) + '%';
+    bbar.className = 'progress-fill' + (pct >= 100 ? ' danger' : pct >= 85 ? ' warn' : '');
+  }
+  if (blab) blab.textContent = spent.toFixed(1) + ' / ' + MAX_BUDGET + ' M (' + pct.toFixed(0) + '%)';
+
+  // Barra vertical jugadores
+  var jpct = Math.min(100, (selected.size / 11) * 100);
+  var pbar = document.getElementById('playersBar');
+  var vwrap = document.getElementById('playersVBar');
+  var pbig = document.getElementById('playersBig');
+  var phint = document.getElementById('playersHint');
+  if (pbar) pbar.style.height = jpct + '%';
+  if (vwrap) {
+    vwrap.className = 'players-vbar' + (selected.size >= 11 ? ' full' : selected.size >= 8 ? ' warn' : '');
+  }
+  if (pbig) pbig.textContent = selected.size + ' / 11';
+  if (phint) {
+    phint.textContent = selected.size >= 11
+      ? '¡Once completo! Ya puedes enviar'
+      : 'Faltan ' + (11 - selected.size) + ' para poder enviar';
+  }
 }
 
 function getAvailablePlayers() {
   // If jornada list is set, only those players; else all
+  var list;
   if (dbData.jornadaPlayerIds && dbData.jornadaPlayerIds.length > 0) {
-    return PLAYERS.filter(function(p) { return dbData.jornadaPlayerIds.indexOf(p.id) !== -1; });
+    list = PLAYERS.filter(function(p) { return dbData.jornadaPlayerIds.indexOf(p.id) !== -1; });
+  } else {
+    list = PLAYERS.slice();
   }
-  return PLAYERS;
+  if (typeof bomboFilter !== 'undefined' && bomboFilter && bomboFilter !== 'all') {
+    list = list.filter(function(p) { return (p.bombo || 'B4') === bomboFilter; });
+  }
+  return list;
 }
 
 function renderOnce() {
@@ -561,7 +699,10 @@ function renderOnce() {
     btn.disabled = true;
   } else {
     alreadyEl.style.display = 'none';
-    btn.disabled = false;
+    btn.disabled = (selected.size !== 11);
+    btn.textContent = selected.size === 11
+      ? 'Enviar mi once (solo 1 vez)'
+      : 'Enviar mi once (' + selected.size + '/11)';
   }
 
   var q = searchEl.value.trim().toLowerCase();
@@ -572,9 +713,9 @@ function renderOnce() {
 
   var team = PLAYERS.filter(function(p) { return selected.has(p.id); }).sort(function(a,b) { return b.points - a.points; });
   document.getElementById('teamList').innerHTML = team.length === 0
-    ? '<div class="empty">Aún no has seleccionado jugadores</div>'
+    ? '<div class="empty">Pulsa un jugador de la lista para ver notas y añadirlo al once</div>'
     : team.map(function(p) {
-      return '<div class="player-card selected"><div class="player-info" onclick="openPlayerModal(' + p.id + ')"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div><button class="btn btn-sm btn-danger" onclick="removePlayer(' + p.id + ')">Quitar</button></div>';
+      return '<div class="player-card selected"><div class="player-info" onclick="openPlayerModal(' + p.id + ')"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removePlayer(' + p.id + ')">Quitar</button></div>';
     }).join('');
 
   var available = filtered.filter(function(p) { return !selected.has(p.id); });
@@ -582,7 +723,9 @@ function renderOnce() {
   document.getElementById('playersList').innerHTML = available.length === 0
     ? '<div class="empty">' + (PLAYERS.length === 0 ? 'No hay jugadores en la plantilla. El admin debe importarlos.' : 'No hay jugadores') + '</div>'
     : available.map(function(p) {
-      return '<div class="player-card"><div class="player-info" style="cursor:pointer" onclick="openPlayerModal(' + p.id + ')"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div><button class="btn btn-sm btn-primary" ' + (canAdd(p) ? '' : 'disabled') + ' onclick="addPlayer(' + p.id + ')">Añadir</button></div>';
+      var afford = (getSpent() + p.points <= MAX_BUDGET) && selected.size < 11;
+      var priceClass = afford ? 'player-price' : 'player-price unaffordable';
+      return '<div class="player-card" style="cursor:pointer" onclick="openPlayerModal(' + p.id + ')"><div class="player-info"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="' + priceClass + '">' + p.points.toFixed(2) + ' M</div><span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;">Ver notas →</span></div>';
     }).join('');
 }
 
@@ -619,7 +762,16 @@ window.openPlayerModal = function(id) {
   if (!p) return;
   document.getElementById('modalName').textContent = p.name;
   document.getElementById('modalClub').textContent = p.club;
-  document.getElementById('modalPrice').textContent = p.points.toFixed(2) + ' M';
+  var priceEl = document.getElementById('modalPrice');
+  priceEl.textContent = p.points.toFixed(2) + ' M';
+  var canAfford = !selected.has(id) && (getSpent() + p.points <= MAX_BUDGET) && selected.size < 11;
+  if (selected.has(id)) {
+    priceEl.style.color = 'var(--accent)';
+  } else if (canAfford) {
+    priceEl.style.color = 'var(--accent)';
+  } else {
+    priceEl.style.color = 'var(--muted)';
+  }
   var be = document.getElementById('modalBombo');
   be.textContent = p.bombo;
   be.className = 'bombo ' + p.bombo.toLowerCase();
@@ -641,6 +793,36 @@ window.openPlayerModal = function(id) {
   var fc = document.getElementById('formCanvas');
   if (fc) fc.style.display = 'none';
   if (typeof renderFormPicker === 'function') renderFormPicker();
+  var onceBtn = document.getElementById('btnModalOnce');
+  if (onceBtn) {
+    if (selected.has(id)) {
+      onceBtn.textContent = 'Quitar del once';
+      onceBtn.className = 'btn btn-danger';
+      onceBtn.disabled = false;
+      onceBtn.onclick = function() {
+        removePlayer(id);
+        document.getElementById('playerModal').classList.remove('show');
+      };
+    } else if (canAdd(p)) {
+      onceBtn.textContent = 'Añadir al once';
+      onceBtn.className = 'btn btn-primary';
+      onceBtn.disabled = false;
+      onceBtn.onclick = function() {
+        addPlayer(id);
+        document.getElementById('playerModal').classList.remove('show');
+      };
+    } else {
+      var reason = selected.size >= 11 ? 'Once completo' : 'Sin presupuesto';
+      onceBtn.textContent = reason;
+      onceBtn.className = 'btn btn-disabled';
+      onceBtn.disabled = true;
+      onceBtn.onclick = function() {
+        alert(selected.size >= 11
+          ? 'El once ya tiene 11 jugadores'
+          : 'No te llega el presupuesto para este jugador');
+      };
+    }
+  }
   document.getElementById('playerModal').classList.add('show');
 };
 document.getElementById('closeModal').addEventListener('click', function() {
@@ -931,6 +1113,89 @@ document.getElementById('btnClearPlayers').addEventListener('click', async funct
     renderOnce();
     alert('Plantilla borrada');
   } catch (e) { alert(e.message); }
+});
+
+
+document.getElementById('btnBulkUpdatePlayers') && document.getElementById('btnBulkUpdatePlayers').addEventListener('click', async function() {
+  var raw = document.getElementById('bulkUpdateInput').value.trim();
+  if (!raw) return alert('Pega la lista nombre - club - puntos');
+
+  function norm(s) {
+    return String(s || '').toUpperCase()
+      .replace(/[ÁÀÄÂ]/g,'A').replace(/[ÉÈËÊ]/g,'E')
+      .replace(/[ÍÌÏÎ]/g,'I').replace(/[ÓÒÖÔ]/g,'O')
+      .replace(/[ÚÙÜÛ]/g,'U').replace(/Ñ/g,'N')
+      .replace(/\s+/g,' ').trim();
+  }
+
+  function findPlayer(name) {
+    var n = norm(name);
+    var p = PLAYERS.find(function(x) { return norm(x.name) === n; });
+    if (p) return p;
+    p = PLAYERS.find(function(x) { return norm(x.name).indexOf(n) !== -1 || n.indexOf(norm(x.name)) !== -1; });
+    return p || null;
+  }
+
+  var lines = raw.split(/\n+/);
+  var ok = 0, fail = [], updates = [];
+
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trim();
+    if (!line) continue;
+    line = line.replace(/^\d+[\.\)\-\:]\s*/, '').replace(/^\d+\s+/, '');
+
+    var name = '', club = '', pts = NaN;
+    var parts = line.split(/\s*[-;|]\s*/);
+    if (parts.length >= 3) {
+      pts = parseFloat(String(parts[parts.length - 1]).replace(',', '.'));
+      club = parts[parts.length - 2].trim();
+      name = parts.slice(0, parts.length - 2).join(' - ').trim();
+    } else {
+      var m = line.match(/^(.+?)\s+([\d]+(?:[.,]\d+)?)\s*$/);
+      if (!m) { fail.push(line); continue; }
+      pts = parseFloat(m[2].replace(',', '.'));
+      var rest = m[1].trim();
+      var words = rest.split(/\s+/);
+      if (words.length < 2) { fail.push(line); continue; }
+      club = words[words.length - 1];
+      name = words.slice(0, -1).join(' ');
+      if (words.length >= 3 && /^[A-ZÁÉÍÓÚÑ0-9.\-]{1,6}$/i.test(words[words.length - 2])) {
+        club = words[words.length - 2] + ' ' + words[words.length - 1];
+        name = words.slice(0, -2).join(' ');
+      }
+    }
+
+    if (!name || !club || isNaN(pts)) { fail.push(line); continue; }
+
+    var p = findPlayer(name);
+    if (!p) { fail.push(name); continue; }
+
+    updates.push({ id: p.id, name: p.name, club: club.toUpperCase(), points: pts, bombo: p.bombo || 'B4' });
+  }
+
+  if (updates.length === 0) {
+    document.getElementById('bulkUpdateStatus').textContent = 'Ninguna coincidencia.';
+    return alert('No se pudo actualizar ningún jugador.\nRevisa nombres.');
+  }
+
+  var btn = document.getElementById('btnBulkUpdatePlayers');
+  btn.disabled = true;
+  try {
+    for (var j = 0; j < updates.length; j += 50) {
+      var batch = updates.slice(j, j + 50);
+      var res = await supabaseClient.from('players').upsert(batch, { onConflict: 'id' });
+      if (res.error) throw res.error;
+      ok += batch.length;
+    }
+    await loadPlayers();
+    renderPlantilla();
+    renderOnce();
+    document.getElementById('bulkUpdateStatus').textContent = 'Actualizados: ' + ok + (fail.length ? ' | No encontrados: ' + fail.length : '');
+    alert('Actualizados: ' + ok + (fail.length ? '\nNo encontrados (' + fail.length + '): ' + fail.slice(0, 8).join(', ') : ''));
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+  btn.disabled = false;
 });
 
 document.getElementById('btnAddPlayer').addEventListener('click', async function() {
