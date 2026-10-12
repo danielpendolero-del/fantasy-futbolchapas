@@ -780,7 +780,7 @@ window.openPlayerModal = function(id) {
     ? '<div class="empty" style="padding:12px;">Sin notas aprobadas</div>'
     : approved.map(function(n) {
       var img = n.image_url ? '<img class="note-img" src="' + n.image_url.replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
-      return '<div class="note-item"><div class="note-author">' + (n.author || 'Anónimo') + '</div>' + n.note + img + '</div>';
+      return '<div class="note-item"><div class="note-author">' + (n.author || 'Anónimo') + '</div>' + stripFormData(n.note) + img + '</div>';
     }).join('');
   document.getElementById('noteAuthor').value = '';
   document.getElementById('noteText').value = '';
@@ -981,7 +981,9 @@ function renderAdmin() {
     pending.map(function(n) {
       var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
       var imgHtml = n.image_url ? '<img class="note-img" src="' + String(n.image_url).replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
-      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="font-weight:600">' + (p ? p.name : 'Jugador '+n.player_id) + '</div><div style="font-size:0.85rem">' + n.note + '</div>' + imgHtml + '<div style="font-size:0.72rem;color:var(--muted)">Por: ' + (n.author||'Anónimo') + (n.image_url ? ' · Con imagen' : '') + '</div><div class="btn-row" style="margin:0"><button class="btn btn-sm btn-primary" onclick="approveNote('+n.id+')">Aprobar</button><button class="btn btn-sm btn-danger" onclick="rejectNote('+n.id+')">Rechazar</button><button class="btn btn-sm" style="background:var(--border);color:var(--text)" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
+      var isForm = !!extractFormData(n.note);
+      var noteLabel = stripFormData(n.note) + (isForm ? ' <span class="badge badge-pending">Formación chapas</span>' : '');
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="font-weight:600">' + (p ? p.name : 'Jugador '+n.player_id) + '</div><div style="font-size:0.85rem">' + noteLabel + '</div>' + imgHtml + '<div style="font-size:0.72rem;color:var(--muted)">Por: ' + (n.author||'Anónimo') + (n.image_url ? ' · Con imagen' : '') + '</div><div class="btn-row" style="margin:0"><button class="btn btn-sm btn-primary" onclick="approveNote('+n.id+')">Aprobar</button><button class="btn btn-sm btn-danger" onclick="rejectNote('+n.id+')">Rechazar</button><button class="btn btn-sm" style="background:var(--border);color:var(--text)" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
     }).join('');
 
   var other = data.notes.filter(function(n) { return n.status !== 'pending'; });
@@ -990,7 +992,12 @@ function renderAdmin() {
       var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
       var badge = n.status === 'approved' ? '<span class="badge badge-approved">Aprobada</span>' : '<span class="badge badge-pending">Rechazada</span>';
       var imgHtml2 = n.image_url ? '<img class="note-img" src="' + String(n.image_url).replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
-      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;justify-content:space-between;width:100%"><div style="font-weight:600">' + (p?p.name:'Jugador '+n.player_id) + '</div>' + badge + '</div><div style="font-size:0.85rem">' + n.note + '</div>' + imgHtml2 + '<button class="btn btn-sm btn-danger" onclick="deleteNote('+n.id+')">Eliminar</button></div>';
+      var isForm2 = !!extractFormData(n.note);
+      var noteLabel2 = stripFormData(n.note) + (isForm2 ? ' <span class="badge badge-approved">Formación</span>' : '');
+      var renameBtn = (n.status === 'approved' && isForm2)
+        ? '<button class="btn btn-sm btn-blue" onclick="renameFormationNote('+n.id+')">Renombrar</button>'
+        : '';
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;justify-content:space-between;width:100%"><div style="font-weight:600">' + (p?p.name:'Jugador '+n.player_id) + '</div>' + badge + '</div><div style="font-size:0.85rem">' + noteLabel2 + '</div>' + imgHtml2 + '<div class="btn-row" style="margin:0">' + renameBtn + '<button class="btn btn-sm btn-danger" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
     }).join('');
 }
 
@@ -1015,10 +1022,31 @@ window.rejectNote = async function(id) {
   renderAdmin();
 };
 window.deleteNote = async function(id) {
-  if (!confirm('¿Eliminar esta nota?')) return;
+  if (!confirm('¿Eliminar esta nota/formación? Solo el administrador puede hacerlo.')) return;
   await supabaseClient.from('player_notes').delete().eq('id', id);
   dbData.notes = dbData.notes.filter(function(n) { return n.id !== id; });
   renderAdmin();
+};
+
+window.renameFormationNote = async function(id) {
+  var n = dbData.notes.find(function(x) { return x.id === id; });
+  if (!n) return;
+  var current = extractFormName(n.note);
+  var nuevo = prompt('Nuevo nombre de la formación:', current);
+  if (!nuevo || !nuevo.trim()) return;
+  nuevo = nuevo.trim();
+  var form = extractFormData(n.note);
+  var newNote = 'Formación: ' + nuevo;
+  if (form) {
+    try { newNote += '\n@@FORM@@' + JSON.stringify(form); } catch (e) {}
+  }
+  try {
+    var err = (await supabaseClient.from('player_notes').update({ note: newNote }).eq('id', id)).error;
+    if (err) throw err;
+    n.note = newNote;
+    renderAdmin();
+    alert('Formación renombrada a "' + nuevo + '"');
+  } catch (e) { alert(e.message); }
 };
 
 // Plantilla management
@@ -1749,6 +1777,24 @@ document.getElementById('btnSaveForm') && document.getElementById('btnSaveForm')
 
 
 
+
+// --- Formaciones chapas en notas ---
+function stripFormData(note) {
+  if (!note) return '';
+  return String(note).replace(/\n?@@FORM@@[\s\S]*$/, '').trim();
+}
+function extractFormData(note) {
+  if (!note) return null;
+  var m = String(note).match(/@@FORM@@([\s\S]*)$/);
+  if (!m) return null;
+  try { return JSON.parse(m[1]); } catch (e) { return null; }
+}
+function extractFormName(note) {
+  var t = stripFormData(note);
+  var m = t.match(/^Formación:\s*(.+)$/i);
+  return m ? m[1].trim() : (t || 'Formación');
+}
+
 // ========== FORMACIÓN CHAPAS ==========
 document.getElementById('btnOpenFormation') && document.getElementById('btnOpenFormation').addEventListener('click', function() {
   if (!currentPlayerId) return alert('Abre primero la ficha de un jugador');
@@ -1759,10 +1805,32 @@ document.getElementById('btnCloseFormation') && document.getElementById('btnClos
 });
 
 window.addEventListener('message', async function(ev) {
-  if (!ev.data || ev.data.type !== 'chapas-formation') return;
+  if (!ev.data) return;
+
+  // El generador pide la lista de formaciones aprobadas
+  if (ev.data.type === 'request-approved-formations') {
+    var items = (dbData.notes || []).filter(function(n) {
+      return n.status === 'approved' && extractFormData(n.note);
+    }).map(function(n) {
+      return {
+        id: n.id,
+        name: extractFormName(n.note),
+        author: n.author || 'Anónimo',
+        formation: extractFormData(n.note)
+      };
+    });
+    var frame = document.getElementById('formationFrame');
+    if (frame && frame.contentWindow) {
+      frame.contentWindow.postMessage({ type: 'approved-formations', items: items }, '*');
+    }
+    return;
+  }
+
+  if (ev.data.type !== 'chapas-formation') return;
   var name = ev.data.name || 'Formación';
   var image = ev.data.image;
   var downloaded = !!ev.data.downloaded;
+  var formation = ev.data.formation || null;
   if (!image) {
     alert('No se recibió la imagen de la formación');
     return;
@@ -1776,6 +1844,11 @@ window.addEventListener('message', async function(ev) {
 
   var author = (document.getElementById('noteAuthor') && document.getElementById('noteAuthor').value.trim()) || 'Anónimo';
   var noteText = 'Formación: ' + name;
+  if (formation) {
+    try {
+      noteText += '\n@@FORM@@' + JSON.stringify(formation);
+    } catch (e3) {}
+  }
   try {
     var payload = {
       player_id: currentPlayerId,
@@ -1786,10 +1859,8 @@ window.addEventListener('message', async function(ev) {
     };
     var err = (await supabaseClient.from('player_notes').insert(payload)).error;
     if (err) throw err;
-    // refrescar notas en memoria si hay loader
     try {
       if (typeof loadSupabaseData === 'function') await loadSupabaseData();
-      else if (typeof loadNotes === 'function') await loadNotes();
     } catch (e2) {}
     var extra = downloaded ? '\nTambién se ha descargado la imagen.' : '';
     alert('Formación "' + name + '" enviada al admin para aprobar o rechazar.' + extra);
