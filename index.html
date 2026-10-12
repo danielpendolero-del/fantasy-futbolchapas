@@ -146,6 +146,59 @@ th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: 
 .note-item { background: var(--card2); border-radius: 9px; padding: 10px; margin-bottom: 8px; font-size: 0.88rem; border-left: 3px solid var(--accent); }
 .note-author { font-size: 0.72rem; color: var(--muted); margin-bottom: 3px; }
 .note-img { max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 8px; display: block; object-fit: contain; background: #0f172a; }
+.formaciones-strip {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0 12px 0 0;
+  margin: 4px 0 10px;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+}
+.formacion-card {
+  flex: 0 0 auto;
+  /* ~42% del ancho: caben 2 y se asoma un poco la 3ª */
+  width: 42%;
+  min-width: 130px;
+  max-width: 180px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  scroll-snap-align: start;
+}
+.formacion-card .formacion-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0 0 1px;
+  text-align: center;
+}
+.formacion-card .formacion-author {
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+.formacion-card img {
+  width: 100%;
+  height: auto;
+  max-height: 220px;
+  object-fit: contain;
+  object-position: center top;
+  border-radius: 10px;
+  display: block;
+  background: #0a1f0a;
+}
 .admin-login { max-width: 340px; margin: 40px auto; text-align: center; }
 .admin-login input { margin-bottom: 12px; text-align: center; }
 .result-input { width: 72px; text-align: center; padding: 7px; font-size: 0.9rem; }
@@ -445,11 +498,8 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
 
     <button class="btn btn-primary" id="btnModalOnce" style="width:100%; margin-bottom:14px;">Añadir al once</button>
 
-    <div class="section-title" style="margin-top:4px;">📐 Crear formación (chapas)</div>
-    <p style="font-size:0.78rem; color:var(--muted); margin-bottom:8px;">
-      Monta la jugada de este jugador. Al guardar se envía siempre al admin. La descarga de la imagen es opcional.
-    </p>
-    <button class="btn btn-blue" id="btnOpenFormation" style="width:100%; margin-bottom:14px;">Crear formación con chapas</button>
+    <button class="btn btn-blue" id="btnOpenFormation" style="width:100%; margin-bottom:8px;">Crear formación con chapas</button>
+    <div id="modalFormaciones" style="margin-bottom:10px;"></div>
 
     <div class="section-title">📝 Añadir nota o foto</div>
     <input type="text" id="noteAuthor" placeholder="Tu nombre (opcional)" style="margin-bottom:8px;">
@@ -474,8 +524,17 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
     <div style="display:flex; align-items:center; gap:8px; padding:10px 12px; background:#222; border-bottom:1px solid #444; flex-shrink:0;">
       <button class="btn btn-sm" id="btnCloseFormation" style="background:#3a3a3a; color:#fff;">← Cerrar</button>
       <span style="font-size:0.8rem; color:#aaa; flex:1;">Guardar → se envía al admin (descarga opcional)</span>
+      <a id="btnOpenFormTab" href="chapas-generator.html" target="_blank" rel="noopener"
+         style="font-size:0.75rem;color:#0a84ff;text-decoration:none;white-space:nowrap;padding:6px 8px;">↗ Pestaña</a>
     </div>
-    <iframe id="formationFrame" src="https://danielpendolero-del.github.io/fantasy-futbolchapas/chapas-generator.html" style="flex:1; width:100%; border:none; background:#1a1a1a;" title="Generador de formaciones"></iframe>
+    <iframe id="formationFrame" src="about:blank" style="flex:1; width:100%; border:none; background:#1a1a1a;" title="Generador de formaciones"></iframe>
+    <div id="formationFallback" style="display:none;padding:16px;text-align:center;background:#222;color:#ccc;font-size:0.85rem;">
+      <p style="margin-bottom:10px;">Si no carga el generador, ábrelo en una pestaña nueva:</p>
+      <a id="formationOpenLink" href="chapas-generator.html" target="_blank" rel="noopener"
+         style="display:inline-block;padding:10px 16px;background:#0a84ff;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">
+        Abrir generador de chapas
+      </a>
+    </div>
   </div>
 </div>
 
@@ -776,10 +835,39 @@ window.openPlayerModal = function(id) {
   be.textContent = p.bombo;
   be.className = 'bombo ' + p.bombo.toLowerCase();
   var approved = dbData.notes.filter(function(n) { return n.player_id === id && n.status === 'approved'; });
-  document.getElementById('modalNotes').innerHTML = approved.length === 0
-    ? '<div class="empty" style="padding:12px;">Sin notas aprobadas</div>'
-    : approved.map(function(n) {
-      var img = n.image_url ? '<img class="note-img" src="' + n.image_url.replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
+  // Formaciones: notas con datos de chapas o imagen de formación
+  var forms = approved.filter(function(n) {
+    return !!extractFormData(n.note) || (n.image_url && /^Formación:/i.test(stripFormData(n.note) || ''));
+  });
+  // Si tiene image_url y el texto empieza por Formación, es formación; si solo imagen sin texto formación, puede ser foto de nota
+  // También incluir cualquier nota aprobada con extractFormData
+  var formIds = {};
+  forms.forEach(function(n) { formIds[n.id] = true; });
+  // Notas de texto (sin contar formaciones)
+  var textNotes = approved.filter(function(n) { return !formIds[n.id]; });
+
+  var formEl = document.getElementById('modalFormaciones');
+  if (formEl) {
+    if (forms.length === 0) {
+      formEl.innerHTML = '';
+    } else {
+      formEl.innerHTML = '<div class="formaciones-strip">' + forms.map(function(n) {
+        var title = extractFormName(n.note) || 'Formación';
+        var img = n.image_url
+          ? '<img src="' + String(n.image_url).replace(/"/g, '') + '" alt="' + title.replace(/"/g, '') + '" loading="lazy" onerror="this.style.display=\'none\'">'
+          : '<div style="padding:20px 8px;text-align:center;color:var(--muted);font-size:0.75rem;">Sin imagen</div>';
+        return '<div class="formacion-card">' +
+          '<div class="formacion-name">' + title.replace(/</g, '&lt;') + '</div>' +
+          '<div class="formacion-author">' + (n.author || 'Anónimo').replace(/</g, '&lt;') + '</div>' +
+          img + '</div>';
+      }).join('') + '</div>';
+    }
+  }
+
+  document.getElementById('modalNotes').innerHTML = textNotes.length === 0
+    ? '<div class="empty" style="padding:12px;">Sin notas de texto</div>'
+    : textNotes.map(function(n) {
+      var img = n.image_url ? '<img class="note-img" src="' + String(n.image_url).replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\">' : '';
       return '<div class="note-item"><div class="note-author">' + (n.author || 'Anónimo') + '</div>' + stripFormData(n.note) + img + '</div>';
     }).join('');
   document.getElementById('noteAuthor').value = '';
@@ -1798,10 +1886,35 @@ function extractFormName(note) {
 // ========== FORMACIÓN CHAPAS ==========
 document.getElementById('btnOpenFormation') && document.getElementById('btnOpenFormation').addEventListener('click', function() {
   if (!currentPlayerId) return alert('Abre primero la ficha de un jugador');
+  var frame = document.getElementById('formationFrame');
+  // Ruta relativa + anti-caché (evita 404 viejo en caché)
+  var url = 'chapas-generator.html?v=' + Date.now();
+  if (frame) {
+    frame.style.display = 'block';
+    frame.src = url;
+  }
+  var link = document.getElementById('btnOpenFormTab');
+  if (link) link.href = url;
+  var fb = document.getElementById('formationFallback');
+  if (fb) fb.style.display = 'none';
+  // Si a los 4s el iframe no ha cargado, mostrar enlace alternativo
+  setTimeout(function() {
+    try {
+      var doc = frame.contentDocument || frame.contentWindow.document;
+      // cross-origin check — same origin should work
+      if (!doc || !doc.body || doc.body.innerHTML.length < 50) {
+        if (fb) fb.style.display = 'block';
+      }
+    } catch (e) {
+      // si hay error de acceso, asumir que cargó (o mostrar fallback)
+    }
+  }, 4000);
   document.getElementById('formationModal').classList.add('show');
 });
 document.getElementById('btnCloseFormation') && document.getElementById('btnCloseFormation').addEventListener('click', function() {
   document.getElementById('formationModal').classList.remove('show');
+  var frame = document.getElementById('formationFrame');
+  if (frame) frame.src = 'about:blank';
 });
 
 window.addEventListener('message', async function(ev) {
