@@ -562,6 +562,7 @@ let dbData = {
   global: {},
   currentJornada: 1,
   jornadaPlayerIds: [],
+  jornadaBombos: {},
   notes: [],
   competitionName: 'Fantasy Futbolchapas'
 };
@@ -584,23 +585,52 @@ function buildJornadaScores(data) {
 async function loadPlayers() {
   var res = await supabaseClient.from('players').select('*').order('points', { ascending: false });
   PLAYERS = (res.data || []).map(function(p) {
-    return { id: p.id, name: p.name, club: p.club, points: Number(p.points), bombo: p.bombo || 'B4' };
+    return { id: p.id, name: p.name, club: p.club, points: Number(p.points), bombo: 'B4' };
+  });
+}
+
+/** Aplica el mapa de bombos de la jornada actual a PLAYERS */
+function applyJornadaBombos() {
+  var map = dbData.jornadaBombos || {};
+  PLAYERS.forEach(function(p) {
+    if (map[String(p.id)]) p.bombo = map[String(p.id)];
+    else if (map[p.id]) p.bombo = map[p.id];
   });
 }
 
 async function loadSupabaseData() {
+  // Primero settings para saber la jornada actual
+  var settingsRes = await supabaseClient.from('settings').select('*');
+  dbData.currentJornada = 1;
+  dbData.jornadaBombos = {};
+  (settingsRes.data || []).forEach(function(s) {
+    if (s.key === 'current_jornada') dbData.currentJornada = Number(s.value) || 1;
+    if (s.key === 'competition_name') dbData.competitionName = s.value;
+    if (s.key === 'max_budget') MAX_BUDGET = Number(s.value) || 2000;
+  });
+  var jornada = dbData.currentJornada || 1;
+
+  // Cargar mapa de bombos de esta jornada
+  (settingsRes.data || []).forEach(function(s) {
+    if (s.key === 'jornada_bombos_' + jornada || s.key === 'jornada_bombos') {
+      try {
+        var parsed = typeof s.value === 'string' ? JSON.parse(s.value) : s.value;
+        if (parsed && typeof parsed === 'object') dbData.jornadaBombos = parsed;
+      } catch (e) {}
+    }
+  });
+
   var results = await Promise.all([
     supabaseClient.from('formations').select('*').order('submitted_at', { ascending: true }),
     supabaseClient.from('jornada_results').select('*'),
     supabaseClient.from('global_scores').select('*'),
-    supabaseClient.from('settings').select('*'),
-    supabaseClient.from('jornada_players').select('*').eq('jornada', 1).maybeSingle(),
+    supabaseClient.from('jornada_players').select('*').eq('jornada', jornada).maybeSingle(),
     supabaseClient.from('player_notes').select('*').order('created_at', { ascending: false }),
     loadPlayers()
   ]);
 
   var formRes = results[0], resultRes = results[1], globalRes = results[2];
-  var settingsRes = results[3], jornadaPlayersRes = results[4], notesRes = results[5];
+  var jornadaPlayersRes = results[3], notesRes = results[4];
 
   dbData.formations = (formRes.data || []).map(function(f) {
     return { id: f.id, coach: f.coach, players: Array.isArray(f.players) ? f.players : [], cost: Number(f.cost), submittedAt: f.submitted_at };
@@ -608,7 +638,7 @@ async function loadSupabaseData() {
 
   dbData.results = {};
   (resultRes.data || []).forEach(function(r) {
-    if (r.jornada === (dbData.currentJornada || 1)) dbData.results[r.player_id] = Number(r.points);
+    if (r.jornada === jornada) dbData.results[r.player_id] = Number(r.points);
   });
 
   dbData.global = {};
@@ -616,17 +646,18 @@ async function loadSupabaseData() {
     dbData.global[g.coach] = { totalPoints: Number(g.total_points || 0), wins: Number(g.wins || 0) };
   });
 
-  (settingsRes.data || []).forEach(function(s) {
-    if (s.key === 'current_jornada') dbData.currentJornada = Number(s.value) || 1;
-    if (s.key === 'competition_name') dbData.competitionName = s.value;
-    if (s.key === 'max_budget') MAX_BUDGET = Number(s.value) || 2000;
-  });
-
   if (jornadaPlayersRes.data) {
     dbData.jornadaPlayerIds = jornadaPlayersRes.data.player_ids || [];
     jornadaSelected = new Set(dbData.jornadaPlayerIds);
+  } else {
+    dbData.jornadaPlayerIds = [];
+    jornadaSelected = new Set();
   }
   dbData.notes = notesRes.data || [];
+
+  // Aplicar bombos guardados de la jornada a los jugadores
+  applyJornadaBombos();
+
   dbData.jornadaScores = buildJornadaScores(dbData);
 
   document.getElementById('compSub').textContent = dbData.competitionName;
@@ -1543,20 +1574,23 @@ document.getElementById('btnResetAll').addEventListener('click', async function(
 // ========== BOMBOS ==========
 async function saveBombosToDb(playersChanged) {
   if (!playersChanged || !playersChanged.length) return;
-  // Guardar en Supabase por lotes (solo id + bombo + campos requeridos)
-  for (var i = 0; i < playersChanged.length; i += 50) {
-    var batch = playersChanged.slice(i, i + 50).map(function(p) {
-      return {
-        id: p.id,
-        name: p.name,
-        club: p.club,
-        points: p.points,
-        bombo: p.bombo || 'B4'
-      };
-    });
-    var res = await supabaseClient.from('players').upsert(batch, { onConflict: 'id' });
-    if (res.error) throw res.error;
-  }
+  if (!dbData.jornadaBombos) dbData.jornadaBombos = {};
+
+  // Actualizar mapa local
+  playersChanged.forEach(function(p) {
+    dbData.jornadaBombos[String(p.id)] = p.bombo || 'B4';
+    var g = PLAYERS.find(function(x) { return x.id === p.id; });
+    if (g) g.bombo = p.bombo || 'B4';
+  });
+
+  // Guardar mapa completo de bombos de la jornada en settings (persiste para todos)
+  var jornada = dbData.currentJornada || 1;
+  var key = 'jornada_bombos_' + jornada;
+  var res = await supabaseClient.from('settings').upsert({
+    key: key,
+    value: JSON.stringify(dbData.jornadaBombos)
+  }, { onConflict: 'key' });
+  if (res.error) throw res.error;
 }
 
 document.getElementById('btnAutoBombos') && document.getElementById('btnAutoBombos').addEventListener('click', async function() {
@@ -1637,10 +1671,16 @@ document.getElementById('btnClearJornadaPlayers') && document.getElementById('bt
   try {
     jornadaSelected.clear();
     dbData.jornadaPlayerIds = [];
+    dbData.jornadaBombos = {};
+    var jornada = dbData.currentJornada || 1;
     await supabaseClient.from('jornada_players').upsert({
-      jornada: dbData.currentJornada || 1,
+      jornada: jornada,
       player_ids: []
     }, { onConflict: 'jornada' });
+    await supabaseClient.from('settings').upsert({
+      key: 'jornada_bombos_' + jornada,
+      value: '{}'
+    }, { onConflict: 'key' });
     document.getElementById('jornadaSelCount').textContent = '0';
     renderJornadaSelect();
     renderOnce();
