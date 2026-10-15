@@ -1541,7 +1541,25 @@ document.getElementById('btnResetAll').addEventListener('click', async function(
 
 
 // ========== BOMBOS ==========
-document.getElementById('btnAutoBombos') && document.getElementById('btnAutoBombos').addEventListener('click', function() {
+async function saveBombosToDb(playersChanged) {
+  if (!playersChanged || !playersChanged.length) return;
+  // Guardar en Supabase por lotes (solo id + bombo + campos requeridos)
+  for (var i = 0; i < playersChanged.length; i += 50) {
+    var batch = playersChanged.slice(i, i + 50).map(function(p) {
+      return {
+        id: p.id,
+        name: p.name,
+        club: p.club,
+        points: p.points,
+        bombo: p.bombo || 'B4'
+      };
+    });
+    var res = await supabaseClient.from('players').upsert(batch, { onConflict: 'id' });
+    if (res.error) throw res.error;
+  }
+}
+
+document.getElementById('btnAutoBombos') && document.getElementById('btnAutoBombos').addEventListener('click', async function() {
   var selected = PLAYERS.filter(function(p) { return jornadaSelected.has(p.id); })
     .sort(function(a,b) { return b.points - a.points; });
   if (selected.length === 0) return alert('No hay jugadores seleccionados');
@@ -1562,11 +1580,25 @@ document.getElementById('btnAutoBombos') && document.getElementById('btnAutoBomb
   });
   libres.forEach(function(p) { p.bombo = 'B5'; });
 
-  renderJornadaSelect();
-  alert('Bombos: ' + conClub.length + ' en B1-B4, ' + libres.length + ' libres sin club (B5)');
+  var btn = document.getElementById('btnAutoBombos');
+  if (btn) btn.disabled = true;
+  try {
+    await saveBombosToDb(selected);
+    // Sincronizar también en el array global PLAYERS
+    selected.forEach(function(p) {
+      var g = PLAYERS.find(function(x) { return x.id === p.id; });
+      if (g) g.bombo = p.bombo;
+    });
+    renderJornadaSelect();
+    renderOnce();
+    alert('Bombos guardados: ' + conClub.length + ' en B1-B4, ' + libres.length + ' libres (B5)');
+  } catch (e) {
+    alert('Error al guardar bombos: ' + e.message);
+  }
+  if (btn) btn.disabled = false;
 });
 
-document.getElementById('btnRangeBombo') && document.getElementById('btnRangeBombo').addEventListener('click', function() {
+document.getElementById('btnRangeBombo') && document.getElementById('btnRangeBombo').addEventListener('click', async function() {
   var from = parseInt(document.getElementById('bomboFrom').value, 10);
   var to = parseInt(document.getElementById('bomboTo').value, 10);
   var bombo = document.getElementById('bomboValue').value;
@@ -1575,13 +1607,29 @@ document.getElementById('btnRangeBombo') && document.getElementById('btnRangeBom
   var selected = PLAYERS.filter(function(p) { return jornadaSelected.has(p.id); })
     .sort(function(a,b) { return b.points - a.points; });
 
+  var changed = [];
   var count = 0;
   for (var i = from - 1; i < to && i < selected.length; i++) {
     selected[i].bombo = bombo;
+    changed.push(selected[i]);
     count++;
   }
-  renderJornadaSelect();
-  alert('Asignado ' + bombo + ' a ' + count + ' jugadores (posiciones ' + from + '-' + to + ')');
+
+  var btn = document.getElementById('btnRangeBombo');
+  if (btn) btn.disabled = true;
+  try {
+    await saveBombosToDb(changed);
+    changed.forEach(function(p) {
+      var g = PLAYERS.find(function(x) { return x.id === p.id; });
+      if (g) g.bombo = p.bombo;
+    });
+    renderJornadaSelect();
+    renderOnce();
+    alert('Guardado: ' + bombo + ' a ' + count + ' jugadores (posiciones ' + from + '-' + to + ')');
+  } catch (e) {
+    alert('Error al guardar: ' + e.message);
+  }
+  if (btn) btn.disabled = false;
 });
 
 document.getElementById('btnClearJornadaPlayers') && document.getElementById('btnClearJornadaPlayers').addEventListener('click', async function() {
