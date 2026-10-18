@@ -189,6 +189,9 @@ th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: 
   text-overflow: ellipsis;
   text-align: center;
 }
+.click-row { cursor: pointer; }
+.click-row:hover { background: rgba(74, 222, 128, 0.08); }
+.hint-cell { color: var(--muted); font-size: 0.85rem; text-align: center; width: 28px; }
 .coach-pick { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
 .coach-pick button { flex:1; min-width:120px; }
 .coach-list { max-height:180px; overflow-y:auto; margin-top:8px; }
@@ -760,23 +763,28 @@ var DRAFT_KEY = 'fantasy_draft_v1';
 function getCoachName() {
   return (selectedCoachName || (coachNameEl && coachNameEl.value) || '').trim();
 }
-function setCoachName(name) {
-  selectedCoachName = name || '';
+function setCoachName(name, opts) {
+  opts = opts || {};
+  selectedCoachName = (name || '').trim();
   if (coachNameEl) coachNameEl.value = selectedCoachName;
   var box = document.getElementById('coachSelected');
   var nm = document.getElementById('coachSelectedName');
+  var ret = document.getElementById('coachReturningBox');
+  var neu = document.getElementById('coachNewBox');
   if (box && nm) {
     if (selectedCoachName) {
       nm.textContent = selectedCoachName;
       box.style.display = 'block';
-      document.getElementById('coachReturningBox').style.display = 'none';
-      document.getElementById('coachNewBox').style.display = 'none';
+      if (ret) ret.style.display = 'none';
+      if (neu) neu.style.display = 'none';
     } else {
       box.style.display = 'none';
     }
   }
-  saveDraft();
-  renderOnce();
+  if (!opts.silent) {
+    saveDraft();
+    renderOnce();
+  }
 }
 function renderPrevCoaches(q) {
   var list = document.getElementById('coachPrevList');
@@ -843,14 +851,21 @@ function loadDraft() {
     var raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return;
     var d = JSON.parse(raw);
-    if (d.coach) setCoachName(d.coach);
     if (Array.isArray(d.players)) {
       selected.clear();
       d.players.forEach(function(id) {
-        if (PLAYERS.some(function(p) { return p.id === id; })) selected.add(id);
+        var nid = Number(id);
+        if (PLAYERS.some(function(p) { return p.id === nid || p.id === id; })) {
+          selected.add(PLAYERS.find(function(p) { return p.id === nid || p.id === id; }).id);
+        }
       });
     }
-  } catch (e) {}
+    if (d.coach) {
+      setCoachName(d.coach, { silent: true });
+    }
+  } catch (e) {
+    console.warn('loadDraft', e);
+  }
 }
 function clearDraft() {
   try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
@@ -873,8 +888,7 @@ function updateSubmissionsUI() {
     btn.className = open ? 'btn btn-warning' : 'btn btn-primary';
   }
   var card = document.getElementById('allOncesCard');
-  if (card) card.style.display = open ? 'none' : 'block';
-  if (!open) renderAllOnces();
+  if (card) card.style.display = 'none'; // los onces se ven al clicar en la clasificación
 }
 
 function renderAllOnces() {
@@ -1259,17 +1273,54 @@ document.getElementById('btnSubmitNote').addEventListener('click', async functio
 function renderJornada() {
   var data = loadData();
   var el = document.getElementById('jornadaRanking');
+  var canSee = dbData.submissionsOpen === false;
   if (!data.jornadaScores || data.jornadaScores.length === 0) {
-    el.innerHTML = '<div class="empty">Aún no se ha calculado ninguna jornada (falta subir resultados)</div>';
+    // Si no hay puntuación aún pero hay formaciones y cerrado, listar entrenadores clicables
+    if (canSee && data.formations && data.formations.length) {
+      el.innerHTML = '<p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Pulsa un entrenador para ver su once →</p><table><thead><tr><th>#</th><th>Entrenador</th><th>Coste</th><th></th></tr></thead><tbody>' +
+        data.formations.map(function(f, i) {
+          return '<tr class="click-row" onclick="showJornadaOnce(\'' + f.coach.replace(/'/g, "\\'") + '\')"><td class="rank">' + (i+1) + '</td><td>' + f.coach + '</td><td>' + Number(f.cost).toFixed(2) + ' M</td><td class="hint-cell">👁</td></tr>';
+        }).join('') + '</tbody></table>';
+    } else {
+      el.innerHTML = '<div class="empty">Aún no se ha calculado ninguna jornada (falta subir resultados)</div>';
+    }
   } else {
-    el.innerHTML = '<table><thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Coste</th></tr></thead><tbody>' +
+    el.innerHTML = (canSee ? '<p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Pulsa un entrenador para ver su once →</p>' : '') +
+      '<table><thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Coste</th>' + (canSee ? '<th></th>' : '') + '</tr></thead><tbody>' +
       data.jornadaScores.map(function(s, i) {
-        return '<tr><td class="rank">' + (i+1) + '</td><td>' + s.coach + (i===0?' 🏆':'') + '</td><td>' + s.points.toFixed(1) + '</td><td>' + s.cost.toFixed(2) + ' M</td></tr>';
+        var click = canSee ? (' class="click-row" onclick="showJornadaOnce(\'' + s.coach.replace(/'/g, "\\'") + '\')"') : '';
+        return '<tr' + click + '><td class="rank">' + (i+1) + '</td><td>' + s.coach + (i===0?' 🏆':'') + '</td><td>' + s.points.toFixed(1) + '</td><td>' + s.cost.toFixed(2) + ' M</td>' +
+          (canSee ? '<td class="hint-cell">👁</td>' : '') + '</tr>';
       }).join('') + '</tbody></table>';
   }
-  if (dbData.submissionsOpen === false) renderAllOnces();
   updateSubmissionsUI();
 }
+
+window.showJornadaOnce = function(coach) {
+  if (dbData.submissionsOpen !== false) {
+    alert('Los onces se pueden ver cuando las inscripciones estén cerradas.');
+    return;
+  }
+  var f = (dbData.formations || []).find(function(x) { return x.coach === coach; });
+  var body = document.getElementById('coachHistoryBody');
+  var title = document.getElementById('coachHistoryTitle');
+  if (!body || !title) return;
+  title.textContent = 'Once de ' + coach;
+  if (!f) {
+    body.innerHTML = '<div class="empty">No se encontró el once</div>';
+  } else {
+    var names = (f.players || []).map(function(id) {
+      var p = PLAYERS.find(function(x) { return x.id === id; });
+      return p ? (p.name + ' (' + p.points.toFixed(1) + ' M)') : ('#' + id);
+    });
+    var pts = 0;
+    (f.players || []).forEach(function(id) { pts += Number(dbData.results[id] || 0); });
+    body.innerHTML = '<div style="font-size:0.85rem;margin-bottom:8px;">Coste: <b>' + Number(f.cost).toFixed(2) + ' M</b> · Puntos jornada: <b>' + pts.toFixed(1) + '</b></div>' +
+      '<div class="history-players">' + names.join('<br>') + '</div>';
+  }
+  document.getElementById('coachHistoryModal').classList.add('show');
+};
+
 function renderGlobal() {
   var data = loadData();
   var el = document.getElementById('globalRanking');
@@ -1283,9 +1334,10 @@ function renderGlobal() {
     el.innerHTML = '<div class="empty">Aún no hay datos globales</div>';
     return;
   }
-  el.innerHTML = '<table><thead><tr><th>#</th><th>Entrenador</th><th>Victorias</th><th>Puntos</th></tr></thead><tbody>' +
+  el.innerHTML = '<p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Pulsa un entrenador para ver su histórico →</p>' +
+    '<table><thead><tr><th>#</th><th>Entrenador</th><th>Victorias</th><th>Puntos</th><th></th></tr></thead><tbody>' +
     list.map(function(s, i) {
-      return '<tr style="cursor:pointer" onclick="showCoachHistory(\'' + s.coach.replace(/'/g, "\\'") + '\')"><td class="rank">' + (i+1) + '</td><td>' + s.coach + '</td><td>' + s.wins + '</td><td>' + s.totalPoints.toFixed(1) + '</td></tr>';
+      return '<tr class="click-row" onclick="showCoachHistory(\'' + s.coach.replace(/'/g, "\\'") + '\')"><td class="rank">' + (i+1) + '</td><td>' + s.coach + '</td><td>' + s.wins + '</td><td>' + s.totalPoints.toFixed(1) + '</td><td class="hint-cell">📜</td></tr>';
     }).join('') + '</tbody></table>';
 }
 
@@ -2484,6 +2536,7 @@ window.addEventListener('message', async function(ev) {
     document.getElementById('compSub').textContent = 'Error cargando datos';
   }
   loadDraft();
+  saveDraft(); // reescribe borrador limpio tras restaurar
   updateSubmissionsUI();
   updateBudget();
   renderOnce();
