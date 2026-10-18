@@ -6,50 +6,130 @@
 <title>Fantasy Futbolchapas</title>
 <style>
 :root {
-  --bg: #0b1120; --card: #1e293b; --card2: #162032; --accent: #22c55e;
-  --blue: #3b82f6; --danger: #ef4444; --warning: #f59e0b;
-  --text: #f1f5f9; --muted: #94a3b8; --border: #334155;
+  --bg: #070b14;
+  --card: #121a2b;
+  --card2: #0e1624;
+  --accent: #34d399;
+  --accent-dim: rgba(52, 211, 153, 0.15);
+  --blue: #38bdf8;
+  --danger: #f87171;
+  --warning: #fbbf24;
+  --text: #f1f5f9;
+  --muted: #8b9bb4;
+  --border: rgba(71, 85, 105, 0.55);
+  --glow: 0 0 24px rgba(52, 211, 153, 0.12);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--bg); color: var(--text); padding: 12px;
-  max-width: 980px; margin: 0 auto; min-height: 100vh; line-height: 1.4;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(34, 197, 94, 0.14), transparent 50%),
+    radial-gradient(ellipse 70% 45% at 100% 5%, rgba(37, 99, 235, 0.16), transparent 48%),
+    radial-gradient(ellipse 50% 40% at 50% 100%, rgba(14, 165, 233, 0.08), transparent 55%),
+    radial-gradient(circle at 80% 70%, rgba(34, 197, 94, 0.05), transparent 30%);
+  color: var(--text); padding: 14px 12px 32px;
+  max-width: 980px; margin: 0 auto; min-height: 100vh; line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
 }
-header { text-align: center; margin-bottom: 16px; padding: 12px 0 8px; }
-header h1 { font-size: 1.45rem; color: var(--accent); font-weight: 800; user-select: none; }
-header .sub { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+header {
+  text-align: center; margin-bottom: 16px; padding: 20px 16px 16px;
+  background:
+    linear-gradient(135deg, rgba(22, 101, 52, 0.35) 0%, rgba(30, 58, 138, 0.25) 50%, rgba(15, 23, 42, 0.5) 100%);
+  border: none;
+  border-radius: 28px 12px 24px 14px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.3);
+}
+header::before {
+  content: '';
+  position: absolute; top: -30%; right: -15%; width: 160px; height: 160px;
+  background: radial-gradient(circle, rgba(56,189,248,0.25), transparent 70%);
+  border-radius: 50%; pointer-events: none;
+}
+header::after {
+  content: '';
+  position: absolute; bottom: -40%; left: -10%; width: 140px; height: 140px;
+  background: radial-gradient(circle, rgba(34,197,94,0.2), transparent 70%);
+  border-radius: 50%; pointer-events: none;
+}
+header h1 {
+  position: relative; z-index: 1;
+  font-size: 1.48rem; font-weight: 900; user-select: none; letter-spacing: -0.03em;
+  background: linear-gradient(100deg, #4ade80, #22c55e 35%, #38bdf8 70%, #3b82f6);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+header .sub {
+  position: relative; z-index: 1;
+  font-size: 0.8rem; color: #a5b4c8; margin-top: 5px; font-weight: 500;
+}
 .tabs {
-  display: flex; gap: 6px; margin-bottom: 16px; background: var(--card);
-  padding: 6px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap;
+  display: flex; gap: 5px; margin-bottom: 16px;
+  background: transparent;
+  padding: 0; border: none; flex-wrap: wrap;
 }
 .tab {
-  flex: 1; min-width: 70px; padding: 10px 6px; background: transparent; border: none;
-  border-radius: 8px; color: var(--muted); font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  flex: 1; min-width: 68px; padding: 12px 6px; background: rgba(15, 23, 42, 0.65);
+  border: 1px solid transparent;
+  border-radius: 999px; color: var(--muted); font-size: 0.78rem; font-weight: 700; cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.tab.active { background: var(--accent); color: #000; }
+.tab.active {
+  background: linear-gradient(120deg, #16a34a, #2563eb);
+  color: #fff;
+  border-color: rgba(255,255,255,0.12);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+}
 .panel { display: none; }
-.panel.active { display: block; }
+.panel.active { display: block; animation: fadeIn 0.2s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
 .card {
-  background: var(--card); border-radius: 14px; padding: 14px;
-  border: 1px solid var(--border); margin-bottom: 12px;
+  background:
+    linear-gradient(145deg, rgba(20, 35, 55, 0.9), rgba(12, 18, 32, 0.95));
+  border-radius: 20px 14px 22px 12px; padding: 15px 14px;
+  border: 1px solid rgba(56, 189, 248, 0.08);
+  margin-bottom: 12px;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.28);
+  position: relative;
+}
+.card:nth-child(even) {
+  border-radius: 14px 22px 12px 20px;
 }
 .btn {
-  border: none; border-radius: 9px; padding: 10px 14px; font-weight: 600;
-  font-size: 0.85rem; cursor: pointer;
+  border: none; border-radius: 999px; padding: 11px 16px; font-weight: 700;
+  font-size: 0.85rem; cursor: pointer; transition: transform 0.1s, filter 0.15s;
 }
-.btn-primary { background: var(--accent); color: #000; }
-.btn-blue { background: var(--blue); color: #fff; }
-.btn-danger { background: var(--danger); color: #fff; }
-.btn-warning { background: var(--warning); color: #000; }
-.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: linear-gradient(120deg, #22c55e, #16a34a 60%, #15803d);
+  color: #fff; box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+}
+.btn-blue {
+  background: linear-gradient(120deg, #3b82f6, #2563eb 60%, #1d4ed8);
+  color: #fff; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+}
+.btn-danger {
+  background: linear-gradient(180deg, #f87171, #dc2626);
+  color: #fff;
+}
+.btn-warning {
+  background: linear-gradient(180deg, #fbbf24, #d97706);
+  color: #1c1000;
+}
+.btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
-.btn-sm { padding: 6px 10px; font-size: 0.75rem; border-radius: 6px; }
+.btn-sm { padding: 7px 11px; font-size: 0.75rem; border-radius: 8px; }
 input, textarea {
-  background: #0f172a; border: 1px solid var(--border); border-radius: 9px;
-  color: var(--text); padding: 10px 12px; font-size: 0.95rem; width: 100%; font-family: inherit;
+  background: rgba(7, 11, 20, 0.75); border: 1px solid rgba(51, 65, 85, 0.5);
+  border-radius: 16px 12px 16px 12px;
+  color: var(--text); padding: 11px 14px; font-size: 0.95rem; width: 100%; font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
 }
-input:focus, textarea:focus { outline: 2px solid var(--accent); }
+input:focus, textarea:focus {
+  outline: none; border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
 textarea { min-height: 100px; resize: vertical; }
 .budget-bar { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-bottom: 10px; }
 .budget-item { text-align: center; }
@@ -87,14 +167,24 @@ textarea { min-height: 100px; resize: vertical; }
 .players-vmeta .big { font-size: 1.25rem; font-weight: 800; color: var(--accent); }
 .players-vmeta .sub { font-size: 0.72rem; color: var(--muted); }
 .player-card {
-  background: var(--card2); border-radius: 11px; padding: 10px 12px;
-  display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); margin-bottom: 7px;
+  background: rgba(12, 20, 34, 0.75); border-radius: 18px 10px 16px 12px; padding: 11px 12px;
+  display: flex; align-items: center; gap: 10px;
+  border: 1px solid rgba(51, 65, 85, 0.4); margin-bottom: 7px;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
 }
-.player-card.selected { border-color: var(--accent); background: #14532d22; }
+.player-card:nth-child(even) { border-radius: 10px 18px 12px 16px; }
+.player-card.selected {
+  border-color: rgba(34, 197, 94, 0.45);
+  background: linear-gradient(115deg, rgba(34, 197, 94, 0.14), rgba(37, 99, 235, 0.08) 60%, rgba(12, 20, 34, 0.85));
+  box-shadow: inset 3px 0 0 #22c55e;
+}
 .player-info { flex: 1; min-width: 0; }
-.player-name { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-name { font-weight: 700; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .player-club { font-size: 0.72rem; color: var(--muted); }
-.player-price { font-weight: 700; color: var(--accent); white-space: nowrap; font-size: 0.9rem; }
+.player-price {
+  font-weight: 800; color: var(--accent); white-space: nowrap; font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
 .player-price.unaffordable { color: var(--muted) !important; opacity: 0.75; }
 .bombo-filters {
   display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
@@ -127,22 +217,40 @@ th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: 
 .success { background: #14532d; color: #bbf7d0; padding: 11px; border-radius: 9px; margin-bottom: 12px; font-size: 0.88rem; }
 .warning { background: #713f12; color: #fef08a; padding: 11px; border-radius: 9px; margin-bottom: 12px; font-size: 0.88rem; }
 .section-title {
-  font-size: 0.8rem; color: var(--muted); margin: 14px 0 8px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.4px;
-  display: flex; justify-content: space-between; align-items: center;
+  font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: #7dd3fc; margin: 14px 0 8px; font-weight: 800;
+  opacity: 0.9;
 }
 .modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none;
-  align-items: flex-end; justify-content: center; z-index: 100; padding: 16px;
+  position: fixed; inset: 0;
+  background: rgba(2, 8, 20, 0.78);
+  backdrop-filter: blur(6px);
+  display: none;
+  align-items: flex-end; justify-content: center; z-index: 100; padding: 12px;
 }
 .modal-overlay.show { display: flex; }
 .modal {
-  background: var(--card); border-radius: 18px 18px 14px 14px; width: 100%;
-  max-width: 480px; max-height: 85vh; overflow-y: auto; padding: 20px; border: 1px solid var(--border);
+  background:
+    radial-gradient(ellipse 80% 50% at 0% 0%, rgba(34,197,94,0.15), transparent 55%),
+    radial-gradient(ellipse 70% 45% at 100% 0%, rgba(37,99,235,0.18), transparent 50%),
+    linear-gradient(165deg, #132238 0%, #0c1524 100%);
+  border-radius: 28px 16px 20px 14px; width: 100%;
+  max-width: 480px; max-height: 88vh; overflow-y: auto; padding: 18px 16px 22px;
+  border: 1px solid rgba(56, 189, 248, 0.15);
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.45);
 }
-.modal h3 { font-size: 1.1rem; margin-bottom: 4px; }
+.modal h3 {
+  font-size: 1.15rem; margin-bottom: 6px; font-weight: 900;
+  background: linear-gradient(100deg, #4ade80, #38bdf8);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  letter-spacing: -0.02em;
+}
 .modal .club { color: var(--muted); font-size: 0.85rem; margin-bottom: 12px; }
-.modal .close { float: right; background: none; border: none; color: var(--muted); font-size: 1.4rem; cursor: pointer; }
+.modal .close {
+  float: right; background: rgba(15,23,42,0.7); border: 1px solid rgba(71,85,105,0.5);
+  color: #cbd5e1; font-size: 1.15rem; cursor: pointer;
+  width: 34px; height: 34px; border-radius: 999px; line-height: 1;
+}
 .note-item { background: var(--card2); border-radius: 9px; padding: 10px; margin-bottom: 8px; font-size: 0.88rem; border-left: 3px solid var(--accent); }
 .note-author { font-size: 0.72rem; color: var(--muted); margin-bottom: 3px; }
 .note-img { max-width: 100%; max-height: 200px; border-radius: 8px; margin-top: 8px; display: block; object-fit: contain; background: #0f172a; }
@@ -197,9 +305,68 @@ th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: 
 .coach-list { max-height:180px; overflow-y:auto; margin-top:8px; }
 .coach-list .player-card { cursor:pointer; }
 .coach-list .player-card:hover { border-color: var(--accent); }
-.history-block { margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--border); }
-.history-block h4 { margin:0 0 6px; font-size:0.9rem; color:var(--accent); }
-.history-players { font-size:0.78rem; color:var(--muted); line-height:1.4; }
+.history-block {
+  margin-bottom: 12px; padding: 14px 12px;
+  background: rgba(8, 15, 28, 0.55);
+  border: 1px solid rgba(56, 189, 248, 0.1);
+  border-radius: 18px 12px 16px 14px;
+  position: relative;
+  overflow: hidden;
+}
+.history-block:nth-child(even) { border-radius: 12px 18px 14px 16px; }
+.history-block::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 4px;
+  background: linear-gradient(180deg, #22c55e, #2563eb);
+  border-radius: 4px 0 0 4px;
+}
+.history-block h4 {
+  margin: 0 0 8px; font-size: 0.92rem; font-weight: 800;
+  color: #e2e8f0; padding-left: 6px;
+}
+.history-meta {
+  display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; padding-left: 6px;
+}
+.history-chip {
+  display: inline-flex; align-items: baseline; gap: 4px;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(71, 85, 105, 0.45);
+  border-radius: 999px; padding: 5px 10px;
+  font-size: 0.68rem; color: #94a3b8;
+}
+.history-chip b {
+  font-size: 0.88rem; font-weight: 800; color: #f1f5f9;
+  font-variant-numeric: tabular-nums;
+}
+.history-chip.green { border-color: rgba(34,197,94,0.35); color: #86efac; }
+.history-chip.green b { color: #4ade80; }
+.history-chip.blue { border-color: rgba(59,130,246,0.35); color: #93c5fd; }
+.history-chip.blue b { color: #60a5fa; }
+.history-players {
+  display: flex; flex-wrap: wrap; gap: 6px; padding-left: 6px;
+}
+.history-pill {
+  font-size: 0.72rem; font-weight: 600;
+  color: #e2e8f0;
+  background: linear-gradient(120deg, rgba(34,197,94,0.12), rgba(37,99,235,0.1));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 999px; padding: 5px 10px;
+  line-height: 1.2;
+}
+.history-pill .price {
+  color: #86efac; font-weight: 700; font-size: 0.65rem; margin-left: 3px;
+}
+.hist-empty {
+  text-align: center; padding: 24px 12px; color: #94a3b8; font-size: 0.88rem;
+}
+.hist-hero {
+  text-align: center; margin: 4px 0 14px; padding: 12px;
+  background: linear-gradient(120deg, rgba(34,197,94,0.12), rgba(37,99,235,0.12));
+  border-radius: 16px 12px 18px 14px;
+  border: 1px solid rgba(56,189,248,0.12);
+}
+.hist-hero .label { font-size: 0.68rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; }
+.hist-hero .name { font-size: 1.15rem; font-weight: 900; margin-top: 2px; color: #f8fafc; }
 .note-form-box { display:none; margin-top:8px; margin-bottom:12px; }
 .note-form-box.show { display:block; }
 .search-me-box { margin-bottom:12px; }
@@ -222,6 +389,163 @@ th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: 
 footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72rem; color: var(--muted); border-top: 1px solid var(--border); }
 .atab-panel { display: none; }
 .atab-panel.active { display: block; }
+
+/* ===== Rankings pro ===== */
+.rank-shell {
+  background:
+    radial-gradient(ellipse 90% 60% at 10% 0%, rgba(34, 197, 94, 0.12), transparent 50%),
+    radial-gradient(ellipse 80% 50% at 100% 10%, rgba(37, 99, 235, 0.14), transparent 45%),
+    linear-gradient(165deg, #0f1a2c 0%, #0a1220 55%, #0d1830 100%);
+  border: 1px solid rgba(56, 189, 248, 0.12);
+  border-radius: 26px 14px 22px 16px;
+  padding: 16px 12px 12px;
+  margin-bottom: 12px;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.35);
+}
+.rank-shell-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; margin-bottom: 14px; padding: 0 4px;
+}
+.rank-shell-head h2 {
+  font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em;
+  background: linear-gradient(90deg, #f8fafc, #7dd3fc);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.rank-shell-head .hint {
+  font-size: 0.68rem; color: var(--muted); text-align: right; max-width: 55%;
+  line-height: 1.25;
+}
+.podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+  align-items: end;
+  margin-bottom: 14px;
+  padding: 8px 2px 4px;
+}
+.podium-card {
+  position: relative;
+  border-radius: 16px 16px 12px 12px;
+  padding: 8px 5px 9px;
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform 0.15s ease;
+  overflow: hidden;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  height: 96px;
+}
+.podium-card:active { transform: scale(0.97); }
+.podium-card .medal {
+  font-size: 1.05rem; line-height: 1; margin-bottom: 2px;
+}
+.podium-card .pname {
+  font-weight: 800; font-size: 0.68rem; line-height: 1.2;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin-bottom: 4px; color: #f8fafc;
+  flex: 1;
+}
+.podium-card .pstats {
+  display: flex; flex-direction: column; gap: 1px; align-items: center;
+  margin-top: auto;
+}
+.podium-card .stat {
+  font-size: 0.58rem; color: rgba(255,255,255,0.85);
+  display: inline-flex; align-items: baseline; gap: 2px;
+}
+.podium-card .stat b {
+  font-size: 0.8rem; font-weight: 800; color: #fff;
+  font-variant-numeric: tabular-nums;
+}
+.podium-card .stat .unit {
+  font-size: 0.55rem; font-weight: 600; color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+}
+.podium-card.first {
+  height: 128px;
+  background: linear-gradient(165deg, #fde68a 0%, #f59e0b 40%, #b45309 100%);
+  border-color: rgba(253, 224, 71, 0.45);
+  box-shadow: 0 10px 22px rgba(245, 158, 11, 0.28);
+  padding-top: 10px;
+}
+.podium-card.first .pname { font-size: 0.74rem; }
+.podium-card.first .stat b { font-size: 0.9rem; }
+.podium-card.second {
+  height: 96px; /* ~75% del primero */
+  background: linear-gradient(165deg, #cbd5e1 0%, #64748b 55%, #334155 100%);
+  border-color: rgba(203, 213, 225, 0.3);
+}
+.podium-card.third {
+  height: 96px;
+  background: linear-gradient(165deg, #fdba74 0%, #ea580c 50%, #9a3412 100%);
+  border-color: rgba(251, 146, 60, 0.3);
+}
+.podium-card.second { order: 1; }
+.podium-card.first { order: 2; }
+.podium-card.third { order: 3; }
+.rank-list {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.rank-row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 16px 10px 14px 12px;
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(51, 65, 85, 0.45);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.rank-row:nth-child(even) { border-radius: 10px 16px 12px 14px; }
+.rank-row:hover, .rank-row:active {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(56, 189, 248, 0.35);
+}
+.rank-row .pos {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.78rem;
+  background: #1e293b; color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+.rank-row .rname {
+  font-weight: 700; font-size: 0.88rem; color: #f1f5f9;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rank-row .rmeta {
+  font-size: 0.68rem; color: var(--muted); margin-top: 1px;
+}
+.rank-row .rstats {
+  text-align: right; display: flex; flex-direction: column; gap: 2px;
+  align-items: flex-end;
+}
+.rank-row .rval {
+  font-weight: 800; font-size: 0.95rem; color: #e2e8f0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.rank-row .rval .unit {
+  font-size: 0.65rem; font-weight: 600; color: #64748b;
+  margin-left: 2px;
+}
+.rank-row .rsub {
+  font-size: 0.65rem; color: #64748b; white-space: nowrap;
+}
+.rank-row .chev {
+  color: #475569; font-size: 0.75rem; margin-left: 4px;
+}
+.rank-empty {
+  text-align: center; padding: 28px 12px; color: var(--muted); font-size: 0.88rem;
+}
+
 </style>
 </head>
 <body>
@@ -305,24 +629,13 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
 
 <!-- JORNADA -->
 <div id="panel-jornada" class="panel">
-  <div class="card">
-    <div class="section-title">Clasificación de la Jornada</div>
-    <div id="jornadaRanking"></div>
-  </div>
-  <div class="card" id="allOncesCard" style="display:none;">
-    <div class="section-title">Onces de esta jornada</div>
-    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">Visible cuando las inscripciones están cerradas.</p>
-    <div id="allOncesList"></div>
-  </div>
+  <div id="jornadaRanking"></div>
+  <div id="allOncesCard" style="display:none;"></div>
 </div>
 
 <!-- GLOBAL -->
 <div id="panel-global" class="panel">
-  <div class="card">
-    <div class="section-title">Clasificación Global</div>
-    <p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Orden: victorias, luego puntos. Pulsa un entrenador para ver su histórico.</p>
-    <div id="globalRanking"></div>
-  </div>
+  <div id="globalRanking"></div>
 </div>
 
 <div class="modal-overlay" id="coachHistoryModal">
@@ -1326,29 +1639,68 @@ document.getElementById('btnSubmitNote').addEventListener('click', async functio
 });
 
 // ========== RANKINGS ==========
+function escJsStr(s) {
+  return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
 function renderJornada() {
   var data = loadData();
   var el = document.getElementById('jornadaRanking');
   var canSee = dbData.submissionsOpen === false;
-  if (!data.jornadaScores || data.jornadaScores.length === 0) {
-    // Si no hay puntuación aún pero hay formaciones y cerrado, listar entrenadores clicables
-    if (canSee && data.formations && data.formations.length) {
-      el.innerHTML = '<p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Pulsa un entrenador para ver su once →</p><table><thead><tr><th>#</th><th>Entrenador</th><th>Coste</th><th></th></tr></thead><tbody>' +
-        data.formations.map(function(f, i) {
-          return '<tr class="click-row" onclick="showJornadaOnce(\'' + f.coach.replace(/'/g, "\\'") + '\')"><td class="rank">' + (i+1) + '</td><td>' + f.coach + '</td><td>' + Number(f.cost).toFixed(2) + ' M</td><td class="hint-cell">👁</td></tr>';
-        }).join('') + '</tbody></table>';
-    } else {
-      el.innerHTML = '<div class="empty">Aún no se ha calculado ninguna jornada (falta subir resultados)</div>';
-    }
-  } else {
-    el.innerHTML = (canSee ? '<p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Pulsa un entrenador para ver su once →</p>' : '') +
-      '<table><thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Coste</th>' + (canSee ? '<th></th>' : '') + '</tr></thead><tbody>' +
-      data.jornadaScores.map(function(s, i) {
-        var click = canSee ? (' class="click-row" onclick="showJornadaOnce(\'' + s.coach.replace(/'/g, "\\'") + '\')"') : '';
-        return '<tr' + click + '><td class="rank">' + (i+1) + '</td><td>' + s.coach + (i===0?' 🏆':'') + '</td><td>' + s.points.toFixed(1) + '</td><td>' + s.cost.toFixed(2) + ' M</td>' +
-          (canSee ? '<td class="hint-cell">👁</td>' : '') + '</tr>';
-      }).join('') + '</tbody></table>';
+  var scores = data.jornadaScores || [];
+  var list = scores.length ? scores : (canSee && data.formations && data.formations.length
+    ? data.formations.map(function(f) {
+        return { coach: f.coach, points: 0, cost: Number(f.cost) || 0 };
+      })
+    : []);
+
+  if (!list.length) {
+    el.innerHTML = '<div class="rank-shell"><div class="rank-shell-head"><h2>Jornada</h2></div><div class="rank-empty">Aún no hay clasificación.<br>Cuando el admin suba resultados, aparecerá aquí.</div></div>';
+    updateSubmissionsUI();
+    return;
   }
+
+  var top = list.slice(0, 3);
+  var rest = list.slice(3);
+  var html = '<div class="rank-shell"><div class="rank-shell-head"><h2>Jornada en vivo</h2><div class="hint">' +
+    (canSee ? 'Toca un entrenador para ver su once' : 'Clasificación por puntos · desempate: coste más bajo') +
+    '</div></div>';
+
+  if (top.length) {
+    html += '<div class="podium">';
+    var medals = ['🥇', '🥈', '🥉'];
+    var cls = ['first', 'second', 'third'];
+    top.forEach(function(s, i) {
+      var click = canSee ? (' onclick="showJornadaOnce(\'' + escJsStr(s.coach) + '\')"') : '';
+      html += '<div class="podium-card ' + cls[i] + '"' + click + '>' +
+        '<div class="medal">' + medals[i] + '</div>' +
+        '<div class="pname">' + s.coach + '</div>' +
+        '<div class="pstats">' +
+          '<div class="stat"><b>' + Number(s.points).toFixed(1) + '</b> <span class="unit">pts</span></div>' +
+          '<div class="stat"><b>' + Number(s.cost).toFixed(1) + '</b> <span class="unit">M</span></div>' +
+        '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  if (rest.length) {
+    html += '<div class="rank-list">';
+    rest.forEach(function(s, idx) {
+      var i = idx + 4;
+      var click = canSee ? (' onclick="showJornadaOnce(\'' + escJsStr(s.coach) + '\')"') : '';
+      html += '<div class="rank-row"' + click + '>' +
+        '<div class="pos">' + i + '</div>' +
+        '<div><div class="rname">' + s.coach + '</div>' +
+        (canSee ? '<div class="rmeta">Ver once →</div>' : '') + '</div>' +
+        '<div class="rstats">' +
+          '<div class="rval">' + Number(s.points).toFixed(1) + '<span class="unit">pts</span></div>' +
+          '<div class="rsub">' + Number(s.cost).toFixed(1) + ' M</div>' +
+        '</div></div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
   updateSubmissionsUI();
 }
 
@@ -1361,18 +1713,26 @@ window.showJornadaOnce = function(coach) {
   var body = document.getElementById('coachHistoryBody');
   var title = document.getElementById('coachHistoryTitle');
   if (!body || !title) return;
-  title.textContent = 'Once de ' + coach;
+  title.textContent = 'Once de la jornada';
   if (!f) {
-    body.innerHTML = '<div class="empty">No se encontró el once</div>';
+    body.innerHTML = '<div class="hist-empty">No se encontró el once</div>';
   } else {
-    var names = (f.players || []).map(function(id) {
-      var p = PLAYERS.find(function(x) { return x.id === id; });
-      return p ? (p.name + ' (' + p.points.toFixed(1) + ' M)') : ('#' + id);
-    });
     var pts = 0;
     (f.players || []).forEach(function(id) { pts += Number(dbData.results[id] || 0); });
-    body.innerHTML = '<div style="font-size:0.85rem;margin-bottom:8px;">Coste: <b>' + Number(f.cost).toFixed(2) + ' M</b> · Puntos jornada: <b>' + pts.toFixed(1) + '</b></div>' +
-      '<div class="history-players">' + names.join('<br>') + '</div>';
+    var pills = (f.players || []).map(function(id) {
+      var p = PLAYERS.find(function(x) { return x.id === id; });
+      if (!p) return '<span class="history-pill">#' + id + '</span>';
+      var nm = getNick(p) || p.name.split(' ').slice(0, 2).join(' ');
+      return '<span class="history-pill">' + nm + '<span class="price">' + p.points.toFixed(1) + 'M</span></span>';
+    }).join('');
+    body.innerHTML =
+      '<div class="hist-hero"><div class="label">Entrenador</div><div class="name">' + coach + '</div></div>' +
+      '<div class="history-meta">' +
+        '<span class="history-chip green"><b>' + pts.toFixed(1) + '</b> pts</span>' +
+        '<span class="history-chip blue"><b>' + Number(f.cost).toFixed(1) + '</b> M coste</span>' +
+        '<span class="history-chip"><b>' + (f.players || []).length + '</b> jugadores</span>' +
+      '</div>' +
+      '<div class="history-players">' + pills + '</div>';
   }
   document.getElementById('coachHistoryModal').classList.add('show');
 };
@@ -1386,54 +1746,108 @@ function renderGlobal() {
     if (b.wins !== a.wins) return b.wins - a.wins;
     return b.totalPoints - a.totalPoints;
   });
-  if (list.length === 0) {
-    el.innerHTML = '<div class="empty">Aún no hay datos globales</div>';
+
+  if (!list.length) {
+    el.innerHTML = '<div class="rank-shell"><div class="rank-shell-head"><h2>Global</h2></div><div class="rank-empty">La clasificación global aparecerá cuando haya resultados.</div></div>';
     return;
   }
-  el.innerHTML = '<p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Pulsa un entrenador para ver su histórico →</p>' +
-    '<table><thead><tr><th>#</th><th>Entrenador</th><th>Victorias</th><th>Puntos</th><th></th></tr></thead><tbody>' +
-    list.map(function(s, i) {
-      return '<tr class="click-row" onclick="showCoachHistory(\'' + s.coach.replace(/'/g, "\\'") + '\')"><td class="rank">' + (i+1) + '</td><td>' + s.coach + '</td><td>' + s.wins + '</td><td>' + s.totalPoints.toFixed(1) + '</td><td class="hint-cell">📜</td></tr>';
-    }).join('') + '</tbody></table>';
+
+  var top = list.slice(0, 3);
+  var rest = list.slice(3);
+  var html = '<div class="rank-shell"><div class="rank-shell-head"><h2>Ranking global</h2><div class="hint">Victorias primero · Toca un nombre para ver su histórico</div></div>';
+
+  if (top.length) {
+    html += '<div class="podium">';
+    var medals = ['🥇', '🥈', '🥉'];
+    var cls = ['first', 'second', 'third'];
+    top.forEach(function(s, i) {
+      html += '<div class="podium-card ' + cls[i] + '" onclick="showCoachHistory(\'' + escJsStr(s.coach) + '\')">' +
+        '<div class="medal">' + medals[i] + '</div>' +
+        '<div class="pname">' + s.coach + '</div>' +
+        '<div class="pstats">' +
+          '<div class="stat"><b>' + s.wins + '</b> <span class="unit">' + (s.wins === 1 ? 'victoria' : 'victorias') + '</span></div>' +
+          '<div class="stat"><b>' + Number(s.totalPoints).toFixed(1) + '</b> <span class="unit">pts</span></div>' +
+        '</div></div>';
+    });
+    html += '</div>';
+  }
+
+  if (rest.length) {
+    html += '<div class="rank-list">';
+    rest.forEach(function(s, idx) {
+      var i = idx + 4;
+      html += '<div class="rank-row" onclick="showCoachHistory(\'' + escJsStr(s.coach) + '\')">' +
+        '<div class="pos">' + i + '</div>' +
+        '<div><div class="rname">' + s.coach + '</div><div class="rmeta">Histórico →</div></div>' +
+        '<div class="rstats">' +
+          '<div class="rval">' + s.wins + '<span class="unit">V</span></div>' +
+          '<div class="rsub">' + Number(s.totalPoints).toFixed(1) + ' pts</div>' +
+        '</div></div>';
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
 }
 
 window.showCoachHistory = function(coach) {
   var body = document.getElementById('coachHistoryBody');
   var title = document.getElementById('coachHistoryTitle');
   if (!body || !title) return;
-  title.textContent = coach;
-  var html = '';
+  title.textContent = 'Histórico';
+  var g = dbData.global[coach] || { wins: 0, totalPoints: 0 };
+  var html = '<div class="hist-hero"><div class="label">Entrenador</div><div class="name">' + coach + '</div>' +
+    '<div class="history-meta" style="justify-content:center;margin-top:10px;margin-bottom:0;">' +
+      '<span class="history-chip green"><b>' + (g.wins || 0) + '</b> victorias</span>' +
+      '<span class="history-chip blue"><b>' + Number(g.totalPoints || 0).toFixed(1) + '</b> pts</span>' +
+    '</div></div>';
+
+  var blocks = 0;
   var keys = Object.keys(dbData.history || {}).sort(function(a,b) { return Number(a) - Number(b); });
   keys.forEach(function(j) {
     var h = dbData.history[j];
     if (!h || !h.formations) return;
     var f = h.formations.find(function(x) { return x.coach === coach; });
     if (!f) return;
-    var names = (f.players || []).map(function(id) {
+    blocks++;
+    var pills = (f.players || []).map(function(id) {
       var p = PLAYERS.find(function(x) { return x.id === id; });
-      return p ? p.name : ('#' + id);
-    });
+      if (!p) return '<span class="history-pill">#' + id + '</span>';
+      var nm = getNick(p) || p.name.split(' ').slice(0, 2).join(' ');
+      return '<span class="history-pill">' + nm + '</span>';
+    }).join('');
     html += '<div class="history-block"><h4>' + (h.competition || ('Jornada ' + j)) + '</h4>' +
-      '<div style="font-size:0.8rem;">Puntos: <b>' + (f.points != null ? Number(f.points).toFixed(1) : '-') + '</b> · Coste: ' + (f.cost != null ? Number(f.cost).toFixed(2) : '-') + ' M</div>' +
-      '<div class="history-players">' + names.join(' · ') + '</div></div>';
+      '<div class="history-meta">' +
+        '<span class="history-chip green"><b>' + (f.points != null ? Number(f.points).toFixed(1) : '-') + '</b> pts</span>' +
+        '<span class="history-chip blue"><b>' + (f.cost != null ? Number(f.cost).toFixed(1) : '-') + '</b> M</span>' +
+      '</div><div class="history-players">' + pills + '</div></div>';
   });
-  // current jornada if has formation
+
   var cur = (dbData.formations || []).find(function(f) { return f.coach === coach; });
   if (cur) {
-    var names2 = (cur.players || []).map(function(id) {
-      var p = PLAYERS.find(function(x) { return x.id === id; });
-      return p ? p.name : ('#' + id);
-    });
+    blocks++;
     var pts = 0;
     (cur.players || []).forEach(function(id) { pts += Number(dbData.results[id] || 0); });
-    html += '<div class="history-block"><h4>' + (dbData.competitionName || 'Jornada actual') + ' (actual)</h4>' +
-      '<div style="font-size:0.8rem;">Puntos: <b>' + pts.toFixed(1) + '</b> · Coste: ' + Number(cur.cost || 0).toFixed(2) + ' M</div>' +
-      '<div class="history-players">' + names2.join(' · ') + '</div></div>';
+    var pills2 = (cur.players || []).map(function(id) {
+      var p = PLAYERS.find(function(x) { return x.id === id; });
+      if (!p) return '<span class="history-pill">#' + id + '</span>';
+      var nm = getNick(p) || p.name.split(' ').slice(0, 2).join(' ');
+      return '<span class="history-pill">' + nm + '</span>';
+    }).join('');
+    html += '<div class="history-block"><h4>' + (dbData.competitionName || 'Jornada actual') + ' · en curso</h4>' +
+      '<div class="history-meta">' +
+        '<span class="history-chip green"><b>' + pts.toFixed(1) + '</b> pts</span>' +
+        '<span class="history-chip blue"><b>' + Number(cur.cost || 0).toFixed(1) + '</b> M</span>' +
+      '</div><div class="history-players">' + pills2 + '</div></div>';
   }
-  if (!html) html = '<div class="empty">Sin histórico de onces guardado aún. A partir de ahora, al cerrar cada jornada se archiva.</div>';
+
+  if (!blocks) {
+    html += '<div class="hist-empty">Sin onces archivados todavía.<br>Al cerrar cada jornada se guardarán aquí.</div>';
+  }
   body.innerHTML = html;
   document.getElementById('coachHistoryModal').classList.add('show');
 };
+
 document.getElementById('closeCoachHistory') && document.getElementById('closeCoachHistory').addEventListener('click', function() {
   document.getElementById('coachHistoryModal').classList.remove('show');
 });
