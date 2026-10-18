@@ -539,6 +539,81 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
 .rank-row .rsub {
   font-size: 0.65rem; color: #64748b; white-space: nowrap;
 }
+.rank-row .rval-pts {
+  color: #38bdf8 !important;
+  font-weight: 800;
+}
+.rank-row .rval-pts .unit { color: #7dd3fc !important; }
+.podium-card .stat-pts b { color: #e0f2fe !important; text-shadow: 0 1px 2px rgba(0,0,0,0.35); }
+.podium-card .stat-pts .unit { color: #bae6fd !important; }
+.podium-multi {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  overflow: hidden;
+  /* altura fija la de .first / .second / .third — sin torre */
+  height: 96px !important;
+  min-height: 96px !important;
+  max-height: 96px !important;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+  padding-top: 6px !important;
+  padding-bottom: 4px !important;
+}
+.podium-multi.first {
+  height: 128px !important;
+  min-height: 128px !important;
+  max-height: 128px !important;
+}
+.podium-tie-label {
+  font-size: 0.5rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.04em; opacity: 0.95; margin-bottom: 1px;
+  flex-shrink: 0;
+}
+.podium-shared-stats {
+  display: flex; flex-direction: row; gap: 6px; justify-content: center; align-items: baseline;
+  margin-bottom: 3px; flex-shrink: 0;
+}
+.podium-shared-stats .stat b { font-size: 0.72rem; }
+.podium-shared-stats .stat { font-size: 0.52rem; }
+.podium-scroll {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  flex: 1;
+  min-height: 0;
+  padding-bottom: 1px;
+}
+.podium-scroll::-webkit-scrollbar { height: 2px; }
+.podium-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.4); border-radius: 99px; }
+.podium-slot {
+  display: flex; flex-direction: column; gap: 0;
+  min-width: 0;
+}
+.podium-scroll .podium-slot {
+  min-width: 70%;
+  max-width: 75%;
+  flex-shrink: 0;
+  padding: 4px 5px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.22);
+  scroll-snap-align: start;
+  box-sizing: border-box;
+}
+.podium-multi .pname {
+  min-height: 0; flex: none; margin-bottom: 0;
+  font-size: 0.65rem !important;
+  -webkit-line-clamp: 2;
+}
+.podium-multi .pstats { display: none; }
+.podium-more-hint {
+  font-size: 0.48rem; opacity: 0.9; margin-top: 1px; flex-shrink: 0;
+}
+
 .rank-row .chev {
   color: #475569; font-size: 0.75rem; margin-left: 4px;
 }
@@ -1741,10 +1816,22 @@ function renderGlobal() {
   var data = loadData();
   var el = document.getElementById('globalRanking');
   var list = Object.keys(data.global).map(function(coach) {
-    return { coach: coach, totalPoints: data.global[coach].totalPoints, wins: data.global[coach].wins };
+    return { coach: coach, totalPoints: Number(data.global[coach].totalPoints) || 0, wins: Number(data.global[coach].wins) || 0 };
   }).sort(function(a, b) {
     if (b.wins !== a.wins) return b.wins - a.wins;
     return b.totalPoints - a.totalPoints;
+  });
+
+  // Asignar posiciones con empates (1,1,3…)
+  var rank = 0;
+  var lastKey = null;
+  list.forEach(function(s, i) {
+    var key = s.wins + '|' + s.totalPoints;
+    if (key !== lastKey) {
+      rank = i + 1;
+      lastKey = key;
+    }
+    s.rank = rank;
   });
 
   if (!list.length) {
@@ -1752,40 +1839,71 @@ function renderGlobal() {
     return;
   }
 
-  var top = list.slice(0, 3);
-  var rest = list.slice(3);
-  var html = '<div class="rank-shell"><div class="rank-shell-head"><h2>Ranking global</h2><div class="hint">Victorias primero · Toca un nombre para ver su histórico</div></div>';
+  // Agrupar puestos 1, 2 y 3 (pueden ser varios por empate)
+  function groupRank(r) {
+    return list.filter(function(s) { return s.rank === r; });
+  }
+  // Solo puestos 1, 2 y 3 reales (varios nombres si hay empate)
+  var podiumRanks = [1, 2, 3].filter(function(r) { return groupRank(r).length > 0; });
 
-  if (top.length) {
+  var html = '<div class="rank-shell"><div class="rank-shell-head"><h2>Ranking global</h2><div class="hint">Victorias → puntos · Empates = mismo puesto · Toca para ver histórico</div></div>';
+
+  if (podiumRanks.length) {
     html += '<div class="podium">';
-    var medals = ['🥇', '🥈', '🥉'];
-    var cls = ['first', 'second', 'third'];
-    top.forEach(function(s, i) {
-      html += '<div class="podium-card ' + cls[i] + '" onclick="showCoachHistory(\'' + escJsStr(s.coach) + '\')">' +
-        '<div class="medal">' + medals[i] + '</div>' +
-        '<div class="pname">' + s.coach + '</div>' +
-        '<div class="pstats">' +
-          '<div class="stat"><b>' + s.wins + '</b> <span class="unit">' + (s.wins === 1 ? 'victoria' : 'victorias') + '</span></div>' +
-          '<div class="stat"><b>' + Number(s.totalPoints).toFixed(1) + '</b> <span class="unit">pts</span></div>' +
-        '</div></div>';
+    var medalByRank = { 1: '🥇', 2: '🥈', 3: '🥉' };
+    var clsByRank = { 1: 'first', 2: 'second', 3: 'third' };
+    podiumRanks.forEach(function(r) {
+      var group = groupRank(r);
+      var multi = group.length > 1 ? ' podium-multi' : '';
+      var sample = group[0];
+      html += '<div class="podium-card ' + clsByRank[r] + multi + '">';
+      html += '<div class="medal">' + medalByRank[r] + '</div>';
+      if (group.length > 1) {
+        html += '<div class="podium-tie-label">Empate · puesto ' + r + ' · ' + group.length + '</div>';
+        html += '<div class="podium-shared-stats">' +
+          '<div class="stat"><b>' + sample.wins + '</b> <span class="unit">V</span></div>' +
+          '<div class="stat stat-pts"><b>' + Number(sample.totalPoints).toFixed(1) + '</b> <span class="unit">pts</span></div>' +
+          '</div>';
+        html += '<div class="podium-scroll">';
+        group.forEach(function(s) {
+          html += '<div class="podium-slot" onclick="showCoachHistory(\'' + escJsStr(s.coach) + '\')">' +
+            '<div class="pname">' + s.coach + '</div></div>';
+        });
+        html += '</div>';
+        html += '<div class="podium-more-hint">← desliza →</div>';
+      } else {
+        html += '<div class="podium-slot" onclick="showCoachHistory(\'' + escJsStr(sample.coach) + '\')">' +
+          '<div class="pname">' + sample.coach + '</div>' +
+          '<div class="pstats">' +
+            '<div class="stat"><b>' + sample.wins + '</b> <span class="unit">' + (sample.wins === 1 ? 'victoria' : 'victorias') + '</span></div>' +
+            '<div class="stat stat-pts"><b>' + Number(sample.totalPoints).toFixed(1) + '</b> <span class="unit">pts</span></div>' +
+          '</div></div>';
+      }
+      html += '</div>';
     });
     html += '</div>';
   }
+
+  var rest = list.filter(function(s) { return s.rank > 3; });
+
+  // También mostrar en lista si alguien del podio... no, solo rest
+  // Pero si hay muchos empatados en top 3, la lista empieza después
 
   if (rest.length) {
     html += '<div class="rank-list">';
-    rest.forEach(function(s, idx) {
-      var i = idx + 4;
+    rest.forEach(function(s) {
       html += '<div class="rank-row" onclick="showCoachHistory(\'' + escJsStr(s.coach) + '\')">' +
-        '<div class="pos">' + i + '</div>' +
+        '<div class="pos">' + s.rank + '</div>' +
         '<div><div class="rname">' + s.coach + '</div><div class="rmeta">Histórico →</div></div>' +
         '<div class="rstats">' +
           '<div class="rval">' + s.wins + '<span class="unit">V</span></div>' +
-          '<div class="rsub">' + Number(s.totalPoints).toFixed(1) + ' pts</div>' +
+          '<div class="rval rval-pts" style="font-size:0.85rem;">' + Number(s.totalPoints).toFixed(1) + '<span class="unit">pts</span></div>' +
         '</div></div>';
     });
     html += '</div>';
   }
+
+  // Si hay empates en el podio, también listar debajo con el mismo rank para claridad? No necesario.
   html += '</div>';
   el.innerHTML = html;
 }
