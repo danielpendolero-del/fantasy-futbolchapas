@@ -383,6 +383,14 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
           <button class="btn btn-danger" id="btnClearPlayers">Borrar toda la plantilla</button>
         </div>
         <div id="importStatus" style="font-size:0.8rem; color:var(--muted); margin-top:8px;"></div>
+        <div class="section-title" style="margin-top:16px;">Apodos de jugadores</div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Ej: Joaquín Jesús Romero → apodo "Kini Romero". Se busca por ambos y se muestra el apodo.</p>
+        <input type="text" id="nickPlayerSearch" placeholder="Buscar jugador real..." style="margin-bottom:6px;">
+        <div id="nickPlayerPick" style="max-height:120px;overflow-y:auto;margin-bottom:8px;"></div>
+        <input type="text" id="nickPlayerId" placeholder="ID (auto)" style="margin-bottom:6px;display:none;">
+        <input type="text" id="nickValue" placeholder="Apodo (vacío = quitar apodo)" style="margin-bottom:6px;">
+        <button class="btn btn-blue" id="btnSaveNick" style="width:100%;">Guardar apodo</button>
+        <div id="nickList" style="margin-top:10px;"></div>
       </div>
       <div class="card">
         <div class="section-title">Actualizar club y puntos (rápido)</div>
@@ -618,7 +626,8 @@ let dbData = {
   notes: [],
   competitionName: 'Fantasy Futbolchapas',
   submissionsOpen: true,
-  history: {}
+  history: {},
+  nicknames: {}
 };
 
 function loadData() { return dbData; }
@@ -634,6 +643,33 @@ function buildJornadaScores(data) {
     return a.cost - b.cost;
   });
   return scores;
+}
+
+
+function getNick(p) {
+  if (!p) return '';
+  var n = (dbData.nicknames || {})[String(p.id)] || (dbData.nicknames || {})[p.id];
+  return n ? String(n).trim() : '';
+}
+function displayName(p) {
+  if (!p) return '';
+  var nick = getNick(p);
+  if (nick) return nick + ' <span style="font-weight:500;color:var(--muted);font-size:0.82em;">(' + p.name + ')</span>';
+  return p.name;
+}
+function displayNamePlain(p) {
+  if (!p) return '';
+  var nick = getNick(p);
+  return nick ? (nick + ' (' + p.name + ')') : p.name;
+}
+function playerMatchesQuery(p, q) {
+  if (!q) return true;
+  q = q.toLowerCase();
+  if ((p.name || '').toLowerCase().indexOf(q) !== -1) return true;
+  if ((p.club || '').toLowerCase().indexOf(q) !== -1) return true;
+  var nick = getNick(p);
+  if (nick && nick.toLowerCase().indexOf(q) !== -1) return true;
+  return false;
 }
 
 async function loadPlayers() {
@@ -664,6 +700,11 @@ async function loadSupabaseData() {
     if (s.key === 'competition_name') dbData.competitionName = s.value;
     if (s.key === 'max_budget') MAX_BUDGET = Number(s.value) || 2000;
     if (s.key === 'submissions_open') dbData.submissionsOpen = (s.value !== 'false' && s.value !== '0');
+    if (s.key === 'player_nicknames') {
+      try {
+        dbData.nicknames = typeof s.value === 'string' ? JSON.parse(s.value) : (s.value || {});
+      } catch (e) { dbData.nicknames = {}; }
+    }
     if (s.key && String(s.key).indexOf('history_jornada_') === 0) {
       try {
         var hj = String(s.key).replace('history_jornada_', '');
@@ -842,7 +883,8 @@ function saveDraft() {
   try {
     localStorage.setItem(DRAFT_KEY, JSON.stringify({
       coach: getCoachName(),
-      players: Array.from(selected)
+      players: Array.from(selected).map(function(id) { return id; }),
+      savedAt: Date.now()
     }));
   } catch (e) {}
 }
@@ -851,13 +893,13 @@ function loadDraft() {
     var raw = localStorage.getItem(DRAFT_KEY);
     if (!raw) return;
     var d = JSON.parse(raw);
-    if (Array.isArray(d.players)) {
+    if (Array.isArray(d.players) && d.players.length) {
       selected.clear();
       d.players.forEach(function(id) {
-        var nid = Number(id);
-        if (PLAYERS.some(function(p) { return p.id === nid || p.id === id; })) {
-          selected.add(PLAYERS.find(function(p) { return p.id === nid || p.id === id; }).id);
-        }
+        var p = PLAYERS.find(function(x) {
+          return x.id === id || x.id === Number(id) || String(x.id) === String(id);
+        });
+        if (p) selected.add(p.id);
       });
     }
     if (d.coach) {
@@ -918,7 +960,7 @@ document.getElementById('searchMeInput') && document.getElementById('searchMeInp
   var out = document.getElementById('searchMeResults');
   if (!out) return;
   if (q.length < 2) { out.innerHTML = ''; return; }
-  var matches = PLAYERS.filter(function(p) { return p.name.toLowerCase().indexOf(q) !== -1; });
+  var matches = PLAYERS.filter(function(p) { return playerMatchesQuery(p, q); });
   if (!matches.length) { out.innerHTML = '<div class="empty">Sin jugadores</div>'; return; }
   // if submissions open, don't reveal others' teams
   if (dbData.submissionsOpen !== false) {
@@ -929,7 +971,7 @@ document.getElementById('searchMeInput') && document.getElementById('searchMeInp
     var coaches = (dbData.formations || []).filter(function(f) {
       return (f.players || []).indexOf(p.id) !== -1;
     }).map(function(f) { return f.coach; });
-    return '<div class="player-card" style="flex-direction:column;align-items:flex-start;"><div style="font-weight:600">' + p.name + '</div><div style="font-size:0.8rem;color:var(--muted)">' +
+    return '<div class="player-card" style="flex-direction:column;align-items:flex-start;"><div style="font-weight:600">' + displayNamePlain(p) + '</div><div style="font-size:0.8rem;color:var(--muted)">' +
       (coaches.length ? ('En el once de: <b>' + coaches.join(', ') + '</b>') : 'Nadie le ha fichado en esta jornada') + '</div></div>';
   }).join('');
 });
@@ -953,14 +995,19 @@ function canAdd(p) {
   return !selected.has(p.id) && selected.size < 11 && getSpent() + p.points <= MAX_BUDGET;
 }
 window.addPlayer = function(id) {
-  var p = PLAYERS.find(function(x) { return x.id === id; });
+  var p = PLAYERS.find(function(x) { return x.id === id || x.id === Number(id); });
   if (!p || !canAdd(p)) return;
-  selected.add(id);
+  selected.add(p.id);
+  saveDraft();
   updateBudget();
   renderOnce();
 };
 window.removePlayer = function(id) {
+  var p = PLAYERS.find(function(x) { return x.id === id || x.id === Number(id); });
+  if (p) selected.delete(p.id);
   selected.delete(id);
+  selected.delete(Number(id));
+  saveDraft();
   updateBudget();
   renderOnce();
 };
@@ -1042,15 +1089,15 @@ function renderOnce() {
 
   var q = searchEl.value.trim().toLowerCase();
   var pool = getAvailablePlayers();
-  var filtered = pool.filter(function(p) {
-    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
-  });
+  var filtered = pool.filter(function(p) { return playerMatchesQuery(p, q); });
 
-  var team = PLAYERS.filter(function(p) { return selected.has(p.id); }).sort(function(a,b) { return b.points - a.points; });
+  var team = PLAYERS.filter(function(p) {
+    return selected.has(p.id) || selected.has(Number(p.id)) || selected.has(String(p.id));
+  }).sort(function(a,b) { return b.points - a.points; });
   document.getElementById('teamList').innerHTML = team.length === 0
     ? '<div class="empty">Pulsa un jugador de la lista para ver notas y añadirlo al once</div>'
     : team.map(function(p) {
-      return '<div class="player-card selected"><div class="player-info" onclick="openPlayerModal(' + p.id + ')"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removePlayer(' + p.id + ')">Quitar</button></div>';
+      return '<div class="player-card selected"><div class="player-info" onclick="openPlayerModal(' + p.id + ')"><div class="player-name">' + displayName(p) + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="player-price">' + p.points.toFixed(2) + ' M</div><button class="btn btn-sm btn-danger" onclick="event.stopPropagation();removePlayer(' + p.id + ')">Quitar</button></div>';
     }).join('');
 
   var available = filtered.filter(function(p) { return !selected.has(p.id); });
@@ -1060,7 +1107,7 @@ function renderOnce() {
     : available.map(function(p) {
       var afford = (getSpent() + p.points <= MAX_BUDGET) && selected.size < 11;
       var priceClass = afford ? 'player-price' : 'player-price unaffordable';
-      return '<div class="player-card" style="cursor:pointer" onclick="openPlayerModal(' + p.id + ')"><div class="player-info"><div class="player-name">' + p.name + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="' + priceClass + '">' + p.points.toFixed(2) + ' M</div><span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;">Ver notas →</span></div>';
+      return '<div class="player-card" style="cursor:pointer" onclick="openPlayerModal(' + p.id + ')"><div class="player-info"><div class="player-name">' + displayName(p) + ' <span class="bombo ' + p.bombo.toLowerCase() + '">' + p.bombo + '</span></div><div class="player-club">' + p.club + '</div></div><div class="' + priceClass + '">' + p.points.toFixed(2) + ' M</div><span style="font-size:0.72rem;color:var(--muted);white-space:nowrap;">Ver notas →</span></div>';
     }).join('');
 }
 
@@ -1097,7 +1144,7 @@ window.openPlayerModal = function(id) {
   currentPlayerId = id;
   var p = PLAYERS.find(function(x) { return x.id === id; });
   if (!p) return;
-  document.getElementById('modalName').textContent = p.name;
+  document.getElementById('modalName').innerHTML = displayName(p);
   document.getElementById('modalClub').textContent = p.club;
   var priceEl = document.getElementById('modalPrice');
   priceEl.textContent = p.points.toFixed(2) + ' M';
@@ -1427,6 +1474,7 @@ document.querySelectorAll('#adminTabs .tab').forEach(function(tab) {
 
 function renderAdmin() {
   var data = loadData();
+  if (typeof renderNickUI === 'function') renderNickUI();
   document.getElementById('formCount').textContent = data.formations.length;
   var formEl = document.getElementById('adminFormations');
   if (data.formations.length === 0) {
@@ -2526,6 +2574,71 @@ window.addEventListener('message', async function(ev) {
   }
 });
 
+
+
+function renderNickUI() {
+  var list = document.getElementById('nickList');
+  if (!list) return;
+  var entries = Object.keys(dbData.nicknames || {}).map(function(id) {
+    var p = PLAYERS.find(function(x) { return String(x.id) === String(id); });
+    return { id: id, nick: dbData.nicknames[id], name: p ? p.name : ('#' + id) };
+  });
+  if (!entries.length) {
+    list.innerHTML = '<div class="empty" style="padding:8px;">Sin apodos</div>';
+    return;
+  }
+  list.innerHTML = entries.map(function(e) {
+    return '<div class="player-card"><div class="player-info"><div class="player-name">' + e.nick + '</div><div class="player-club">' + e.name + ' · ID ' + e.id + '</div></div><button class="btn btn-sm btn-danger" onclick="clearNick(\'' + e.id + '\')">Quitar</button></div>';
+  }).join('');
+}
+document.getElementById('nickPlayerSearch') && document.getElementById('nickPlayerSearch').addEventListener('input', function() {
+  var q = this.value.trim().toLowerCase();
+  var box = document.getElementById('nickPlayerPick');
+  if (!box) return;
+  if (q.length < 2) { box.innerHTML = ''; return; }
+  var matches = PLAYERS.filter(function(p) { return p.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 12);
+  box.innerHTML = matches.map(function(p) {
+    return '<div class="player-card" style="cursor:pointer" data-nid="' + p.id + '"><div class="player-name">' + p.name + '</div><div class="player-club">' + p.club + ' · ' + p.points.toFixed(1) + ' M</div></div>';
+  }).join('');
+  box.querySelectorAll('[data-nid]').forEach(function(el) {
+    el.addEventListener('click', function() {
+      var id = el.getAttribute('data-nid');
+      var p = PLAYERS.find(function(x) { return String(x.id) === String(id); });
+      document.getElementById('nickPlayerId').value = id;
+      document.getElementById('nickPlayerSearch').value = p ? p.name : id;
+      document.getElementById('nickValue').value = getNick(p) || '';
+      box.innerHTML = '';
+    });
+  });
+});
+document.getElementById('btnSaveNick') && document.getElementById('btnSaveNick').addEventListener('click', async function() {
+  var id = document.getElementById('nickPlayerId').value.trim();
+  var nick = document.getElementById('nickValue').value.trim();
+  if (!id) return alert('Elige un jugador de la búsqueda');
+  if (!dbData.nicknames) dbData.nicknames = {};
+  if (nick) dbData.nicknames[String(id)] = nick;
+  else delete dbData.nicknames[String(id)];
+  try {
+    var err = (await supabaseClient.from('settings').upsert({
+      key: 'player_nicknames',
+      value: JSON.stringify(dbData.nicknames)
+    }, { onConflict: 'key' })).error;
+    if (err) throw err;
+    renderNickUI();
+    renderOnce();
+    alert(nick ? ('Apodo guardado: ' + nick) : 'Apodo eliminado');
+  } catch (e) { alert(e.message); }
+});
+window.clearNick = async function(id) {
+  if (!dbData.nicknames) return;
+  delete dbData.nicknames[String(id)];
+  await supabaseClient.from('settings').upsert({
+    key: 'player_nicknames',
+    value: JSON.stringify(dbData.nicknames)
+  }, { onConflict: 'key' });
+  renderNickUI();
+  renderOnce();
+};
 
 // Init
 (async function() {
