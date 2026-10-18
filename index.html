@@ -189,6 +189,17 @@ th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: 
   text-overflow: ellipsis;
   text-align: center;
 }
+.coach-pick { display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+.coach-pick button { flex:1; min-width:120px; }
+.coach-list { max-height:180px; overflow-y:auto; margin-top:8px; }
+.coach-list .player-card { cursor:pointer; }
+.coach-list .player-card:hover { border-color: var(--accent); }
+.history-block { margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+.history-block h4 { margin:0 0 6px; font-size:0.9rem; color:var(--accent); }
+.history-players { font-size:0.78rem; color:var(--muted); line-height:1.4; }
+.note-form-box { display:none; margin-top:8px; margin-bottom:12px; }
+.note-form-box.show { display:block; }
+.search-me-box { margin-bottom:12px; }
 .formacion-card img {
   width: 100%;
   height: auto;
@@ -224,10 +235,30 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
 
 <!-- MI ONCE -->
 <div id="panel-once" class="panel active">
+  <div id="submissionsBanner" class="card" style="display:none; border-color:var(--danger);"></div>
   <div class="card">
-    <input type="text" id="coachName" placeholder="Tu nombre de entrenador..." maxlength="40">
+    <div class="coach-pick">
+      <button type="button" class="btn btn-blue" id="btnCoachReturning" style="flex:1;">Ya he jugado</button>
+      <button type="button" class="btn btn-primary" id="btnCoachNew" style="flex:1;">Nuevo entrenador</button>
+    </div>
+    <div id="coachReturningBox" style="display:none;">
+      <input type="text" id="coachSearchPrev" placeholder="Buscar tu nombre de entrenador...">
+      <div class="coach-list" id="coachPrevList"></div>
+    </div>
+    <div id="coachNewBox" style="display:none;">
+      <input type="text" id="coachName" placeholder="Escribe tu nombre de entrenador..." maxlength="40">
+    </div>
+    <div id="coachSelected" style="display:none; margin-top:8px; font-size:0.9rem;">
+      Entrenador: <b id="coachSelectedName"></b>
+      <button type="button" class="btn btn-sm" id="btnCoachChange" style="margin-left:8px; background:var(--border); color:var(--text);">Cambiar</button>
+    </div>
   </div>
   <div id="alreadySubmitted" class="success" style="display:none;"></div>
+  <div class="card search-me-box">
+    <div class="section-title" style="margin:0 0 8px;">¿Quién ha apostado por mí?</div>
+    <input type="text" id="searchMeInput" placeholder="Escribe tu nombre de jugador...">
+    <div id="searchMeResults" style="margin-top:8px;"></div>
+  </div>
   <div class="card" style="padding:12px;">
     <div class="progress-wrap" style="margin-bottom:14px;">
       <div class="progress-label">
@@ -275,13 +306,27 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
     <div class="section-title">Clasificación de la Jornada</div>
     <div id="jornadaRanking"></div>
   </div>
+  <div class="card" id="allOncesCard" style="display:none;">
+    <div class="section-title">Onces de esta jornada</div>
+    <p style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">Visible cuando las inscripciones están cerradas.</p>
+    <div id="allOncesList"></div>
+  </div>
 </div>
 
 <!-- GLOBAL -->
 <div id="panel-global" class="panel">
   <div class="card">
     <div class="section-title">Clasificación Global</div>
+    <p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Orden: victorias, luego puntos. Pulsa un entrenador para ver su histórico.</p>
     <div id="globalRanking"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="coachHistoryModal">
+  <div class="modal">
+    <button class="close" id="closeCoachHistory">×</button>
+    <h3 id="coachHistoryTitle">Histórico</h3>
+    <div id="coachHistoryBody"></div>
   </div>
 </div>
 
@@ -472,7 +517,14 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
       <div class="card">
         <div class="section-title">Presupuesto máximo</div>
         <input type="number" id="budgetInput" value="2000" style="margin-bottom:10px;">
-        <button class="btn btn-blue" id="btnSaveBudget" style="width:100%">Guardar presupuesto</button>
+        <button class="btn btn-blue" id="btnSaveBudget" style="width:100%; margin-bottom:12px;">Guardar presupuesto</button>
+        <div class="section-title">Inscripciones</div>
+        <p style="font-size:0.78rem;color:var(--muted);margin-bottom:8px;">Abiertas = se puede enviar once (no se ven los de otros). Cerradas = no se envía, se ven todos los onces.</p>
+        <button class="btn btn-warning" id="btnToggleSubmissions" style="width:100%; margin-bottom:12px;">Cerrar inscripciones</button>
+        <div class="section-title">Renombrar entrenador</div>
+        <input type="text" id="renameCoachFrom" placeholder="Nombre actual" style="margin-bottom:6px;">
+        <input type="text" id="renameCoachTo" placeholder="Nombre nuevo" style="margin-bottom:6px;">
+        <button class="btn btn-blue" id="btnRenameCoach" style="width:100%;">Renombrar (mantiene puntos y victorias)</button>
       </div>
       <div class="card">
         <button class="btn btn-danger" id="btnResetAll" style="width:100%">Borrar TODO (formaciones + resultados + notas)</button>
@@ -496,21 +548,18 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
       <span id="modalBombo" class="bombo" style="margin-left:8px;"></span>
     </div>
 
-    <button class="btn btn-primary" id="btnModalOnce" style="width:100%; margin-bottom:14px;">Añadir al once</button>
-
+    <button class="btn btn-primary" id="btnModalOnce" style="width:100%; margin-bottom:8px;">Añadir al once</button>
     <button class="btn btn-blue" id="btnOpenFormation" style="width:100%; margin-bottom:8px;">Crear formación con chapas</button>
+    <button class="btn" id="btnToggleNote" style="width:100%; margin-bottom:10px; background:var(--border); color:var(--text);">Añadir nota</button>
+
     <div id="modalFormaciones" style="margin-bottom:10px;"></div>
 
-    <div class="section-title">📝 Añadir nota o foto</div>
-    <input type="text" id="noteAuthor" placeholder="Tu nombre (opcional)" style="margin-bottom:8px;">
-    <textarea id="noteText" placeholder="Escribe una nota sobre este jugador..."></textarea>
-    <div style="margin-top:8px; margin-bottom:8px;">
-      <label style="font-size:0.8rem; color:var(--muted); display:block; margin-bottom:4px;">Foto de galería (opcional)</label>
-      <input type="file" id="noteImageFile" accept="image/*" style="padding:8px;">
-      <div id="noteImagePreview" style="margin-top:8px;"></div>
-    </div>
-    <div class="btn-row" style="margin-bottom:14px;">
-      <button class="btn btn-primary" id="btnSubmitNote" style="flex:1">Enviar nota / foto</button>
+    <div class="note-form-box" id="noteFormBox">
+      <input type="text" id="noteAuthor" placeholder="Tu nombre (opcional)" style="margin-bottom:8px;">
+      <textarea id="noteText" placeholder="Escribe una nota sobre este jugador..."></textarea>
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="btn btn-primary" id="btnSubmitNote" style="flex:1">Enviar nota</button>
+      </div>
     </div>
 
     <div class="section-title">💬 Notas de la comunidad</div>
@@ -564,7 +613,9 @@ let dbData = {
   jornadaPlayerIds: [],
   jornadaBombos: {},
   notes: [],
-  competitionName: 'Fantasy Futbolchapas'
+  competitionName: 'Fantasy Futbolchapas',
+  submissionsOpen: true,
+  history: {}
 };
 
 function loadData() { return dbData; }
@@ -603,10 +654,19 @@ async function loadSupabaseData() {
   var settingsRes = await supabaseClient.from('settings').select('*');
   dbData.currentJornada = 1;
   dbData.jornadaBombos = {};
+  dbData.submissionsOpen = true;
+  dbData.history = {};
   (settingsRes.data || []).forEach(function(s) {
     if (s.key === 'current_jornada') dbData.currentJornada = Number(s.value) || 1;
     if (s.key === 'competition_name') dbData.competitionName = s.value;
     if (s.key === 'max_budget') MAX_BUDGET = Number(s.value) || 2000;
+    if (s.key === 'submissions_open') dbData.submissionsOpen = (s.value !== 'false' && s.value !== '0');
+    if (s.key && String(s.key).indexOf('history_jornada_') === 0) {
+      try {
+        var hj = String(s.key).replace('history_jornada_', '');
+        dbData.history[hj] = typeof s.value === 'string' ? JSON.parse(s.value) : s.value;
+      } catch (e) {}
+    }
   });
   var jornada = dbData.currentJornada || 1;
 
@@ -694,9 +754,172 @@ document.getElementById('mainTitle').addEventListener('click', function() {
 
 // ========== MI ONCE ==========
 var coachNameEl = document.getElementById('coachName');
+var selectedCoachName = '';
+var DRAFT_KEY = 'fantasy_draft_v1';
+
+function getCoachName() {
+  return (selectedCoachName || (coachNameEl && coachNameEl.value) || '').trim();
+}
+function setCoachName(name) {
+  selectedCoachName = name || '';
+  if (coachNameEl) coachNameEl.value = selectedCoachName;
+  var box = document.getElementById('coachSelected');
+  var nm = document.getElementById('coachSelectedName');
+  if (box && nm) {
+    if (selectedCoachName) {
+      nm.textContent = selectedCoachName;
+      box.style.display = 'block';
+      document.getElementById('coachReturningBox').style.display = 'none';
+      document.getElementById('coachNewBox').style.display = 'none';
+    } else {
+      box.style.display = 'none';
+    }
+  }
+  saveDraft();
+  renderOnce();
+}
+function renderPrevCoaches(q) {
+  var list = document.getElementById('coachPrevList');
+  if (!list) return;
+  q = (q || '').trim().toLowerCase();
+  var names = Object.keys(dbData.global || {}).sort(function(a,b) { return a.localeCompare(b); });
+  if (q) names = names.filter(function(n) { return n.toLowerCase().indexOf(q) !== -1; });
+  if (!names.length) {
+    list.innerHTML = '<div class="empty">No hay entrenadores previos</div>';
+    return;
+  }
+  list.innerHTML = names.map(function(n) {
+    return '<div class="player-card" data-coach="' + n.replace(/"/g,'&quot;') + '"><div class="player-name">' + n + '</div><div class="player-club">' +
+      (dbData.global[n] ? (dbData.global[n].wins + ' victorias · ' + Number(dbData.global[n].totalPoints).toFixed(1) + ' pts') : '') +
+      '</div></div>';
+  }).join('');
+  list.querySelectorAll('[data-coach]').forEach(function(el) {
+    el.addEventListener('click', function() { setCoachName(el.getAttribute('data-coach')); });
+  });
+}
+document.getElementById('btnCoachReturning') && document.getElementById('btnCoachReturning').addEventListener('click', function() {
+  document.getElementById('coachReturningBox').style.display = 'block';
+  document.getElementById('coachNewBox').style.display = 'none';
+  document.getElementById('coachSelected').style.display = 'none';
+  selectedCoachName = '';
+  renderPrevCoaches(document.getElementById('coachSearchPrev').value);
+});
+document.getElementById('btnCoachNew') && document.getElementById('btnCoachNew').addEventListener('click', function() {
+  document.getElementById('coachReturningBox').style.display = 'none';
+  document.getElementById('coachNewBox').style.display = 'block';
+  document.getElementById('coachSelected').style.display = 'none';
+  selectedCoachName = '';
+  if (coachNameEl) { coachNameEl.value = ''; coachNameEl.focus(); }
+});
+document.getElementById('btnCoachChange') && document.getElementById('btnCoachChange').addEventListener('click', function() {
+  selectedCoachName = '';
+  document.getElementById('coachSelected').style.display = 'none';
+  document.getElementById('coachReturningBox').style.display = 'none';
+  document.getElementById('coachNewBox').style.display = 'none';
+});
+document.getElementById('coachSearchPrev') && document.getElementById('coachSearchPrev').addEventListener('input', function() {
+  renderPrevCoaches(this.value);
+});
+if (coachNameEl) {
+  coachNameEl.addEventListener('input', function() {
+    selectedCoachName = coachNameEl.value.trim();
+    saveDraft();
+  });
+  coachNameEl.addEventListener('change', function() {
+    if (coachNameEl.value.trim()) setCoachName(coachNameEl.value.trim());
+  });
+}
+
+function saveDraft() {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      coach: getCoachName(),
+      players: Array.from(selected)
+    }));
+  } catch (e) {}
+}
+function loadDraft() {
+  try {
+    var raw = localStorage.getItem(DRAFT_KEY);
+    if (!raw) return;
+    var d = JSON.parse(raw);
+    if (d.coach) setCoachName(d.coach);
+    if (Array.isArray(d.players)) {
+      selected.clear();
+      d.players.forEach(function(id) {
+        if (PLAYERS.some(function(p) { return p.id === id; })) selected.add(id);
+      });
+    }
+  } catch (e) {}
+}
+function clearDraft() {
+  try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
+}
+
+function updateSubmissionsUI() {
+  var open = dbData.submissionsOpen !== false;
+  var ban = document.getElementById('submissionsBanner');
+  var btn = document.getElementById('btnToggleSubmissions');
+  if (ban) {
+    if (!open) {
+      ban.style.display = 'block';
+      ban.innerHTML = '<b>Inscripciones cerradas.</b> Ya no se pueden enviar onces. Puedes ver los de los demás en la pestaña Jornada.';
+    } else {
+      ban.style.display = 'none';
+    }
+  }
+  if (btn) {
+    btn.textContent = open ? 'Cerrar inscripciones' : 'Abrir inscripciones';
+    btn.className = open ? 'btn btn-warning' : 'btn btn-primary';
+  }
+  var card = document.getElementById('allOncesCard');
+  if (card) card.style.display = open ? 'none' : 'block';
+  if (!open) renderAllOnces();
+}
+
+function renderAllOnces() {
+  var el = document.getElementById('allOncesList');
+  if (!el) return;
+  var forms = dbData.formations || [];
+  if (!forms.length) {
+    el.innerHTML = '<div class="empty">Nadie ha enviado aún</div>';
+    return;
+  }
+  el.innerHTML = forms.map(function(f) {
+    var names = (f.players || []).map(function(id) {
+      var p = PLAYERS.find(function(x) { return x.id === id; });
+      return p ? p.name.split(' ').slice(0, 2).join(' ') : id;
+    }).join(' · ');
+    return '<div class="player-card" style="flex-direction:column;align-items:flex-start;"><div style="font-weight:700">' + f.coach + ' · ' + Number(f.cost).toFixed(2) + ' M</div><div style="font-size:0.75rem;color:var(--muted)">' + names + '</div></div>';
+  }).join('');
+}
+
 var searchEl = document.getElementById('search');
 searchEl.addEventListener('input', renderOnce);
 document.getElementById('btnSubmit').addEventListener('click', submitFormation);
+
+// Quién ha apostado por mí
+document.getElementById('searchMeInput') && document.getElementById('searchMeInput').addEventListener('input', function() {
+  var q = this.value.trim().toLowerCase();
+  var out = document.getElementById('searchMeResults');
+  if (!out) return;
+  if (q.length < 2) { out.innerHTML = ''; return; }
+  var matches = PLAYERS.filter(function(p) { return p.name.toLowerCase().indexOf(q) !== -1; });
+  if (!matches.length) { out.innerHTML = '<div class="empty">Sin jugadores</div>'; return; }
+  // if submissions open, don't reveal others' teams
+  if (dbData.submissionsOpen !== false) {
+    out.innerHTML = '<div class="empty" style="font-size:0.8rem;">Disponible cuando las inscripciones estén cerradas (para no copiar).</div>';
+    return;
+  }
+  out.innerHTML = matches.map(function(p) {
+    var coaches = (dbData.formations || []).filter(function(f) {
+      return (f.players || []).indexOf(p.id) !== -1;
+    }).map(function(f) { return f.coach; });
+    return '<div class="player-card" style="flex-direction:column;align-items:flex-start;"><div style="font-weight:600">' + p.name + '</div><div style="font-size:0.8rem;color:var(--muted)">' +
+      (coaches.length ? ('En el once de: <b>' + coaches.join(', ') + '</b>') : 'Nadie le ha fichado en esta jornada') + '</div></div>';
+  }).join('');
+});
+
 
 var bomboFilter = 'all';
 document.getElementById('bomboFilters').addEventListener('click', function(e) {
@@ -779,14 +1002,22 @@ function getAvailablePlayers() {
 
 function renderOnce() {
   var data = loadData();
-  var coach = coachNameEl.value.trim();
+  var coach = getCoachName();
   var already = data.formations.find(function(f) { return f.coach.toLowerCase() === coach.toLowerCase(); });
   var alreadyEl = document.getElementById('alreadySubmitted');
   var btn = document.getElementById('btnSubmit');
-  if (already) {
+  if (dbData.submissionsOpen === false) {
+    alreadyEl.style.display = 'block';
+    alreadyEl.textContent = already
+      ? ('Inscripciones cerradas. Tu once: "' + already.coach + '".')
+      : 'Inscripciones cerradas. No se pueden enviar más onces.';
+    btn.disabled = true;
+    btn.textContent = 'Inscripciones cerradas';
+  } else if (already) {
     alreadyEl.style.display = 'block';
     alreadyEl.textContent = 'Ya has enviado tu once como "' + already.coach + '".';
     btn.disabled = true;
+    btn.textContent = 'Once ya enviado';
   } else {
     alreadyEl.style.display = 'none';
     btn.disabled = (selected.size !== 11);
@@ -820,12 +1051,13 @@ function renderOnce() {
 }
 
 async function submitFormation() {
-  var coach = coachNameEl.value.trim();
-  if (!coach) return alert('Escribe tu nombre de entrenador');
+  if (dbData.submissionsOpen === false) return alert('Las inscripciones están cerradas. No se pueden enviar más onces.');
+  var coach = getCoachName();
+  if (!coach) return alert('Elige o escribe tu nombre de entrenador');
   if (selected.size !== 11) return alert('Debes seleccionar exactamente 11 jugadores');
   var data = loadData();
   if (data.formations.some(function(f) { return f.coach.toLowerCase() === coach.toLowerCase(); })) {
-    return alert('Ya existe una formación con ese nombre');
+    return alert('Ya existe una formación con ese nombre de entrenador en esta jornada');
   }
   var team = PLAYERS.filter(function(p) { return selected.has(p.id); });
   var cost = getSpent();
@@ -840,6 +1072,7 @@ async function submitFormation() {
       data.global[coach] = { totalPoints: 0, wins: 0 };
       await supabaseClient.from('global_scores').upsert({ coach: coach, total_points: 0, wins: 0 }, { onConflict: 'coach' });
     }
+    clearDraft();
     alert('¡Once enviado correctamente!');
     renderOnce();
   } catch (e) { alert('Error: ' + e.message); }
@@ -904,6 +1137,10 @@ window.openPlayerModal = function(id) {
   document.getElementById('noteAuthor').value = '';
   document.getElementById('noteText').value = '';
   noteImageData = null;
+  var nfb = document.getElementById('noteFormBox');
+  if (nfb) nfb.classList.remove('show');
+  var btnTn = document.getElementById('btnToggleNote');
+  if (btnTn) btnTn.textContent = 'Añadir nota';
   var fi = document.getElementById('noteImageFile');
   if (fi) fi.value = '';
   var prev = document.getElementById('noteImagePreview');
@@ -990,6 +1227,14 @@ document.getElementById('noteImageFile') && document.getElementById('noteImageFi
   }
 });
 
+
+document.getElementById('btnToggleNote') && document.getElementById('btnToggleNote').addEventListener('click', function() {
+  var box = document.getElementById('noteFormBox');
+  if (!box) return;
+  box.classList.toggle('show');
+  this.textContent = box.classList.contains('show') ? 'Ocultar nota' : 'Añadir nota';
+});
+
 document.getElementById('btnSubmitNote').addEventListener('click', async function() {
   var note = document.getElementById('noteText').value.trim();
   if (!note && !noteImageData) return alert('Escribe una nota o sube una foto');
@@ -1015,13 +1260,15 @@ function renderJornada() {
   var data = loadData();
   var el = document.getElementById('jornadaRanking');
   if (!data.jornadaScores || data.jornadaScores.length === 0) {
-    el.innerHTML = '<div class="empty">Aún no se ha calculado ninguna jornada</div>';
-    return;
+    el.innerHTML = '<div class="empty">Aún no se ha calculado ninguna jornada (falta subir resultados)</div>';
+  } else {
+    el.innerHTML = '<table><thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Coste</th></tr></thead><tbody>' +
+      data.jornadaScores.map(function(s, i) {
+        return '<tr><td class="rank">' + (i+1) + '</td><td>' + s.coach + (i===0?' 🏆':'') + '</td><td>' + s.points.toFixed(1) + '</td><td>' + s.cost.toFixed(2) + ' M</td></tr>';
+      }).join('') + '</tbody></table>';
   }
-  el.innerHTML = '<table><thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Coste</th></tr></thead><tbody>' +
-    data.jornadaScores.map(function(s, i) {
-      return '<tr><td class="rank">' + (i+1) + '</td><td>' + s.coach + (i===0?' 🏆':'') + '</td><td>' + s.points.toFixed(1) + '</td><td>' + s.cost.toFixed(2) + ' M</td></tr>';
-    }).join('') + '</tbody></table>';
+  if (dbData.submissionsOpen === false) renderAllOnces();
+  updateSubmissionsUI();
 }
 function renderGlobal() {
   var data = loadData();
@@ -1029,18 +1276,63 @@ function renderGlobal() {
   var list = Object.keys(data.global).map(function(coach) {
     return { coach: coach, totalPoints: data.global[coach].totalPoints, wins: data.global[coach].wins };
   }).sort(function(a, b) {
-    if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
-    return b.wins - a.wins;
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    return b.totalPoints - a.totalPoints;
   });
   if (list.length === 0) {
     el.innerHTML = '<div class="empty">Aún no hay datos globales</div>';
     return;
   }
-  el.innerHTML = '<table><thead><tr><th>#</th><th>Entrenador</th><th>Puntos</th><th>Victorias</th></tr></thead><tbody>' +
+  el.innerHTML = '<table><thead><tr><th>#</th><th>Entrenador</th><th>Victorias</th><th>Puntos</th></tr></thead><tbody>' +
     list.map(function(s, i) {
-      return '<tr><td class="rank">' + (i+1) + '</td><td>' + s.coach + '</td><td>' + s.totalPoints.toFixed(1) + '</td><td>' + s.wins + '</td></tr>';
+      return '<tr style="cursor:pointer" onclick="showCoachHistory(\'' + s.coach.replace(/'/g, "\\'") + '\')"><td class="rank">' + (i+1) + '</td><td>' + s.coach + '</td><td>' + s.wins + '</td><td>' + s.totalPoints.toFixed(1) + '</td></tr>';
     }).join('') + '</tbody></table>';
 }
+
+window.showCoachHistory = function(coach) {
+  var body = document.getElementById('coachHistoryBody');
+  var title = document.getElementById('coachHistoryTitle');
+  if (!body || !title) return;
+  title.textContent = coach;
+  var html = '';
+  var keys = Object.keys(dbData.history || {}).sort(function(a,b) { return Number(a) - Number(b); });
+  keys.forEach(function(j) {
+    var h = dbData.history[j];
+    if (!h || !h.formations) return;
+    var f = h.formations.find(function(x) { return x.coach === coach; });
+    if (!f) return;
+    var names = (f.players || []).map(function(id) {
+      var p = PLAYERS.find(function(x) { return x.id === id; });
+      return p ? p.name : ('#' + id);
+    });
+    html += '<div class="history-block"><h4>' + (h.competition || ('Jornada ' + j)) + '</h4>' +
+      '<div style="font-size:0.8rem;">Puntos: <b>' + (f.points != null ? Number(f.points).toFixed(1) : '-') + '</b> · Coste: ' + (f.cost != null ? Number(f.cost).toFixed(2) : '-') + ' M</div>' +
+      '<div class="history-players">' + names.join(' · ') + '</div></div>';
+  });
+  // current jornada if has formation
+  var cur = (dbData.formations || []).find(function(f) { return f.coach === coach; });
+  if (cur) {
+    var names2 = (cur.players || []).map(function(id) {
+      var p = PLAYERS.find(function(x) { return x.id === id; });
+      return p ? p.name : ('#' + id);
+    });
+    var pts = 0;
+    (cur.players || []).forEach(function(id) { pts += Number(dbData.results[id] || 0); });
+    html += '<div class="history-block"><h4>' + (dbData.competitionName || 'Jornada actual') + ' (actual)</h4>' +
+      '<div style="font-size:0.8rem;">Puntos: <b>' + pts.toFixed(1) + '</b> · Coste: ' + Number(cur.cost || 0).toFixed(2) + ' M</div>' +
+      '<div class="history-players">' + names2.join(' · ') + '</div></div>';
+  }
+  if (!html) html = '<div class="empty">Sin histórico de onces guardado aún. A partir de ahora, al cerrar cada jornada se archiva.</div>';
+  body.innerHTML = html;
+  document.getElementById('coachHistoryModal').classList.add('show');
+};
+document.getElementById('closeCoachHistory') && document.getElementById('closeCoachHistory').addEventListener('click', function() {
+  document.getElementById('coachHistoryModal').classList.remove('show');
+});
+document.getElementById('coachHistoryModal') && document.getElementById('coachHistoryModal').addEventListener('click', function(e) {
+  if (e.target.id === 'coachHistoryModal') e.target.classList.remove('show');
+});
+
 
 // ========== ADMIN ==========
 document.getElementById('btnLogin').addEventListener('click', function() {
@@ -1100,9 +1392,15 @@ function renderAdmin() {
     pending.map(function(n) {
       var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
       var imgHtml = n.image_url ? '<img class="note-img" src="' + String(n.image_url).replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
-      var isForm = !!extractFormData(n.note);
-      var noteLabel = stripFormData(n.note) + (isForm ? ' <span class="badge badge-pending">Formación chapas</span>' : '');
-      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="font-weight:600">' + (p ? p.name : 'Jugador '+n.player_id) + '</div><div style="font-size:0.85rem">' + noteLabel + '</div>' + imgHtml + '<div style="font-size:0.72rem;color:var(--muted)">Por: ' + (n.author||'Anónimo') + (n.image_url ? ' · Con imagen' : '') + '</div><div class="btn-row" style="margin:0"><button class="btn btn-sm btn-primary" onclick="approveNote('+n.id+')">Aprobar</button><button class="btn btn-sm btn-danger" onclick="rejectNote('+n.id+')">Rechazar</button><button class="btn btn-sm" style="background:var(--border);color:var(--text)" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
+      var isForm = !!extractFormData(n.note) || (n.image_url && /^Formación:/i.test(stripFormData(n.note) || ''));
+      var formName = isForm ? extractFormName(n.note) : null;
+      var title = isForm
+        ? ('📐 ' + (formName || 'Formación'))
+        : (p ? p.name : ('Jugador ' + n.player_id));
+      var sub = isForm
+        ? ('Asociada al jugador: <b>' + (p ? p.name : ('ID ' + n.player_id)) + '</b>')
+        : stripFormData(n.note);
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="font-weight:600">' + title + '</div><div style="font-size:0.85rem">' + sub + '</div>' + imgHtml + '<div style="font-size:0.72rem;color:var(--muted)">Enviada por: ' + (n.author||'Anónimo') + (n.image_url ? ' · Con imagen' : '') + '</div><div class="btn-row" style="margin:0"><button class="btn btn-sm btn-primary" onclick="approveNote('+n.id+')">Aprobar</button><button class="btn btn-sm btn-danger" onclick="rejectNote('+n.id+')">Rechazar</button><button class="btn btn-sm" style="background:var(--border);color:var(--text)" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
     }).join('');
 
   var other = data.notes.filter(function(n) { return n.status !== 'pending'; });
@@ -1111,12 +1409,18 @@ function renderAdmin() {
       var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
       var badge = n.status === 'approved' ? '<span class="badge badge-approved">Aprobada</span>' : '<span class="badge badge-pending">Rechazada</span>';
       var imgHtml2 = n.image_url ? '<img class="note-img" src="' + String(n.image_url).replace(/"/g,'') + '" alt="Foto" loading="lazy" onerror="this.style.display=\'none\'">' : '';
-      var isForm2 = !!extractFormData(n.note);
-      var noteLabel2 = stripFormData(n.note) + (isForm2 ? ' <span class="badge badge-approved">Formación</span>' : '');
+      var isForm2 = !!extractFormData(n.note) || (n.image_url && /^Formación:/i.test(stripFormData(n.note) || ''));
+      var formName2 = isForm2 ? extractFormName(n.note) : null;
+      var title2 = isForm2
+        ? ('📐 ' + (formName2 || 'Formación'))
+        : (p ? p.name : ('Jugador ' + n.player_id));
+      var sub2 = isForm2
+        ? ('Asociada al jugador: <b>' + (p ? p.name : ('ID ' + n.player_id)) + '</b>')
+        : stripFormData(n.note);
       var renameBtn = (n.status === 'approved' && isForm2)
         ? '<button class="btn btn-sm btn-blue" onclick="renameFormationNote('+n.id+')">Renombrar</button>'
         : '';
-      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;justify-content:space-between;width:100%"><div style="font-weight:600">' + (p?p.name:'Jugador '+n.player_id) + '</div>' + badge + '</div><div style="font-size:0.85rem">' + noteLabel2 + '</div>' + imgHtml2 + '<div class="btn-row" style="margin:0">' + renameBtn + '<button class="btn btn-sm btn-danger" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
+      return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;justify-content:space-between;width:100%"><div style="font-weight:600">' + title2 + '</div>' + badge + '</div><div style="font-size:0.85rem">' + sub2 + '</div>' + imgHtml2 + '<div style="font-size:0.72rem;color:var(--muted)">Enviada por: ' + (n.author||'Anónimo') + '</div><div class="btn-row" style="margin:0">' + renameBtn + '<button class="btn btn-sm btn-danger" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
     }).join('');
 }
 
@@ -1521,13 +1825,47 @@ document.getElementById('btnResetJornada').addEventListener('click', async funct
 });
 
 document.getElementById('btnCloseJornada').addEventListener('click', async function() {
-  if (!confirm('¿Cerrar jornada?\nSe borrarán todos los onces. La gente tendrá que enviar uno nuevo.')) return;
-  await supabaseClient.from('formations').delete().neq('coach', '__x__');
-  dbData.formations = [];
-  selected.clear();
-  renderOnce();
-  renderAdmin();
-  alert('Jornada cerrada. Onces eliminados.');
+  if (!confirm('¿Cerrar jornada?\nSe archivarán los onces (histórico) y luego se borrarán para la siguiente. La gente tendrá que enviar uno nuevo.')) return;
+  try {
+    var jornada = dbData.currentJornada || 1;
+    // Archivar onces con puntos calculados
+    var scores = buildJornadaScores(dbData);
+    var scoreMap = {};
+    scores.forEach(function(s) { scoreMap[s.coach] = s.points; });
+    var archive = {
+      competition: dbData.competitionName || ('Jornada ' + jornada),
+      closedAt: new Date().toISOString(),
+      formations: (dbData.formations || []).map(function(f) {
+        return {
+          coach: f.coach,
+          players: f.players || [],
+          cost: f.cost,
+          points: scoreMap[f.coach] != null ? scoreMap[f.coach] : 0
+        };
+      })
+    };
+    var key = 'history_jornada_' + jornada;
+    var errA = (await supabaseClient.from('settings').upsert({
+      key: key,
+      value: JSON.stringify(archive)
+    }, { onConflict: 'key' })).error;
+    if (errA) throw errA;
+    dbData.history[String(jornada)] = archive;
+
+    await supabaseClient.from('formations').delete().neq('coach', '__x__');
+    dbData.formations = [];
+    selected.clear();
+    clearDraft();
+    // Reabrir inscripciones para la siguiente
+    await supabaseClient.from('settings').upsert({ key: 'submissions_open', value: 'true' }, { onConflict: 'key' });
+    dbData.submissionsOpen = true;
+    updateSubmissionsUI();
+    renderOnce();
+    renderAdmin();
+    alert('Jornada cerrada. Onces archivados en el histórico y eliminados de la jornada actual.');
+  } catch (e) {
+    alert('Error al cerrar jornada: ' + e.message);
+  }
 });
 
 document.getElementById('btnSaveCompName').addEventListener('click', async function() {
@@ -1548,6 +1886,72 @@ document.getElementById('btnSaveBudget').addEventListener('click', async functio
   updateBudget();
   alert('Presupuesto actualizado: ' + b);
 });
+
+document.getElementById('btnToggleSubmissions') && document.getElementById('btnToggleSubmissions').addEventListener('click', async function() {
+  var open = dbData.submissionsOpen !== false;
+  var next = !open;
+  if (!confirm(next ? '¿Abrir inscripciones? La gente podrá enviar onces (no se verán los ajenos).' : '¿Cerrar inscripciones? Nadie más podrá enviar once y se podrán ver todos.')) return;
+  try {
+    var err = (await supabaseClient.from('settings').upsert({ key: 'submissions_open', value: next ? 'true' : 'false' }, { onConflict: 'key' })).error;
+    if (err) throw err;
+    dbData.submissionsOpen = next;
+    updateSubmissionsUI();
+    renderOnce();
+    renderJornada();
+    alert(next ? 'Inscripciones abiertas' : 'Inscripciones cerradas');
+  } catch (e) { alert(e.message); }
+});
+
+document.getElementById('btnRenameCoach') && document.getElementById('btnRenameCoach').addEventListener('click', async function() {
+  var from = (document.getElementById('renameCoachFrom').value || '').trim();
+  var to = (document.getElementById('renameCoachTo').value || '').trim();
+  if (!from || !to) return alert('Rellena nombre actual y nuevo');
+  if (from === to) return alert('Son el mismo nombre');
+  if (!confirm('¿Renombrar "' + from + '" → "' + to + '"?\nSe mantienen puntos y victorias.')) return;
+  try {
+    // global_scores
+    var g = dbData.global[from];
+    if (g) {
+      var err1 = (await supabaseClient.from('global_scores').upsert({
+        coach: to, total_points: g.totalPoints, wins: g.wins
+      }, { onConflict: 'coach' })).error;
+      if (err1) throw err1;
+      await supabaseClient.from('global_scores').delete().eq('coach', from);
+      delete dbData.global[from];
+      dbData.global[to] = g;
+    }
+    // formations actuales
+    var forms = (dbData.formations || []).filter(function(f) { return f.coach === from; });
+    for (var i = 0; i < forms.length; i++) {
+      await supabaseClient.from('formations').update({ coach: to }).eq('coach', from);
+      forms[i].coach = to;
+    }
+    // histórico en settings
+    var keys = Object.keys(dbData.history || {});
+    for (var k = 0; k < keys.length; k++) {
+      var hj = keys[k];
+      var h = dbData.history[hj];
+      if (!h || !h.formations) continue;
+      var changed = false;
+      h.formations.forEach(function(f) {
+        if (f.coach === from) { f.coach = to; changed = true; }
+      });
+      if (changed) {
+        await supabaseClient.from('settings').upsert({
+          key: 'history_jornada_' + hj,
+          value: JSON.stringify(h)
+        }, { onConflict: 'key' });
+      }
+    }
+    document.getElementById('renameCoachFrom').value = '';
+    document.getElementById('renameCoachTo').value = '';
+    renderGlobal();
+    renderOnce();
+    renderAdmin();
+    alert('Entrenador renombrado: ' + from + ' → ' + to);
+  } catch (e) { alert('Error: ' + e.message); }
+});
+
 
 document.getElementById('btnResetAll').addEventListener('click', async function() {
   if (!confirm('¿Borrar ABSOLUTAMENTE TODO?')) return;
@@ -1744,7 +2148,7 @@ function renderEditPanel() {
 
   var globalList = Object.keys(data.global).map(function(c) {
     return { coach: c, totalPoints: data.global[c].totalPoints, wins: data.global[c].wins };
-  }).sort(function(a,b) { return b.totalPoints - a.totalPoints; });
+  }).sort(function(a,b) { if (b.wins !== a.wins) return b.wins - a.wins; return b.totalPoints - a.totalPoints; });
 
   gEl.innerHTML = globalList.length === 0 ? '<div class="empty">Sin datos globales</div>' :
     globalList.map(function(g) {
@@ -2079,8 +2483,12 @@ window.addEventListener('message', async function(ev) {
     console.error(e);
     document.getElementById('compSub').textContent = 'Error cargando datos';
   }
+  loadDraft();
+  updateSubmissionsUI();
   updateBudget();
   renderOnce();
+  renderJornada();
+  renderGlobal();
 })();
 </script>
 </body>
