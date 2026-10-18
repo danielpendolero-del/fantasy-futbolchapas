@@ -646,6 +646,15 @@ function buildJornadaScores(data) {
 }
 
 
+/** Quita tildes/diacríticos y pasa a minúsculas para buscar sin importar acentos */
+function foldText(s) {
+  return String(s || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/ñ/g, 'n') // por si algún entorno no separa ñ
+    .trim();
+}
 function getNick(p) {
   if (!p) return '';
   var n = (dbData.nicknames || {})[String(p.id)] || (dbData.nicknames || {})[p.id];
@@ -664,11 +673,11 @@ function displayNamePlain(p) {
 }
 function playerMatchesQuery(p, q) {
   if (!q) return true;
-  q = q.toLowerCase();
-  if ((p.name || '').toLowerCase().indexOf(q) !== -1) return true;
-  if ((p.club || '').toLowerCase().indexOf(q) !== -1) return true;
+  var f = foldText(q);
+  if (foldText(p.name).indexOf(f) !== -1) return true;
+  if (foldText(p.club).indexOf(f) !== -1) return true;
   var nick = getNick(p);
-  if (nick && nick.toLowerCase().indexOf(q) !== -1) return true;
+  if (nick && foldText(nick).indexOf(f) !== -1) return true;
   return false;
 }
 
@@ -830,9 +839,9 @@ function setCoachName(name, opts) {
 function renderPrevCoaches(q) {
   var list = document.getElementById('coachPrevList');
   if (!list) return;
-  q = (q || '').trim().toLowerCase();
+  q = foldText(q || '');
   var names = Object.keys(dbData.global || {}).sort(function(a,b) { return a.localeCompare(b); });
-  if (q) names = names.filter(function(n) { return n.toLowerCase().indexOf(q) !== -1; });
+  if (q) names = names.filter(function(n) { return foldText(n).indexOf(q) !== -1; });
   if (!names.length) {
     list.innerHTML = '<div class="empty">No hay entrenadores previos</div>';
     return;
@@ -1575,9 +1584,9 @@ window.renameFormationNote = async function(id) {
 // Plantilla management
 function renderPlantilla() {
   document.getElementById('dbPlayersCount').textContent = PLAYERS.length;
-  var q = (document.getElementById('plantillaSearch').value || '').trim().toLowerCase();
+  var q = foldText(document.getElementById('plantillaSearch').value || '');
   var list = PLAYERS.filter(function(p) {
-    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+    return !q || foldText(p.name).indexOf(foldText(q)) !== -1 || foldText(p.club).indexOf(foldText(q)) !== -1 || (typeof getNick === 'function' && foldText(getNick(p)).indexOf(foldText(q)) !== -1);
   });
   document.getElementById('plantillaList').innerHTML = list.length === 0
     ? '<div class="empty">Plantilla vacía</div>'
@@ -1773,9 +1782,9 @@ document.getElementById('btnAddPlayer').addEventListener('click', async function
 
 // Jornada player selection
 function renderJornadaSelect() {
-  var q = (document.getElementById('jornadaSearch').value || '').trim().toLowerCase();
+  var q = foldText(document.getElementById('jornadaSearch').value || '');
   var list = PLAYERS.filter(function(p) {
-    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+    return !q || foldText(p.name).indexOf(foldText(q)) !== -1 || foldText(p.club).indexOf(foldText(q)) !== -1 || (typeof getNick === 'function' && foldText(getNick(p)).indexOf(foldText(q)) !== -1);
   });
   document.getElementById('jornadaSelCount').textContent = jornadaSelected.size;
   document.getElementById('jornadaSelectList').innerHTML = list.map(function(p) {
@@ -1857,13 +1866,13 @@ document.getElementById('btnSaveJornadaPlayers').addEventListener('click', async
 document.getElementById('resultSearch').addEventListener('input', renderResultInputs);
 function renderResultInputs() {
   var data = loadData();
-  var q = document.getElementById('resultSearch').value.trim().toLowerCase();
+  var q = foldText(document.getElementById('resultSearch').value);
   var list = PLAYERS;
   if (data.jornadaPlayerIds && data.jornadaPlayerIds.length > 0) {
     list = PLAYERS.filter(function(p) { return data.jornadaPlayerIds.indexOf(p.id) !== -1; });
   }
   list = list.filter(function(p) {
-    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+    return !q || foldText(p.name).indexOf(foldText(q)) !== -1 || foldText(p.club).indexOf(foldText(q)) !== -1 || (typeof getNick === 'function' && foldText(getNick(p)).indexOf(foldText(q)) !== -1);
   });
   document.getElementById('resultInputs').innerHTML = list.map(function(p) {
     var val = data.results[p.id] !== undefined ? data.results[p.id] : '';
@@ -2318,10 +2327,10 @@ document.getElementById('btnRecalcFromEdit') && document.getElementById('btnReca
 var formSelected = new Set();
 
 function renderFormPicker() {
-  var q = (document.getElementById('formSearch') && document.getElementById('formSearch').value || '').trim().toLowerCase();
+  var q = foldText((document.getElementById('formSearch') && document.getElementById('formSearch').value) || '');
   var list = PLAYERS.filter(function(p) {
     if (formSelected.has(p.id)) return false;
-    return !q || p.name.toLowerCase().indexOf(q) !== -1 || p.club.toLowerCase().indexOf(q) !== -1;
+    return !q || foldText(p.name).indexOf(foldText(q)) !== -1 || foldText(p.club).indexOf(foldText(q)) !== -1 || (typeof getNick === 'function' && foldText(getNick(p)).indexOf(foldText(q)) !== -1);
   }).slice(0, 40);
   var el = document.getElementById('formPickList');
   if (!el) return;
@@ -2592,11 +2601,11 @@ function renderNickUI() {
   }).join('');
 }
 document.getElementById('nickPlayerSearch') && document.getElementById('nickPlayerSearch').addEventListener('input', function() {
-  var q = this.value.trim().toLowerCase();
+  var q = foldText(this.value);
   var box = document.getElementById('nickPlayerPick');
   if (!box) return;
   if (q.length < 2) { box.innerHTML = ''; return; }
-  var matches = PLAYERS.filter(function(p) { return p.name.toLowerCase().indexOf(q) !== -1; }).slice(0, 12);
+  var matches = PLAYERS.filter(function(p) { return foldText(p.name).indexOf(q) !== -1; }).slice(0, 12);
   box.innerHTML = matches.map(function(p) {
     return '<div class="player-card" style="cursor:pointer" data-nid="' + p.id + '"><div class="player-name">' + p.name + '</div><div class="player-club">' + p.club + ' · ' + p.points.toFixed(1) + ' M</div></div>';
   }).join('');
