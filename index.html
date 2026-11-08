@@ -186,6 +186,114 @@ textarea { min-height: 100px; resize: vertical; }
   font-variant-numeric: tabular-nums;
 }
 .player-price.unaffordable { color: var(--muted) !important; opacity: 0.75; }
+.bombo-rule-banner {
+  display: none;
+  margin-bottom: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  font-weight: 800;
+  text-align: center;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  background: linear-gradient(120deg, rgba(251,191,36,0.22), rgba(37,99,235,0.18));
+  border: 1px solid rgba(251,191,36,0.5);
+  color: #fef3c7;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+}
+.bombo-rule-banner.show { display: block; }
+.bombo-rule-banner b { color: #fff; font-size: 1.05rem; }
+.bombo-filter-wrap {
+  position: relative;
+  display: inline-flex;
+  vertical-align: middle;
+}
+.bombo-bang {
+  position: absolute;
+  bottom: -8px;
+  right: -9px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #f97316;
+  color: #fff7ed;
+  font-size: 0.7rem;
+  font-weight: 900;
+  line-height: 1;
+  cursor: pointer;
+  border: 2px solid #ea580c;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.35), 0 2px 8px rgba(234, 88, 12, 0.5);
+  pointer-events: auto;
+}
+.bombo-bang:active { transform: scale(0.9); }
+.modal-bombo-hint {
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.35;
+  min-height: 1.2em;
+}
+.modal-bombo-hint.warn { color: #fbbf24; font-weight: 700; }
+.modal-bombo-hint.danger { color: #f87171; font-weight: 700; }
+.modal-bombo-hint.ok { color: #86efac; }
+.toast-wrap {
+  position: fixed;
+  left: 12px; right: 12px;
+  bottom: 16px;
+  z-index: 300;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 12px 12px 14px;
+  border-radius: 14px;
+  background: linear-gradient(145deg, #92400e, #b45309 45%, #78350f);
+  border: 1px solid rgba(253, 224, 71, 0.55);
+  box-shadow: 0 12px 32px rgba(180, 83, 9, 0.4);
+  color: #fffbeb;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  animation: toastIn 0.22s ease;
+}
+.toast .toast-body { color: #fffbeb; font-weight: 600; }
+.toast .toast-close {
+  border-color: rgba(254, 243, 199, 0.35) !important;
+  background: rgba(0,0,0,0.25) !important;
+  color: #fffbeb !important;
+}
+.toast .toast-body { flex: 1; min-width: 0; white-space: pre-line; }
+.toast .toast-close {
+  flex-shrink: 0;
+  width: 28px; height: 28px;
+  border-radius: 99px;
+  border: 1px solid rgba(148,163,184,0.35);
+  background: rgba(15,23,42,0.8);
+  color: #e2e8f0;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+.toast .toast-close:active { transform: scale(0.94); }
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: none; }
+}
 .bombo-filters {
   display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px;
 }
@@ -684,7 +792,9 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
   </div>
   <span id="maxBudgetShow" style="display:none;">2000</span>
   <span id="count" style="display:none;">0 / 11</span>
-  <input type="text" id="search" placeholder="Buscar jugador o club..." style="margin-bottom:8px;">
+  <div class="section-title">Tu once <span id="teamCount">0 jugadores</span></div>
+  <div id="teamList"></div>
+  <input type="text" id="search" placeholder="Buscar jugador o club..." style="margin-bottom:8px;margin-top:8px;">
   <div class="bombo-filters" id="bomboFilters">
     <button type="button" data-bombo="all" class="active">Todos</button>
     <button type="button" data-bombo="B1">B1</button>
@@ -693,8 +803,6 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
     <button type="button" data-bombo="B4">B4</button>
     <button type="button" data-bombo="B5">B5</button>
   </div>
-  <div class="section-title">Tu once <span id="teamCount">0 jugadores</span></div>
-  <div id="teamList"></div>
   <div class="section-title">Jugadores disponibles <span id="availableCount"></span></div>
   <div id="playersList" style="max-height:42vh; overflow-y:auto;"></div>
   <div class="btn-row">
@@ -924,6 +1032,33 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
         <input type="text" id="renameCoachFrom" placeholder="Nombre actual" style="margin-bottom:6px;">
         <input type="text" id="renameCoachTo" placeholder="Nombre nuevo" style="margin-bottom:6px;">
         <button class="btn btn-blue" id="btnRenameCoach" style="width:100%;">Renombrar (mantiene puntos y victorias)</button>
+        <div class="section-title" style="margin-top:14px;">Fusionar entrenadores</div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Une dos nombres en uno solo: suma puntos y victorias, junta el histórico y elimina el nombre antiguo. Útil si alguien volvió a jugar con otro nombre.</p>
+        <input type="text" id="mergeCoachFrom" placeholder="Nombre a absorber (se elimina)" style="margin-bottom:6px;">
+        <input type="text" id="mergeCoachTo" placeholder="Nombre que se queda (recibe todo)" style="margin-bottom:6px;">
+        <button class="btn btn-warning" id="btnMergeCoach" style="width:100%;">Fusionar entrenadores</button>
+        <div class="section-title" style="margin-top:14px;">Mínimo por bombo (B1–B4)</div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Cada once debe llevar al menos N jugadores de cada bombo B1, B2, B3 y B4. B5 (libres) no cuenta. 0 = sin restricción.</p>
+        <select id="minPerBomboSelect" style="width:100%;background:#0f172a;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-bottom:8px;font-size:0.95rem;">
+          <option value="0">Ninguno (0) — sin mínimo</option>
+          <option value="1">1 por bombo (B1–B4)</option>
+          <option value="2">2 por bombo (B1–B4)</option>
+          <option value="3">3 por bombo (B1–B4)</option>
+          <option value="4">4 por bombo (B1–B4)</option>
+        </select>
+        <button class="btn btn-blue" id="btnSaveMinPerBombo" style="width:100%; margin-bottom:12px;">Guardar mínimo por bombo</button>
+        <div class="section-title" style="margin-top:14px;">Máximo por bombo (B1–B4)</div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Cada once no puede llevar más de N jugadores de cada bombo B1–B4. B5 no cuenta. 0 = sin límite.</p>
+        <select id="maxPerBomboSelect" style="width:100%;background:#0f172a;color:var(--text);border:1px solid var(--border);border-radius:12px;padding:11px 14px;margin-bottom:8px;font-size:0.95rem;">
+          <option value="0">Ninguno (0) — sin máximo</option>
+          <option value="1">Máx 1 por bombo (B1–B4)</option>
+          <option value="2">Máx 2 por bombo (B1–B4)</option>
+          <option value="3">Máx 3 por bombo (B1–B4)</option>
+          <option value="4">Máx 4 por bombo (B1–B4)</option>
+          <option value="5">Máx 5 por bombo (B1–B4)</option>
+          <option value="6">Máx 6 por bombo (B1–B4)</option>
+        </select>
+        <button class="btn btn-blue" id="btnSaveMaxPerBombo" style="width:100%;">Guardar máximo por bombo</button>
       </div>
       <div class="card">
         <button class="btn btn-danger" id="btnResetAll" style="width:100%">Borrar TODO (formaciones + resultados + notas)</button>
@@ -947,8 +1082,9 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
       <span id="modalBombo" class="bombo" style="margin-left:8px;"></span>
     </div>
 
-    <button class="btn btn-primary" id="btnModalOnce" style="width:100%; margin-bottom:8px;">Añadir al once</button>
-    <button class="btn btn-blue" id="btnOpenFormation" style="width:100%; margin-bottom:8px;">Crear formación con chapas</button>
+    <button class="btn btn-primary" id="btnModalOnce" style="width:100%; margin-bottom:4px;">Añadir al once</button>
+    <div class="modal-bombo-hint" id="modalBomboHint"></div>
+    <button class="btn btn-blue" id="btnOpenFormation" style="width:100%; margin-bottom:8px;margin-top:8px;">Crear formación con chapas</button>
     <button class="btn" id="btnToggleNote" style="width:100%; margin-bottom:10px; background:var(--border); color:var(--text);">Añadir nota</button>
 
     <div id="modalFormaciones" style="margin-bottom:10px;"></div>
@@ -987,6 +1123,7 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
 </div>
 
 <footer>Fantasy Futbolchapas · Sistema oficial</footer>
+<div class="toast-wrap" id="toastWrap"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
@@ -1015,7 +1152,9 @@ let dbData = {
   competitionName: 'Fantasy Futbolchapas',
   submissionsOpen: true,
   history: {},
-  nicknames: {}
+  nicknames: {},
+  minPerBombo: 0,
+  maxPerBombo: 0
 };
 
 function loadData() { return dbData; }
@@ -1092,11 +1231,15 @@ async function loadSupabaseData() {
   dbData.jornadaBombos = {};
   dbData.submissionsOpen = true;
   dbData.history = {};
+  dbData.minPerBombo = 0;
+  dbData.maxPerBombo = 0;
   (settingsRes.data || []).forEach(function(s) {
     if (s.key === 'current_jornada') dbData.currentJornada = Number(s.value) || 1;
     if (s.key === 'competition_name') dbData.competitionName = s.value;
     if (s.key === 'max_budget') MAX_BUDGET = Number(s.value) || 2000;
     if (s.key === 'submissions_open') dbData.submissionsOpen = (s.value !== 'false' && s.value !== '0');
+    if (s.key === 'min_per_bombo') dbData.minPerBombo = Math.max(0, Math.min(4, parseInt(s.value, 10) || 0));
+    if (s.key === 'max_per_bombo') dbData.maxPerBombo = Math.max(0, Math.min(11, parseInt(s.value, 10) || 0));
     if (s.key === 'player_nicknames') {
       try {
         dbData.nicknames = typeof s.value === 'string' ? JSON.parse(s.value) : (s.value || {});
@@ -1167,6 +1310,10 @@ async function loadSupabaseData() {
   if (ci) ci.value = dbData.competitionName || '';
   var bi = document.getElementById('budgetInput');
   if (bi) bi.value = MAX_BUDGET;
+  var mpb = document.getElementById('minPerBomboSelect');
+  if (mpb) mpb.value = String(dbData.minPerBombo || 0);
+  var xpb = document.getElementById('maxPerBomboSelect');
+  if (xpb) xpb.value = String(dbData.maxPerBombo || 0);
 }
 
 // ========== TABS ==========
@@ -1388,12 +1535,60 @@ document.getElementById('bomboFilters').addEventListener('click', function(e) {
 function getSpent() {
   return PLAYERS.filter(function(p) { return selected.has(p.id); }).reduce(function(s, p) { return s + p.points; }, 0);
 }
+function bomboOf(p) {
+  return String((p && p.bombo) || 'B4').toUpperCase();
+}
+function isBomboLimited(b) {
+  return b === 'B1' || b === 'B2' || b === 'B3' || b === 'B4';
+}
+/** Motivo por el que no se puede añadir, o null si sí se puede (salvo ya seleccionado). */
+function whyCannotAdd(p) {
+  if (!p) return 'Jugador no encontrado';
+  if (selected.has(p.id)) return 'Ya está en el once';
+  if (selected.size >= 11) return 'El once ya tiene 11 jugadores';
+  if (getSpent() + p.points > MAX_BUDGET) return 'No te llega el presupuesto para este jugador';
+  var maxN = Number(dbData.maxPerBombo || 0);
+  var b = bomboOf(p);
+  if (maxN > 0 && isBomboLimited(b)) {
+    var counts = countBombosInSelected();
+    if ((counts[b] || 0) >= maxN) {
+      return 'Máximo ' + maxN + ' de ' + b + ' (ya tienes ' + (counts[b] || 0) + ')';
+    }
+  }
+  return null;
+}
 function canAdd(p) {
-  return !selected.has(p.id) && selected.size < 11 && getSpent() + p.points <= MAX_BUDGET;
+  return !whyCannotAdd(p);
+}
+/** Texto bajo el botón Añadir: progreso mín/máx de ese bombo */
+function bomboHintForPlayer(p) {
+  if (!p) return '';
+  var minN = Number(dbData.minPerBombo || 0);
+  var maxN = Number(dbData.maxPerBombo || 0);
+  if (!minN && !maxN) return '';
+  var b = bomboOf(p);
+  if (!isBomboLimited(b)) {
+    return 'B5 no cuenta para el mínimo/máximo de bombos';
+  }
+  var n = (countBombosInSelected()[b] || 0);
+  var parts = [];
+  if (minN > 0) {
+    var leftMin = Math.max(0, minN - n);
+    if (leftMin > 0) parts.push(b + ': faltan ' + leftMin + ' para el mínimo (' + n + '/' + minN + ')');
+    else parts.push(b + ': mínimo cumplido (' + n + '/' + minN + ')');
+  }
+  if (maxN > 0) {
+    var leftMax = Math.max(0, maxN - n);
+    if (leftMax <= 0) parts.push(b + ': máximo alcanzado (' + n + '/' + maxN + ')');
+    else parts.push(b + ': puedes ' + leftMax + ' más (máx ' + maxN + ', llevas ' + n + ')');
+  }
+  return parts.join(' · ');
 }
 window.addPlayer = function(id) {
   var p = PLAYERS.find(function(x) { return x.id === id || x.id === Number(id); });
-  if (!p || !canAdd(p)) return;
+  if (!p) return;
+  var why = whyCannotAdd(p);
+  if (why) { alert(why); return; }
   selected.add(p.id);
   saveDraft();
   updateBudget();
@@ -1442,6 +1637,96 @@ function updateBudget() {
       ? '¡Once completo! Ya puedes enviar'
       : 'Faltan ' + (11 - selected.size) + ' para poder enviar';
   }
+  updateBomboStatusPanel();
+}
+
+function updateBomboStatusPanel() {
+  updateBomboFilterBangs();
+}
+
+var _toastTimer = null;
+function showToast(msg) {
+  var wrap = document.getElementById('toastWrap');
+  if (!wrap) {
+    wrap = document.createElement('div');
+    wrap.id = 'toastWrap';
+    wrap.className = 'toast-wrap';
+    document.body.appendChild(wrap);
+  }
+  var el = document.createElement('div');
+  el.className = 'toast';
+  var body = document.createElement('div');
+  body.className = 'toast-body';
+  body.textContent = msg;
+  var close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'toast-close';
+  close.setAttribute('aria-label', 'Cerrar');
+  close.textContent = '×';
+  function dismiss() {
+    if (el.parentNode) el.parentNode.removeChild(el);
+  }
+  close.addEventListener('click', dismiss);
+  el.appendChild(body);
+  el.appendChild(close);
+  wrap.appendChild(el);
+  // Auto-cerrar a los 6s (se puede cerrar antes con la X)
+  setTimeout(dismiss, 6000);
+}
+
+function updateBomboFilterBangs() {
+  var minN = Number(dbData.minPerBombo || 0);
+  var maxN = Number(dbData.maxPerBombo || 0);
+  var counts = countBombosInSelected();
+  var filters = document.getElementById('bomboFilters');
+  if (!filters) return;
+  filters.querySelectorAll('button[data-bombo]').forEach(function(btn) {
+    var b = btn.getAttribute('data-bombo');
+    // Envolver el botón en un wrap sin cambiar su tamaño/forma
+    var wrap = btn.parentNode;
+    if (!wrap || !wrap.classList || !wrap.classList.contains('bombo-filter-wrap')) {
+      wrap = document.createElement('span');
+      wrap.className = 'bombo-filter-wrap';
+      btn.parentNode.insertBefore(wrap, btn);
+      wrap.appendChild(btn);
+    }
+    var oldBang = wrap.querySelector('.bombo-bang');
+    if (oldBang) oldBang.remove();
+    if (!isBomboLimited(b)) return;
+    if (!minN && !maxN) return;
+    var n = counts[b] || 0;
+    var needMin = minN > 0 && n < minN;
+    var atMax = maxN > 0 && n >= maxN;
+    if (!needMin && !atMax) return;
+    var bang = document.createElement('button');
+    bang.type = 'button';
+    bang.className = 'bombo-bang';
+    bang.title = needMin && atMax ? ('Mín/máx en ' + b) : (needMin ? ('Falta mínimo en ' + b) : ('Máximo en ' + b));
+    bang.textContent = '!';
+    bang.setAttribute('data-bang-bombo', b);
+    bang.addEventListener('click', function(ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      var cur = countBombosInSelected()[b] || 0;
+      var lines = [];
+      if (minN > 0) {
+        if (cur < minN) {
+          lines.push('Mínimo ' + minN + ' de ' + b + '.\nLlevas ' + cur + '.\nTe faltan ' + (minN - cur) + '.');
+        } else {
+          lines.push('Mínimo ' + minN + ' de ' + b + ': cumplido (' + cur + ').');
+        }
+      }
+      if (maxN > 0) {
+        if (cur >= maxN) {
+          lines.push('Máximo ' + maxN + ' de ' + b + '.\nLlevas ' + cur + '.\nNo puedes añadir más de este bombo.');
+        } else {
+          lines.push('Máximo ' + maxN + ' de ' + b + '.\nLlevas ' + cur + '.\nPuedes ' + (maxN - cur) + ' más.');
+        }
+      }
+      showToast(lines.join('\n\n'));
+    });
+    wrap.appendChild(bang);
+  });
 }
 
 function getAvailablePlayers() {
@@ -1508,11 +1793,47 @@ function renderOnce() {
     }).join('');
 }
 
+function countBombosInSelected() {
+  var counts = { B1: 0, B2: 0, B3: 0, B4: 0, B5: 0 };
+  PLAYERS.forEach(function(p) {
+    if (!selected.has(p.id)) return;
+    var b = (p.bombo || 'B4').toUpperCase();
+    if (counts[b] == null) counts[b] = 0;
+    counts[b]++;
+  });
+  return counts;
+}
+
+function checkMinPerBombo() {
+  var minN = Number(dbData.minPerBombo || 0);
+  var maxN = Number(dbData.maxPerBombo || 0);
+  if (!minN && !maxN) return { ok: true, msg: '' };
+  var counts = countBombosInSelected();
+  var missing = [];
+  var excess = [];
+  ['B1', 'B2', 'B3', 'B4'].forEach(function(b) {
+    var n = counts[b] || 0;
+    if (minN && n < minN) missing.push(b + ' (' + n + '/' + minN + ')');
+    if (maxN && n > maxN) excess.push(b + ' (' + n + '/' + maxN + ')');
+  });
+  var msgs = [];
+  if (missing.length) {
+    msgs.push('Mínimo ' + minN + ' por bombo B1–B4. Falta: ' + missing.join(', '));
+  }
+  if (excess.length) {
+    msgs.push('Máximo ' + maxN + ' por bombo B1–B4. Sobra: ' + excess.join(', '));
+  }
+  if (!msgs.length) return { ok: true, msg: '' };
+  return { ok: false, msg: msgs.join('\n') };
+}
+
 async function submitFormation() {
   if (dbData.submissionsOpen === false) return alert('Las inscripciones están cerradas. No se pueden enviar más onces.');
   var coach = getCoachName();
   if (!coach) return alert('Elige o escribe tu nombre de entrenador');
   if (selected.size !== 11) return alert('Debes seleccionar exactamente 11 jugadores');
+  var bomboCheck = checkMinPerBombo();
+  if (!bomboCheck.ok) return alert(bomboCheck.msg);
   var data = loadData();
   if (data.formations.some(function(f) { return f.coach.toLowerCase() === coach.toLowerCase(); })) {
     return alert('Ya existe una formación con ese nombre de entrenador en esta jornada');
@@ -1608,6 +1929,19 @@ window.openPlayerModal = function(id) {
   if (fc) fc.style.display = 'none';
   if (typeof renderFormPicker === 'function') renderFormPicker();
   var onceBtn = document.getElementById('btnModalOnce');
+  var hintEl = document.getElementById('modalBomboHint');
+  if (hintEl) {
+    var hintTxt = bomboHintForPlayer(p);
+    hintEl.textContent = hintTxt;
+    var maxN0 = Number(dbData.maxPerBombo || 0);
+    var minN0 = Number(dbData.minPerBombo || 0);
+    var bb = bomboOf(p);
+    var nn = (countBombosInSelected()[bb] || 0);
+    hintEl.className = 'modal-bombo-hint';
+    if (maxN0 && isBomboLimited(bb) && nn >= maxN0 && !selected.has(id)) hintEl.className += ' danger';
+    else if (minN0 && isBomboLimited(bb) && nn < minN0) hintEl.className += ' warn';
+    else if (hintTxt) hintEl.className += ' ok';
+  }
   if (onceBtn) {
     if (selected.has(id)) {
       onceBtn.textContent = 'Quitar del once';
@@ -1617,24 +1951,26 @@ window.openPlayerModal = function(id) {
         removePlayer(id);
         document.getElementById('playerModal').classList.remove('show');
       };
-    } else if (canAdd(p)) {
-      onceBtn.textContent = 'Añadir al once';
-      onceBtn.className = 'btn btn-primary';
-      onceBtn.disabled = false;
-      onceBtn.onclick = function() {
-        addPlayer(id);
-        document.getElementById('playerModal').classList.remove('show');
-      };
     } else {
-      var reason = selected.size >= 11 ? 'Once completo' : 'Sin presupuesto';
-      onceBtn.textContent = reason;
-      onceBtn.className = 'btn btn-disabled';
-      onceBtn.disabled = true;
-      onceBtn.onclick = function() {
-        alert(selected.size >= 11
-          ? 'El once ya tiene 11 jugadores'
-          : 'No te llega el presupuesto para este jugador');
-      };
+      var why = whyCannotAdd(p);
+      if (!why) {
+        onceBtn.textContent = 'Añadir al once';
+        onceBtn.className = 'btn btn-primary';
+        onceBtn.disabled = false;
+        onceBtn.onclick = function() {
+          addPlayer(id);
+          document.getElementById('playerModal').classList.remove('show');
+        };
+      } else {
+        onceBtn.textContent = why.length > 42 ? 'No se puede añadir' : why;
+        onceBtn.className = 'btn btn-disabled';
+        onceBtn.disabled = true;
+        onceBtn.onclick = function() { alert(why); };
+        if (hintEl && why) {
+          hintEl.textContent = why + (hintEl.textContent ? ' · ' + hintEl.textContent : '');
+          hintEl.className = 'modal-bombo-hint danger';
+        }
+      }
     }
   }
   document.getElementById('playerModal').classList.add('show');
@@ -2594,6 +2930,111 @@ document.getElementById('btnRenameCoach') && document.getElementById('btnRenameC
     renderOnce();
     renderAdmin();
     alert('Entrenador renombrado: ' + from + ' → ' + to);
+  } catch (e) { alert('Error: ' + e.message); }
+});
+
+document.getElementById('btnSaveMinPerBombo') && document.getElementById('btnSaveMinPerBombo').addEventListener('click', async function() {
+  var v = parseInt((document.getElementById('minPerBomboSelect') || {}).value, 10);
+  if (isNaN(v) || v < 0 || v > 4) return alert('Valor inválido (0–4)');
+  if (v * 4 > 11) {
+    if (!confirm('Con mínimo ' + v + ' en B1–B4 se exigen ' + (v*4) + ' jugadores solo de esos bombos, pero el once tiene 11. ¿Guardar igual?')) return;
+  }
+  var maxN = Number(dbData.maxPerBombo || 0);
+  if (v > 0 && maxN > 0 && v > maxN) {
+    return alert('El mínimo (' + v + ') no puede ser mayor que el máximo (' + maxN + ').');
+  }
+  try {
+    var err = (await supabaseClient.from('settings').upsert({ key: 'min_per_bombo', value: String(v) }, { onConflict: 'key' })).error;
+    if (err) throw err;
+    dbData.minPerBombo = v;
+    updateBudget();
+    renderOnce();
+    alert(v === 0 ? 'Sin mínimo por bombo' : ('Mínimo guardado: ' + v + ' jugador' + (v>1?'es':'') + ' por cada bombo B1–B4'));
+  } catch (e) { alert('Error: ' + e.message); }
+});
+
+document.getElementById('btnSaveMaxPerBombo') && document.getElementById('btnSaveMaxPerBombo').addEventListener('click', async function() {
+  var v = parseInt((document.getElementById('maxPerBomboSelect') || {}).value, 10);
+  if (isNaN(v) || v < 0 || v > 11) return alert('Valor inválido (0–6)');
+  var minN = Number(dbData.minPerBombo || 0);
+  if (v > 0 && minN > 0 && minN > v) {
+    return alert('El máximo (' + v + ') no puede ser menor que el mínimo (' + minN + ').');
+  }
+  try {
+    var err = (await supabaseClient.from('settings').upsert({ key: 'max_per_bombo', value: String(v) }, { onConflict: 'key' })).error;
+    if (err) throw err;
+    dbData.maxPerBombo = v;
+    updateBudget();
+    renderOnce();
+    alert(v === 0 ? 'Sin máximo por bombo' : ('Máximo guardado: ' + v + ' jugador' + (v>1?'es':'') + ' por cada bombo B1–B4'));
+  } catch (e) { alert('Error: ' + e.message); }
+});
+
+document.getElementById('btnMergeCoach') && document.getElementById('btnMergeCoach').addEventListener('click', async function() {
+  var from = (document.getElementById('mergeCoachFrom').value || '').trim();
+  var to = (document.getElementById('mergeCoachTo').value || '').trim();
+  if (!from || !to) return alert('Rellena ambos nombres');
+  if (from === to) return alert('Son el mismo nombre');
+  if (!confirm('¿Fusionar "' + from + '" → "' + to + '"?\n\nSe SUMAN puntos y victorias.\nEl histórico de "' + from + '" pasa a "' + to + '".\nSe elimina el nombre "' + from + '".')) return;
+  try {
+    var gFrom = dbData.global[from] || { totalPoints: 0, wins: 0 };
+    var gTo = dbData.global[to] || { totalPoints: 0, wins: 0 };
+    var merged = {
+      totalPoints: Number(gFrom.totalPoints || 0) + Number(gTo.totalPoints || 0),
+      wins: Number(gFrom.wins || 0) + Number(gTo.wins || 0)
+    };
+    var err1 = (await supabaseClient.from('global_scores').upsert({
+      coach: to, total_points: merged.totalPoints, wins: merged.wins
+    }, { onConflict: 'coach' })).error;
+    if (err1) throw err1;
+    await supabaseClient.from('global_scores').delete().eq('coach', from);
+    delete dbData.global[from];
+    dbData.global[to] = merged;
+
+    // Formaciones de la jornada actual
+    var formFrom = (dbData.formations || []).filter(function(f) { return f.coach === from; });
+    var formTo = (dbData.formations || []).filter(function(f) { return f.coach === to; });
+    if (formFrom.length && formTo.length) {
+      // Ambos tienen once: se conserva el de "to" y se borra el de "from"
+      await supabaseClient.from('formations').delete().eq('coach', from);
+      dbData.formations = (dbData.formations || []).filter(function(f) { return f.coach !== from; });
+    } else if (formFrom.length) {
+      await supabaseClient.from('formations').update({ coach: to }).eq('coach', from);
+      formFrom.forEach(function(f) { f.coach = to; });
+    }
+
+    // Histórico
+    var keys = Object.keys(dbData.history || {});
+    for (var k = 0; k < keys.length; k++) {
+      var hj = keys[k];
+      var h = dbData.history[hj];
+      if (!h || !h.formations) continue;
+      var changed = false;
+      h.formations.forEach(function(f) {
+        if (f.coach === from) { f.coach = to; changed = true; }
+      });
+      if (changed) {
+        await supabaseClient.from('settings').upsert({
+          key: 'history_jornada_' + hj,
+          value: JSON.stringify(h)
+        }, { onConflict: 'key' });
+      }
+    }
+
+    // jornadaScores en memoria
+    if (dbData.jornadaScores && dbData.jornadaScores.length) {
+      dbData.jornadaScores.forEach(function(s) {
+        if (s.coach === from) s.coach = to;
+      });
+    }
+
+    document.getElementById('mergeCoachFrom').value = '';
+    document.getElementById('mergeCoachTo').value = '';
+    renderGlobal();
+    renderJornada();
+    renderOnce();
+    renderAdmin();
+    alert('Fusionado: "' + from + '" → "' + to + '"\nPuntos: ' + merged.totalPoints.toFixed(1) + ' · Victorias: ' + merged.wins);
   } catch (e) { alert('Error: ' + e.message); }
 });
 
