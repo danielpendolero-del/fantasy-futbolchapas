@@ -1058,7 +1058,12 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
           <option value="5">Máx 5 por bombo (B1–B4)</option>
           <option value="6">Máx 6 por bombo (B1–B4)</option>
         </select>
-        <button class="btn btn-blue" id="btnSaveMaxPerBombo" style="width:100%;">Guardar máximo por bombo</button>
+        <button class="btn btn-blue" id="btnSaveMaxPerBombo" style="width:100%; margin-bottom:12px;">Guardar máximo por bombo</button>
+        <div class="section-title" style="margin-top:14px;">Seguridad admin</div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;">Cambia la contraseña del panel. Se guarda solo el hash en Supabase (no en el código).</p>
+        <input type="password" id="adminPassNew" placeholder="Nueva contraseña (mín. 8 caracteres)" style="margin-bottom:8px;">
+        <input type="password" id="adminPassNew2" placeholder="Repite la nueva contraseña" style="margin-bottom:8px;">
+        <button class="btn btn-blue" id="btnChangeAdminPass" style="width:100%;">Cambiar contraseña admin</button>
       </div>
       <div class="card">
         <button class="btn btn-danger" id="btnResetAll" style="width:100%">Borrar TODO (formaciones + resultados + notas)</button>
@@ -1130,7 +1135,26 @@ footer { text-align: center; margin-top: 28px; padding: 16px 0; font-size: 0.72r
 const SUPABASE_URL = "https://cdzpawcoksvaxgqrxiou.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_XYG6wdRg1RaYfSVjqKwhIA_JL4vhClM";
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-const ADMIN_PASSWORD = "ci1gw7j9";
+// Contraseña admin: nunca en claro. Solo hash SHA-256 con sal.
+const ADMIN_PASS_HASH = "1cedcc3330024f5cdbbb5df32d2514bd7deda2a7ed6378112208a6c4877841b7";
+const ADMIN_PASS_SALT = "futbolchapas-admin-v1:";
+async function hashAdminPassword(pw) {
+  var data = new TextEncoder().encode(ADMIN_PASS_SALT + String(pw || ""));
+  var buf = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buf)).map(function(b) {
+    return b.toString(16).padStart(2, "0");
+  }).join("");
+}
+async function getExpectedAdminHash() {
+  try {
+    var res = await supabaseClient.from("settings").select("value").eq("key", "admin_pass_hash").maybeSingle();
+    if (res.data && res.data.value && String(res.data.value).length === 64) {
+      return String(res.data.value).toLowerCase();
+    }
+  } catch (e) {}
+  return ADMIN_PASS_HASH;
+}
+
 
 let PLAYERS = [];
 let selected = new Set();
@@ -2315,14 +2339,43 @@ document.getElementById('coachHistoryModal') && document.getElementById('coachHi
 
 
 // ========== ADMIN ==========
-document.getElementById('btnLogin').addEventListener('click', function() {
-  if (document.getElementById('adminPass').value === ADMIN_PASSWORD) {
+document.getElementById('btnLogin').addEventListener('click', async function() {
+  var input = (document.getElementById('adminPass') || {}).value || '';
+  if (!input) return alert('Escribe la contraseña');
+  try {
+    var got = (await hashAdminPassword(input)).toLowerCase();
+    var expected = (await getExpectedAdminHash()).toLowerCase();
+    if (got !== expected) {
+      alert('Contraseña incorrecta');
+      return;
+    }
     isAdmin = true;
     document.getElementById('adminLogin').style.display = 'none';
     document.getElementById('adminContent').style.display = 'block';
     renderAdmin();
-  } else alert('Contraseña incorrecta');
+  } catch (e) {
+    alert('Error al verificar: ' + (e.message || e));
+  }
 });
+
+document.getElementById('btnChangeAdminPass') && document.getElementById('btnChangeAdminPass').addEventListener('click', async function() {
+  if (!isAdmin) return alert('Debes estar en modo admin');
+  var a = ((document.getElementById('adminPassNew') || {}).value || '').trim();
+  var b = ((document.getElementById('adminPassNew2') || {}).value || '').trim();
+  if (a.length < 8) return alert('Mínimo 8 caracteres');
+  if (a !== b) return alert('Las contraseñas no coinciden');
+  try {
+    var h = await hashAdminPassword(a);
+    var err = (await supabaseClient.from('settings').upsert({ key: 'admin_pass_hash', value: h }, { onConflict: 'key' })).error;
+    if (err) throw err;
+    if (document.getElementById('adminPassNew')) document.getElementById('adminPassNew').value = '';
+    if (document.getElementById('adminPassNew2')) document.getElementById('adminPassNew2').value = '';
+    alert('Contraseña actualizada. La próxima vez entrará con la nueva.');
+  } catch (e) {
+    alert('Error al guardar: ' + (e.message || e));
+  }
+});
+
 
 function exitAdmin() {
   isAdmin = false;
