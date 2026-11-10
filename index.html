@@ -3938,8 +3938,24 @@ window.addEventListener('message', async function(ev) {
     return;
   }
 
+
+  if (ev.data.type === 'request-chapas-players') {
+    var frame = document.getElementById('formationFrame');
+    var list = (typeof PLAYERS !== 'undefined' ? PLAYERS : []).map(function(p) {
+      return { id: p.id, name: p.name, club: p.club || '', points: p.points || 0 };
+    });
+    if (frame && frame.contentWindow) {
+      frame.contentWindow.postMessage({ type: 'chapas-players', players: list }, '*');
+    }
+    return;
+  }
+
   if (ev.data.type !== 'chapas-formation') return;
-  var name = ev.data.name || 'Formación';
+  // Jugador elegido en el generador ("quién la usa") — no hace falta abrir la ficha del once
+  if (ev.data.playerId != null && ev.data.playerId !== '') {
+    currentPlayerId = isNaN(Number(ev.data.playerId)) ? ev.data.playerId : Number(ev.data.playerId);
+  }
+  var name = ev.data.name || ev.data.playerName || 'Formación';
   var image = ev.data.image;
   var downloaded = !!ev.data.downloaded;
   var formation = ev.data.formation || null;
@@ -3948,13 +3964,13 @@ window.addEventListener('message', async function(ev) {
     return;
   }
   if (!currentPlayerId) {
-    alert('No hay jugador seleccionado. Abre la ficha del jugador y vuelve a guardar la formación.');
+    alert('Falta el jugador (quién usa la colocación). Elígelo en el buscador al guardar.');
     return;
   }
 
   document.getElementById('formationModal').classList.remove('show');
 
-  var author = (document.getElementById('noteAuthor') && document.getElementById('noteAuthor').value.trim()) || 'Anónimo';
+  var author = (ev.data && ev.data.creator) || (document.getElementById('noteAuthor') && document.getElementById('noteAuthor').value.trim()) || 'Anónimo';
   var noteText = 'Formación: ' + name;
   if (formation) {
     try {
