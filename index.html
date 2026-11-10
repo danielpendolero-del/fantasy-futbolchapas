@@ -725,6 +725,16 @@ html,body{height:auto;min-height:100%}
 .panel{padding-bottom:calc(var(--nav-h) + 30px + var(--safe-b))}
 .podium-card{cursor:pointer}
 
+/* v9: escudos en los once */
+.history-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 5px}
+.history-pill .club-badge{width:22px;height:22px;flex-shrink:0;object-fit:contain;border-radius:50%;background:#fff}
+.fold .player-card .club-badge{width:22px;height:22px}
+/* Chapas a pantalla completa, dejando solo la barra de abajo */
+#panel-chapas.active{position:fixed;left:0;right:0;top:0;bottom:calc(var(--nav-h) + var(--safe-b));padding:0;margin:0;z-index:40;background:#0b2a55}
+#panel-chapas .chapas-panel-frame{width:100%;height:100%;min-height:0;border:0;border-radius:0;display:block}
+body:has(#panel-chapas.active) .app-top{display:none!important}
+.bottom-nav{z-index:60}
+
 </style>
 </head>
 <body>
@@ -843,6 +853,11 @@ html,body{height:auto;min-height:100%}
 <!-- JORNADA -->
 <div id="panel-jornada" class="panel">
   <div id="jornadaSelector" class="jornada-selector"></div>
+  <details class="card search-me-box fold" id="jornadaMeBox">
+    <summary>¿Quién ha apostado por mí?</summary>
+    <input type="text" id="jornadaMeInput" placeholder="Escribe tu nombre de jugador..." autocomplete="off">
+    <div id="jornadaMeResults"></div>
+  </details>
   <div id="jornadaRanking"></div>
   <div id="allOncesCard" style="display:none;"></div>
 </div>
@@ -1680,6 +1695,28 @@ document.getElementById('searchMeInput') && document.getElementById('searchMeInp
 });
 
 
+function jornadaMeRefresh() {
+  var inp = document.getElementById('jornadaMeInput'), out = document.getElementById('jornadaMeResults');
+  if (!inp || !out) return;
+  var q = inp.value.trim().toLowerCase();
+  if (q.length < 2) { out.innerHTML = ''; return; }
+  var key = window._jornadaViewKey || jornadaLiveKey();
+  var live = (key === jornadaLiveKey());
+  if (live && dbData.submissionsOpen !== false) {
+    out.innerHTML = '<div class="empty" style="font-size:0.8rem;">Disponible cuando las inscripciones estén cerradas (para no copiar).</div>';
+    return;
+  }
+  var forms = live ? (dbData.formations || []) : (((dbData.history || {})[key] || {}).formations || []);
+  var matches = PLAYERS.filter(function(p) { return playerMatchesQuery(p, q); }).slice(0, 20);
+  if (!matches.length) { out.innerHTML = '<div class="empty">Sin jugadores</div>'; return; }
+  out.innerHTML = matches.map(function(p) {
+    var coaches = forms.filter(function(f) { return (f.players || []).indexOf(p.id) !== -1; }).map(function(f) { return f.coach; });
+    return '<div class="player-card" style="flex-direction:column;align-items:flex-start;"><div style="display:flex;align-items:center;gap:8px;font-weight:600">' + clubBadgeHtml(p.club) + displayNamePlain(p) + '</div><div style="font-size:0.8rem;color:var(--muted)">' +
+      (coaches.length ? ('En el once de: <b>' + coaches.join(', ') + '</b>') : 'Nadie le fichó en esta jornada') + '</div></div>';
+  }).join('');
+}
+document.getElementById('jornadaMeInput') && document.getElementById('jornadaMeInput').addEventListener('input', jornadaMeRefresh);
+
 var bomboFilter = 'all';
 document.getElementById('bomboFilters').addEventListener('click', function(e) {
   var btn = e.target.closest('button[data-bombo]');
@@ -2373,6 +2410,8 @@ function renderJornada() {
   var viewingOption = options.find(function(o){return o.key === viewingKey;}) || options[options.length-1];
   var viewingLabel = viewingOption ? viewingOption.label : ('Jornada ' + viewingKey);
   var viewingNumber = /^\d+$/.test(viewingKey) ? Number(viewingKey) : null;
+  window._jornadaViewKey = viewingKey;
+  if (typeof jornadaMeRefresh === 'function') jornadaMeRefresh();
 
   if (selector) {
     selector.innerHTML = options.map(function(o) {
@@ -2471,7 +2510,7 @@ window.showJornadaOnce = function(coach, jornada) {
       var p = PLAYERS.find(function(x) { return x.id === id; });
       if (!p) return '<span class="history-pill">#' + id + '</span>';
       var nm = getNick(p) || p.name.split(' ').slice(0, 2).join(' ');
-      return '<span class="history-pill">' + nm + '<span class="price">' + p.points.toFixed(1) + 'M</span></span>';
+      return '<span class="history-pill">' + clubBadgeHtml(p.club) + nm + '<span class="price">' + p.points.toFixed(1) + 'M</span></span>';
     }).join('');
     body.innerHTML =
       '<div class="hist-hero"><div class="label">Entrenador</div><div class="name">' + coach + '</div></div>' +
@@ -2605,7 +2644,7 @@ window.showCoachHistory = function(coach) {
       var p = PLAYERS.find(function(x) { return x.id === id; });
       if (!p) return '<span class="history-pill">#' + id + '</span>';
       var nm = getNick(p) || p.name.split(' ').slice(0, 2).join(' ');
-      return '<span class="history-pill">' + nm + '</span>';
+      return '<span class="history-pill">' + clubBadgeHtml(p.club) + nm + '</span>';
     }).join('');
     html += '<div class="history-block"><h4>' + (h.competition || ('Jornada ' + j)) + '</h4>' +
       '<div class="history-meta">' +
@@ -2627,7 +2666,7 @@ window.showCoachHistory = function(coach) {
       var p = PLAYERS.find(function(x) { return x.id === id; });
       if (!p) return '<span class="history-pill">#' + id + '</span>';
       var nm = getNick(p) || p.name.split(' ').slice(0, 2).join(' ');
-      return '<span class="history-pill">' + nm + '</span>';
+      return '<span class="history-pill">' + clubBadgeHtml(p.club) + nm + '</span>';
     }).join('');
     html += '<div class="history-block"><h4>' + (dbData.competitionName || 'Jornada actual') + ' · en curso</h4>' +
       '<div class="history-meta">' +
