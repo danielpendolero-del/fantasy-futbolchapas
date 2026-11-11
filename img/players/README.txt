@@ -1,16 +1,12 @@
-Fotos de jugadores (por ID de Supabase)
-========================================
-Estructura:
-  img/players/{ID}/foto.png
+Fotos de jugadores por ID
+=========================
+Carpeta: img/players/{ID}/
 
-Ejemplo Fernando (id 59):
-  img/players/59/foto.png
+Puedes poner CUALQUIER nombre.png dentro.
+Ejemplos validos:
+  img/players/97/foto.png
+  img/players/97/mi-jugador.png
+  img/players/97/loquesea.png
 
-Alternativa plana:
-  img/players/59.png
-
-Jerarquía en la web:
-  1) foto del jugador
-  2) camiseta del club
-  3) escudo del club
-  4) letra del nombre
+Si hay varios PNG, se elige uno al azar.
+No hace falta que se llame foto.png.
