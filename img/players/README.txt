@@ -1,12 +1,8 @@
-Fotos de jugadores por ID
-=========================
-Carpeta: img/players/{ID}/
+Fotos por ID (img/players/{ID}/)
 
-Puedes poner CUALQUIER nombre.png dentro.
-Ejemplos validos:
-  img/players/97/foto.png
-  img/players/97/mi-jugador.png
-  img/players/97/loquesea.png
-
-Si hay varios PNG, se elige uno al azar.
-No hace falta que se llame foto.png.
+- Cualquier .png / .jpg en la carpeta vale.
+- Si hay 1 foto: se usa en ficha y en campo.
+- Si hay 2 o mas (orden alfabético por nombre de archivo):
+    1ª → ficha del jugador
+    2ª → campo / once
+- Si no hay foto: camiseta del club → escudo → letra.
