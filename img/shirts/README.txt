@@ -1,11 +1,10 @@
-Camisetas de club (fallback si no hay foto de jugador)
-======================================================
-Ruta: img/shirts/{SLUG}.png
+Camisetas de club
+=================
+Misma estructura que img/clubs/.
+En cada carpeta pon: camiseta.png (o .jpg / .webp)
 
-Sube aqui los PNG del zip camisetas-clubes.zip
-(ALCALA.png, MADRID.png, NVDA-COSLADA.png, etc.)
+Ejemplo:
+  img/shirts/NVDA-COSLADA/camiseta.png
+  img/shirts/LIBRE/camiseta.png
 
-Orden de imagenes en la app:
-1) img/players/{id}.png  (foto jugador)
-2) img/shirts/{club}.png (camiseta)
-3) img/clubs/{club}/escudo.png (escudo)
+La web busca: img/shirts/{SLUG}/camiseta.png
