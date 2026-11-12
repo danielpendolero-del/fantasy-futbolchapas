@@ -1367,10 +1367,19 @@ var CLUB_SLUG_ALIASES = {
   "HORTALEZA": "HORTALEZA",
   "HORTALEZA FC": "HORTALEZA",
   "FC HORTALEZA": "HORTALEZA",
-  "NOS VAMOS DE AVENTURA COSLADA": "NVDA-COSLADA",
-  "NOS VAMOS DE AVENTURA": "NVDA-COSLADA",
-  "NVDA COSLADA": "NVDA-COSLADA",
-  "NVDA-COSLADA": "NVDA-COSLADA",
+  "NOS VAMOS DE AVENTURA COSLADA": "COSLADA",
+  "NOS VAMOS DE AVENTURA": "COSLADA",
+  "NOS VAMOS DE AVENTURA COSLADA.": "COSLADA",
+  "NVDA COSLADA": "COSLADA",
+  "COSLADA": "COSLADA",
+  "NVDA – COSLADA": "COSLADA",
+  "NVDA - COSLADA": "COSLADA",
+  "NVDA—COSLADA": "COSLADA",
+  "N.V.D.A COSLADA": "COSLADA",
+  "N.V.D.A. COSLADA": "COSLADA",
+  "N V D A COSLADA": "COSLADA",
+  "NVDA": "COSLADA",
+  "COSLADA NVDA": "COSLADA",
   "NVDA FCH COSLADA": "NVDA-FCH-COSLADA",
   "SAN MARTIN DE V.": "SAN-MARTIN-DE-V",
   "SAN MARTIN DE V": "SAN-MARTIN-DE-V",
@@ -1406,6 +1415,10 @@ function clubFileSlug(name) {
     return "MALAGA-BOK";
   }
   if (key === "MALAGA-BOK" || key.replace(/\s+/g, "-") === "MALAGA-BOK") return "MALAGA-BOK";
+  var compact2 = key.replace(/[^A-Z0-9]/g, "");
+  if (compact2.indexOf("NVDA") >= 0 && compact2.indexOf("COSLADA") >= 0) return "COSLADA";
+  if (compact2 === "NVDA" || compact2.indexOf("NOSVAMOSDEAVENTURA") >= 0) return "COSLADA";
+  if (compact2 === "COSLADA") return "COSLADA";
   return key.replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 function clubBadgeHtml(club) {
@@ -1506,11 +1519,31 @@ function ensurePlayerPhotoResolved(id) {
     delete PLAYER_PHOTO_PENDING[id];
   });
 }
-function clubShirtUrl(club) {
+function clubShirtCandidates(club) {
   var slug = clubFileSlug(club);
-  if (!slug) return "";
-  // img/shirts/{SLUG}/camiseta.png
-  return IMG_RAW + "img/shirts/" + slug + "/camiseta.png";
+  var key = clubKey(club);
+  var compact = key.replace(/[^A-Z0-9]/g, "");
+  var list = [];
+  function add(s) { if (s && list.indexOf(s) < 0) list.push(s); }
+  add(slug);
+  // Coslada / NVDA: carpeta real en repo = COSLADA
+  if (compact.indexOf("COSLADA") >= 0 || compact.indexOf("NVDA") >= 0 || compact.indexOf("NOSVAMOSDEAVENTURA") >= 0) {
+    add("COSLADA");
+    add("NVDA-COSLADA");
+    add("NOS-VAMOS-DE-AVENTURA-COSLADA");
+  }
+  return list;
+}
+function clubShirtUrl(club) {
+  var cands = clubShirtCandidates(club);
+  if (!cands.length) return "";
+  // img/shirts/{SLUG}/camiseta.png — primer candidato; onerror prueba el resto
+  return IMG_RAW + "img/shirts/" + cands[0] + "/camiseta.png";
+}
+function clubShirtFallbackUrls(club) {
+  return clubShirtCandidates(club).map(function(s) {
+    return IMG_RAW + "img/shirts/" + s + "/camiseta.png";
+  });
 }
 function clubEscudoUrl(club) {
   var key = clubKey(club);
@@ -1528,15 +1561,15 @@ function playerAvatarHtml(p, opts) {
   var letter = String(p.name || "?").trim().charAt(0).toUpperCase() || "?";
   var photo = playerPhotoUrl(p, "modal");
   var flat = playerPhotoUrlFlat(p);
-  var shirt = clubShirtUrl(p.club);
+  var shirts = (typeof clubShirtFallbackUrls === 'function') ? clubShirtFallbackUrls(p.club) : [clubShirtUrl(p.club)].filter(Boolean);
+  var shirt = shirts[0] || '';
   var escudo = clubEscudoUrl(p.club);
   var src = photo || flat || shirt || escudo || "";
-  var chain = photo ? 0 : (flat ? 5 : (shirt ? 1 : 2));
   if (!src) {
     return '<div class="' + cls + ' fallback" style="width:' + size + 'px;height:' + size + 'px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#e2e8f0;color:#334155;font-weight:800">' + letter + '</div>';
   }
   return '<img class="' + cls + '" src="' + src + '" alt="" loading="lazy" ' +
-    'data-step="0" data-flat="' + (flat || '') + '" data-shirt="' + (shirt || '') + '" data-escudo="' + (escudo || '') + '" data-letter="' + letter + '" ' +
+    'data-step="0" data-flat="' + (flat || '') + '" data-shirt="' + (shirt || '') + '" data-shirts="' + shirts.join('|') + '" data-escudo="' + (escudo || '') + '" data-letter="' + letter + '" ' +
     'style="width:' + size + 'px;height:' + size + 'px;object-fit:contain;border-radius:' + (opts.round != null ? opts.round : '50%') + ';background:transparent;flex-shrink:0" ' +
     'onerror="window._playerAvatarError(this)">';
 }
@@ -1545,18 +1578,18 @@ window._playerAvatarError = function(img) {
   var step = parseInt(img.getAttribute("data-step") || "0", 10);
   var flat = img.getAttribute("data-flat") || "";
   var shirt = img.getAttribute("data-shirt") || "";
+  var shirts = (img.getAttribute("data-shirts") || "").split("|").filter(Boolean);
+  if (shirt && shirts.indexOf(shirt) < 0) shirts.unshift(shirt);
   var escudo = img.getAttribute("data-escudo") || "";
   var letter = img.getAttribute("data-letter") || "?";
-  var next = [
-    { s: 1, u: flat },
-    { s: 2, u: shirt },
-    { s: 3, u: escudo }
-  ];
+  var next = [{ s: 1, u: flat }];
+  shirts.forEach(function(u, i) { next.push({ s: 2 + i * 0.01, u: u, shirt: true }); });
+  next.push({ s: 50, u: escudo });
+  // reordenar por step y filtrar ya intentados
   for (var i = 0; i < next.length; i++) {
     if (step < next[i].s && next[i].u) {
       img.setAttribute("data-step", String(next[i].s));
-      // si pasamos a camiseta/escudo, no forzar crop de cara
-      if (next[i].s >= 2 && img.classList) img.classList.remove("tphoto-face");
+      if ((next[i].shirt || next[i].s >= 2) && img.classList) img.classList.remove("tphoto-face");
       img.src = next[i].u;
       return;
     }
@@ -2398,7 +2431,8 @@ function renderTacticalBoard(team) {
       if (cached && typeof cached === "object") photo = cached.field || cached.modal || "";
       else if (cached !== null) photo = playerPhotoUrl(p, "field") || "";
       var flat = playerPhotoUrlFlat(p) || "";
-      var shirt = clubShirtUrl(p.club) || "";
+      var shirtsArr = (typeof clubShirtFallbackUrls === 'function') ? clubShirtFallbackUrls(p.club) : [clubShirtUrl(p.club)].filter(Boolean);
+      var shirt = shirtsArr[0] || "";
       var escudo = clubEscudoUrl(p.club) || "";
       // Jerarquía campo: foto campo → foto plana → camiseta → escudo
       var start = photo || (cached === null ? "" : flat) || shirt || escudo;
@@ -2407,7 +2441,7 @@ function renderTacticalBoard(team) {
         var isFace = !!(photo && photo.indexOf('/players/') >= 0);
         imgHtml = '<img class="' + (isFace ? 'tphoto-face' : '') + '" src="' + String(start).replace(/"/g, "&quot;") + '" alt="" draggable="false" ' +
           'data-step="0" data-flat="' + flat.replace(/"/g, "&quot;") + '" ' +
-          'data-shirt="' + shirt.replace(/"/g, "&quot;") + '" data-escudo="' + escudo.replace(/"/g, "&quot;") + '" ' +
+          'data-shirt="' + shirt.replace(/"/g, "&quot;") + '" data-shirts="' + (shirtsArr||[]).join('|').replace(/"/g, '') + '" data-escudo="' + escudo.replace(/"/g, "&quot;") + '" ' +
           'data-letter="' + fb.replace(/"/g, "&quot;") + '" data-is-face="' + (isFace ? '1' : '0') + '" ' +
           'onerror="window._playerAvatarError(this)">';
       }
