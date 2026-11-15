@@ -839,6 +839,12 @@ body:has(#panel-chapas.active) .app-top{display:none!important}
   background: transparent;
 }
 
+
+.history-pill .pts { color: var(--gold, #c9a227); font-weight: 800; font-size: 0.68rem; margin-left: 4px; }
+.history-pill .hp-txt { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
+.history-pill .hp-name { font-weight: 700; font-size: 0.72rem; }
+.history-pill .price { margin-left: 0; font-size: 0.62rem; }
+
 </style>
 </head>
 <body>
@@ -1246,6 +1252,22 @@ body:has(#panel-chapas.active) .app-top{display:none!important}
         <input type="password" id="adminPassNew" placeholder="Nueva contraseña (mín. 8 caracteres)" style="margin-bottom:8px;">
         <input type="password" id="adminPassNew2" placeholder="Repite la nueva contraseña" style="margin-bottom:8px;">
         <button class="btn btn-blue" id="btnChangeAdminPass" style="width:100%;">Cambiar contraseña admin</button>
+      </div>
+      <div class="card">
+        <div class="section-title">Copia de seguridad completa</div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;line-height:1.4;">
+          Descarga un archivo JSON con global, histórico, formaciones de la jornada, resultados, ajustes, notas y apodos.
+          Guárdalo en tu dispositivo por si algo falla.
+        </p>
+        <button class="btn btn-primary" id="btnFullBackup" style="width:100%;margin-bottom:10px;">Descargar backup completo</button>
+        <div class="section-title">Restaurar backup</div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;line-height:1.4;">
+          <b style="color:var(--danger);">Peligroso:</b> sustituye datos en el servidor por los del archivo.
+          Te pedirá varias confirmaciones. No uses un backup viejo a ciegas.
+        </p>
+        <input type="file" id="restoreBackupFile" accept="application/json,.json" style="margin-bottom:8px;font-size:0.78rem;">
+        <button class="btn btn-danger" id="btnFullRestore" style="width:100%;">Restaurar desde archivo…</button>
+        <div id="backupStatus" style="font-size:0.75rem;color:var(--muted);margin-top:8px;"></div>
       </div>
       <div class="card">
         <button class="btn btn-danger" id="btnResetAll" style="width:100%">Borrar TODO (formaciones + resultados + notas)</button>
@@ -1808,8 +1830,14 @@ async function loadSupabaseData() {
   });
 
   dbData.results = {};
+  dbData.resultsByJornada = {};
   (resultRes.data || []).forEach(function(r) {
-    if (r.jornada === jornada) dbData.results[r.player_id] = Number(r.points);
+    var jn = r.jornada;
+    var pid = r.player_id;
+    var pts = Number(r.points);
+    if (!dbData.resultsByJornada[jn]) dbData.resultsByJornada[jn] = {};
+    dbData.resultsByJornada[jn][pid] = pts;
+    if (jn === jornada) dbData.results[pid] = pts;
   });
 
   dbData.global = {};
@@ -2965,18 +2993,27 @@ window.showJornadaOnce = function(coach, jornada) {
   if (!f) {
     body.innerHTML = '<div class="hist-empty">No se encontró el once</div>';
   } else {
-    var pts = 0;
-    pts = historical ? (Number(f.points) || 0) : (f.players || []).reduce(function(total,id) { return total + Number(dbData.results[id] || 0); }, 0);
+    var archive = historical ? ((dbData.history || {})[j] || {}) : null;
+    var resInfo = resultsMapForHistoryKey(j, archive);
+    var pts = historical ? (Number(f.points) || 0) : null;
+    if (!historical && resInfo.mode === 'pts') {
+      pts = (f.players || []).reduce(function(total, id) {
+        var v = resInfo.map[id];
+        if (v == null) v = resInfo.map[String(id)];
+        return total + Number(v || 0);
+      }, 0);
+    }
     var pills = (f.players || []).map(function(id) {
       var p = PLAYERS.find(function(x) { return x.id === id; });
-      if (!p) return '<span class="history-pill">#' + id + '</span>';
+      var ptsHtml = playerPtsHtml(id, resInfo, p);
+      if (!p) return '<span class="history-pill">#' + id + ptsHtml + '</span>';
       var nm = getNick(p) || p.name.split(' ').slice(0, 2).join(' ');
-      return '<span class="history-pill">' + clubBadgeHtml(p.club) + nm + '<span class="price">' + p.points.toFixed(1) + 'M</span></span>';
+      return '<span class="history-pill">' + clubBadgeHtml(p.club) + '<span class="hp-txt"><span class="hp-name">' + nm + '</span>' + ptsHtml + '</span></span>';
     }).join('');
     body.innerHTML =
       '<div class="hist-hero"><div class="label">Entrenador</div><div class="name">' + coach + '</div></div>' +
       '<div class="history-meta">' +
-        '<span class="history-chip green"><b>' + pts.toFixed(1) + '</b> pts</span>' +
+        '<span class="history-chip green"><b>' + (pts == null ? '—' : Number(pts).toFixed(1)) + '</b> pts</span>' +
         '<span class="history-chip blue"><b>' + Number(f.cost).toFixed(1) + '</b> M coste</span>' +
         '<span class="history-chip"><b>' + (f.players || []).length + '</b> jugadores</span>' +
       '</div>' +
@@ -3081,6 +3118,43 @@ function renderGlobal() {
   el.innerHTML = html;
 }
 
+
+function resultsMapForHistoryKey(j, archive) {
+  var liveKey = (typeof jornadaLiveKey === 'function') ? jornadaLiveKey() : 'live';
+  var isLive = (String(j) === String(liveKey) || j === 'live' || j == null);
+
+  // JORNADA ACTUAL: pts solo si ya se calcularon; si no, precio M
+  if (isLive) {
+    var liveMap = dbData.results || {};
+    if (Object.keys(liveMap).length > 0) return { map: liveMap, known: true, mode: 'pts' };
+    return { map: {}, known: true, mode: 'price' };
+  }
+
+  // HISTÓRICO: SOLO puntos si al cerrar se guardó snapshot archive.results
+  // Nunca usar results de otra jornada (evitar mostrar pts de Mijas en Segovia, etc.)
+  if (archive && archive.results && typeof archive.results === 'object' && Object.keys(archive.results).length) {
+    return { map: archive.results, known: true, mode: 'pts' };
+  }
+
+  // Archivos antiguos sin snapshot → solo millones (precio de plantilla)
+  return { map: {}, known: true, mode: 'price' };
+}
+function playerPtsHtml(id, resInfo, playerObj) {
+  if (!resInfo || !resInfo.known) return '';
+  if (resInfo.mode === 'price') {
+    var price = playerObj && playerObj.points != null ? Number(playerObj.points) : null;
+    if (price == null) return '';
+    return ' <span class="price">' + price.toFixed(1) + ' M</span>';
+  }
+  if (resInfo.mode !== 'pts') return '';
+  var map = resInfo.map || {};
+  var pts = map[id];
+  if (pts == null) pts = map[String(id)];
+  if (pts == null) return ' <span class="pts">0.0 pts</span>';
+  return ' <span class="pts">' + Number(pts).toFixed(1) + ' pts</span>';
+}
+
+
 window.showCoachHistory = function(coach) {
   try { if (window.FFC_SFX) FFC_SFX.history(); } catch (e) {}
   var body = document.getElementById('coachHistoryBody');
@@ -3102,11 +3176,13 @@ window.showCoachHistory = function(coach) {
     var f = h.formations.find(function(x) { return x.coach === coach; });
     if (!f) return;
     blocks++;
+    var resInfo = resultsMapForHistoryKey(j, h);
     var pills = (f.players || []).map(function(id) {
       var p = PLAYERS.find(function(x) { return x.id === id; });
-      if (!p) return '<span class="history-pill">#' + id + '</span>';
+      var ptsHtml = playerPtsHtml(id, resInfo, p);
+      if (!p) return '<span class="history-pill">#' + id + ptsHtml + '</span>';
       var nm = getNick(p) || p.name.split(' ').slice(0, 2).join(' ');
-      return '<span class="history-pill">' + clubBadgeHtml(p.club) + nm + '</span>';
+      return '<span class="history-pill">' + clubBadgeHtml(p.club) + '<span class="hp-txt"><span class="hp-name">' + nm + '</span>' + ptsHtml + '</span></span>';
     }).join('');
     html += '<div class="history-block"><h4>' + (h.competition || ('Jornada ' + j)) + '</h4>' +
       '<div class="history-meta">' +
@@ -3124,11 +3200,13 @@ window.showCoachHistory = function(coach) {
     blocks++;
     var pts = 0;
     (cur.players || []).forEach(function(id) { pts += Number(dbData.results[id] || 0); });
+    var resLive = resultsMapForHistoryKey('live', null);
     var pills2 = (cur.players || []).map(function(id) {
       var p = PLAYERS.find(function(x) { return x.id === id; });
-      if (!p) return '<span class="history-pill">#' + id + '</span>';
+      var ptsHtml = playerPtsHtml(id, resLive, p);
+      if (!p) return '<span class="history-pill">#' + id + ptsHtml + '</span>';
       var nm = getNick(p) || p.name.split(' ').slice(0, 2).join(' ');
-      return '<span class="history-pill">' + clubBadgeHtml(p.club) + nm + '</span>';
+      return '<span class="history-pill">' + clubBadgeHtml(p.club) + '<span class="hp-txt"><span class="hp-name">' + nm + '</span>' + ptsHtml + '</span></span>';
     }).join('');
     html += '<div class="history-block"><h4>' + (dbData.competitionName || 'Jornada actual') + ' · en curso</h4>' +
       '<div class="history-meta">' +
@@ -3928,6 +4006,233 @@ document.getElementById('btnResetJornada').addEventListener('click', async funct
   alert('Resultados borrados');
 });
 
+
+document.getElementById('btnFullBackup') && document.getElementById('btnFullBackup').addEventListener('click', async function() {
+  var st = document.getElementById('backupStatus');
+  try {
+    if (st) st.textContent = 'Generando backup…';
+    var payload = {
+      version: 1,
+      type: 'fantasy-futbolchapas-full-backup',
+      exportedAt: new Date().toISOString(),
+      competition: dbData.competitionName || '',
+      currentJornada: dbData.currentJornada || 1,
+      maxBudget: typeof MAX_BUDGET !== 'undefined' ? MAX_BUDGET : null,
+      submissionsOpen: dbData.submissionsOpen,
+      minPerBombo: dbData.minPerBombo,
+      maxPerBombo: dbData.maxPerBombo,
+      nicknames: dbData.nicknames || {},
+      jornadaBombos: dbData.jornadaBombos || {},
+      history: dbData.history || {},
+      global: dbData.global || {},
+      formations: dbData.formations || [],
+      results: dbData.results || {},
+      resultsByJornada: dbData.resultsByJornada || {},
+      jornadaPlayerIds: dbData.jornadaPlayerIds || [],
+      settings: {},
+      tables: {}
+    };
+    // settings completos
+    try {
+      var sRes = await supabaseClient.from('settings').select('*');
+      if (sRes.error) throw sRes.error;
+      payload.tables.settings = sRes.data || [];
+      (sRes.data || []).forEach(function(row) {
+        payload.settings[row.key] = row.value;
+      });
+    } catch (e1) { console.warn(e1); }
+    try {
+      var gRes = await supabaseClient.from('global_scores').select('*');
+      if (!gRes.error) payload.tables.global_scores = gRes.data || [];
+    } catch (e2) {}
+    try {
+      var fRes = await supabaseClient.from('formations').select('*');
+      if (!fRes.error) payload.tables.formations = fRes.data || [];
+    } catch (e3) {}
+    try {
+      var rRes = await supabaseClient.from('jornada_results').select('*');
+      if (!rRes.error) payload.tables.jornada_results = rRes.data || [];
+    } catch (e4) {}
+    try {
+      var nRes = await supabaseClient.from('player_notes').select('*');
+      if (!nRes.error) payload.tables.player_notes = nRes.data || [];
+    } catch (e5) {}
+    try {
+      var jpRes = await supabaseClient.from('jornada_players').select('*');
+      if (!jpRes.error) payload.tables.jornada_players = jpRes.data || [];
+    } catch (e6) {}
+    try {
+      var pRes = await supabaseClient.from('players').select('*');
+      if (!pRes.error) payload.tables.players = pRes.data || [];
+    } catch (e7) {}
+
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'fantasy-backup-' + new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-') + '.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+    if (st) st.textContent = 'Backup descargado. Guárdalo en un sitio seguro.';
+    try { if (window.FFC_SFX) FFC_SFX.success(); } catch (e) {}
+  } catch (e) {
+    if (st) st.textContent = 'Error al generar backup: ' + (e.message || e);
+    alert('Error al generar backup: ' + (e.message || e));
+  }
+});
+
+document.getElementById('btnFullRestore') && document.getElementById('btnFullRestore').addEventListener('click', async function() {
+  var st = document.getElementById('backupStatus');
+  var fileInput = document.getElementById('restoreBackupFile');
+  if (!fileInput || !fileInput.files || !fileInput.files[0]) {
+    alert('Elige primero un archivo .json de backup.');
+    return;
+  }
+  if (!confirm('AVISO 1/3\n\nVas a RESTAURAR un backup.\nEsto puede SOBRESCRIBIR:\n• Clasificación global\n• Histórico de jornadas\n• Formaciones de la jornada actual\n• Resultados\n• Ajustes (nombre, presupuesto, inscripciones…)\n• Notas y plantilla (si vienen en el archivo)\n\n¿Seguro que quieres continuar?')) return;
+  if (!confirm('AVISO 2/3\n\nLos datos actuales del servidor se sustituirán por los del archivo.\nSi el backup es antiguo o de otra temporada, puedes perder información reciente.\n\n¿Quieres seguir?')) return;
+  if (!confirm('AVISO 3/3 — ÚLTIMA CONFIRMACIÓN\n\nDespués de restaurar:\n1) Se escribirán los datos del backup en Supabase.\n2) Se recargará la web para aplicar los cambios.\n3) No hay “deshacer” automático: solo otro backup.\n\n¿Restaurar ahora?')) return;
+
+  try {
+    if (st) st.textContent = 'Leyendo archivo…';
+    var text = await fileInput.files[0].text();
+    var data = JSON.parse(text);
+    if (!data || (data.type && data.type !== 'fantasy-futbolchapas-full-backup' && !data.history && !data.global && !data.tables)) {
+      throw new Error('El archivo no parece un backup válido de esta web.');
+    }
+    if (st) st.textContent = 'Restaurando en servidor…';
+
+    // Settings (incl. history_jornada_*)
+    if (data.tables && Array.isArray(data.tables.settings) && data.tables.settings.length) {
+      for (var i = 0; i < data.tables.settings.length; i++) {
+        var row = data.tables.settings[i];
+        if (!row || !row.key) continue;
+        var errS = (await supabaseClient.from('settings').upsert({ key: row.key, value: row.value }, { onConflict: 'key' })).error;
+        if (errS) throw errS;
+      }
+    } else if (data.settings && typeof data.settings === 'object') {
+      var keys = Object.keys(data.settings);
+      for (var si = 0; si < keys.length; si++) {
+        var k = keys[si];
+        var errS2 = (await supabaseClient.from('settings').upsert({ key: k, value: data.settings[k] }, { onConflict: 'key' })).error;
+        if (errS2) throw errS2;
+      }
+    } else if (data.history) {
+      // al menos reponer histórico
+      var hkeys = Object.keys(data.history);
+      for (var hi = 0; hi < hkeys.length; hi++) {
+        var hk = hkeys[hi];
+        var errH = (await supabaseClient.from('settings').upsert({
+          key: 'history_jornada_' + hk,
+          value: JSON.stringify(data.history[hk])
+        }, { onConflict: 'key' })).error;
+        if (errH) throw errH;
+      }
+    }
+
+    // Global scores: replace
+    if (data.tables && Array.isArray(data.tables.global_scores)) {
+      await supabaseClient.from('global_scores').delete().neq('coach', '__never__');
+      if (data.tables.global_scores.length) {
+        var errG = (await supabaseClient.from('global_scores').insert(data.tables.global_scores)).error;
+        if (errG) {
+          // fallback fila a fila con shape mínimo
+          for (var gi = 0; gi < data.tables.global_scores.length; gi++) {
+            var g = data.tables.global_scores[gi];
+            await supabaseClient.from('global_scores').upsert({
+              coach: g.coach,
+              total_points: g.total_points != null ? g.total_points : (g.totalPoints || 0),
+              wins: g.wins || 0
+            }, { onConflict: 'coach' });
+          }
+        }
+      }
+    } else if (data.global) {
+      await supabaseClient.from('global_scores').delete().neq('coach', '__never__');
+      var gNames = Object.keys(data.global);
+      for (var gj = 0; gj < gNames.length; gj++) {
+        var name = gNames[gj];
+        var gv = data.global[name] || {};
+        await supabaseClient.from('global_scores').upsert({
+          coach: name,
+          total_points: Number(gv.totalPoints || gv.total_points || 0),
+          wins: Number(gv.wins || 0)
+        }, { onConflict: 'coach' });
+      }
+    }
+
+    // Formations
+    if (data.tables && Array.isArray(data.tables.formations)) {
+      await supabaseClient.from('formations').delete().neq('coach', '__never__');
+      if (data.tables.formations.length) {
+        var forms = data.tables.formations.map(function(f) {
+          return {
+            coach: f.coach,
+            players: f.players || [],
+            cost: f.cost,
+            submitted_at: f.submitted_at || f.submittedAt || new Date().toISOString()
+          };
+        });
+        var errF = (await supabaseClient.from('formations').insert(forms)).error;
+        if (errF) console.warn(errF);
+      }
+    } else if (Array.isArray(data.formations)) {
+      await supabaseClient.from('formations').delete().neq('coach', '__never__');
+      if (data.formations.length) {
+        await supabaseClient.from('formations').insert(data.formations.map(function(f) {
+          return { coach: f.coach, players: f.players || [], cost: f.cost, submitted_at: f.submittedAt || new Date().toISOString() };
+        }));
+      }
+    }
+
+    // jornada_results
+    if (data.tables && Array.isArray(data.tables.jornada_results)) {
+      await supabaseClient.from('jornada_results').delete().neq('player_id', -999999);
+      if (data.tables.jornada_results.length) {
+        var errR = (await supabaseClient.from('jornada_results').insert(data.tables.jornada_results)).error;
+        if (errR) console.warn(errR);
+      }
+    }
+
+    // notes
+    if (data.tables && Array.isArray(data.tables.player_notes)) {
+      try {
+        await supabaseClient.from('player_notes').delete().neq('id', -999999);
+        if (data.tables.player_notes.length) {
+          await supabaseClient.from('player_notes').insert(data.tables.player_notes);
+        }
+      } catch (en) { console.warn(en); }
+    }
+
+    // jornada_players
+    if (data.tables && Array.isArray(data.tables.jornada_players)) {
+      try {
+        await supabaseClient.from('jornada_players').delete().neq('jornada', -999999);
+        if (data.tables.jornada_players.length) {
+          await supabaseClient.from('jornada_players').insert(data.tables.jornada_players);
+        }
+      } catch (ej) { console.warn(ej); }
+    }
+
+    // players (solo si el backup los trae)
+    if (data.tables && Array.isArray(data.tables.players) && data.tables.players.length) {
+      if (confirm('El backup incluye la plantilla de jugadores (' + data.tables.players.length + ').\n¿Quieres restaurarla también?\n(Si dices que no, se mantienen los jugadores actuales.)')) {
+        try {
+          await supabaseClient.from('players').delete().neq('id', -999999);
+          var errP = (await supabaseClient.from('players').insert(data.tables.players)).error;
+          if (errP) alert('Aviso plantilla: ' + errP.message);
+        } catch (ep) { console.warn(ep); }
+      }
+    }
+
+    if (st) st.textContent = 'Restaurado. Recargando…';
+    alert('Backup restaurado.\nLa página se recargará para aplicar los datos.');
+    location.reload();
+  } catch (e) {
+    if (st) st.textContent = 'Error: ' + (e.message || e);
+    alert('Error al restaurar: ' + (e.message || e));
+  }
+});
+
 document.getElementById('btnBackupHistory').addEventListener('click', function() {
   var data = { exportedAt: new Date().toISOString(), competition: dbData.competitionName || '', currentJornada: dbData.currentJornada, history: dbData.history || {}, global: dbData.global || {} };
   var blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
@@ -3948,6 +4253,11 @@ document.getElementById('btnCloseJornada').addEventListener('click', async funct
     var archive = {
       competition: dbData.competitionName || ('Jornada ' + jornada),
       closedAt: new Date().toISOString(),
+      results: (function() {
+        var out = {};
+        Object.keys(dbData.results || {}).forEach(function(k) { out[k] = Number(dbData.results[k]); out[String(k)] = Number(dbData.results[k]); });
+        return out;
+      })(),
       formations: (dbData.formations || []).map(function(f) {
         return {
           coach: f.coach,
