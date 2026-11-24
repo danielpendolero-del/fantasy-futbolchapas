@@ -1165,8 +1165,13 @@ body:has(#panel-chapas.active) .app-top{display:none!important}
     <!-- Notas -->
     <div id="atab-notas" class="atab-panel">
       <div class="card">
-        <div class="section-title">Pendientes (<span id="pendingNotesCount">0</span>)</div>
+        <div class="section-title">Pendientes comunidad (<span id="pendingNotesCount">0</span>)</div>
         <div id="pendingNotes"></div>
+      </div>
+      <div class="card">
+        <div class="section-title">Solo ver (guardadas sin comunidad)</div>
+        <p style="font-size:0.75rem;color:var(--muted);margin:0 0 8px;">La persona solo guardó/descargó. Puedes verlas aquí, pero no aprobar ni rechazar para la comunidad.</p>
+        <div id="adminViewNotes"></div>
       </div>
       <div class="card">
         <div class="section-title">Todas las notas</div>
@@ -3327,7 +3332,19 @@ function renderAdmin() {
       return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="font-weight:600">' + title + '</div><div style="font-size:0.85rem">' + sub + '</div>' + imgHtml + '<div style="font-size:0.72rem;color:var(--muted)">Enviada por: ' + (n.author||'Anónimo') + (n.image_url ? ' · Con imagen' : '') + '</div><div class="btn-row" style="margin:0"><button class="btn btn-sm btn-primary" onclick="approveNote('+n.id+')">Aprobar</button><button class="btn btn-sm btn-danger" onclick="rejectNote('+n.id+')">Rechazar</button><button class="btn btn-sm" style="background:var(--border);color:var(--text)" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
     }).join('');
 
-  var other = data.notes.filter(function(n) { return n.status !== 'pending'; });
+  // Solo ver (guardar sin comunidad): visibles, sin aprobar/rechazar
+  var adminView = data.notes.filter(function(n) { return n.status === 'admin_view'; });
+  var viewEl = document.getElementById('adminViewNotes');
+  if (viewEl) {
+    viewEl.innerHTML = adminView.length === 0 ? '<div class="empty">Ninguna formación privada enviada al admin</div>' :
+      adminView.map(function(n) {
+        var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
+        var imgHtml = n.image_url ? '<img class="note-img" src="' + String(n.image_url).replace(/"/g, '&quot;') + '" alt="" style="max-width:100%;border-radius:10px;margin-top:6px;">' : '';
+        var formName = extractFormName(n.note) || 'Formación';
+        return '<div class="player-card" style="flex-direction:column;align-items:flex-start;gap:6px;"><div style="display:flex;justify-content:space-between;width:100%"><div style="font-weight:600">👁 ' + formName + '</div><span class="badge" style="background:rgba(59,130,246,.2);color:#93c5fd;">Solo ver</span></div><div style="font-size:0.85rem">Asociada a: <b>' + (p ? p.name : ('ID ' + n.player_id)) + '</b></div>' + imgHtml + '<div style="font-size:0.72rem;color:var(--muted)">Enviada por: ' + (n.author||'Anónimo') + ' · no se puede aprobar (no es comunidad)</div><div class="btn-row" style="margin:0"><button class="btn btn-sm btn-danger" onclick="deleteNote('+n.id+')">Eliminar</button></div></div>';
+      }).join('');
+  }
+  var other = data.notes.filter(function(n) { return n.status !== 'pending' && n.status !== 'admin_view'; });
   document.getElementById('allNotes').innerHTML = other.length === 0 ? '<div class="empty">Sin notas</div>' :
     other.map(function(n) {
       var p = PLAYERS.find(function(x) { return x.id === n.player_id; });
@@ -5007,12 +5024,15 @@ window.addEventListener('message', async function(ev) {
       noteText += '\n@@FORM@@' + JSON.stringify(formation);
     } catch (e3) {}
   }
+  // Solo imagen / guardar para mí → admin puede ver, NO aprobar/rechazar para comunidad
+  var adminOnly = !!(ev.data && ev.data.adminOnly) && !(ev.data && ev.data.community);
+  var community = !!(ev.data && ev.data.community);
   try {
     var payload = {
       player_id: currentPlayerId,
       author: author,
       note: noteText,
-      status: 'pending',
+      status: adminOnly ? 'admin_view' : 'pending',
       image_url: image
     };
     var err = (await supabaseClient.from('player_notes').insert(payload)).error;
@@ -5021,7 +5041,11 @@ window.addEventListener('message', async function(ev) {
       if (typeof loadSupabaseData === 'function') await loadSupabaseData();
     } catch (e2) {}
     var extra = downloaded ? '\nTambién se ha descargado la imagen.' : '';
-    alert('Formación "' + name + '" enviada al admin para aprobar o rechazar.' + extra);
+    if (adminOnly) {
+      alert('Formación "' + name + '" enviada al admin solo para que la vea (no se sube a la comunidad ni se puede aprobar/rechazar).' + extra);
+    } else {
+      alert('Formación "' + name + '" enviada al admin para aprobar o rechazar.' + extra);
+    }
   } catch (e) {
     alert('Error al enviar al admin: ' + e.message + '\nComprueba que la columna image_url existe en player_notes.');
   }
