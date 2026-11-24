@@ -1050,6 +1050,27 @@ body:has(#panel-chapas.active) .app-top{display:none!important}
         <input type="text" id="nickValue" placeholder="Apodo (vacío = quitar apodo)" style="margin-bottom:6px;">
         <button class="btn btn-blue" id="btnSaveNick" style="width:100%;">Guardar apodo</button>
         <div id="nickList" style="margin-top:10px;"></div>
+
+        <div class="section-title" style="margin-top:18px;">Importar apodos masivo</div>
+        <p style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;line-height:1.35;">
+          Pega <b>una línea por jugador</b> con este formato exacto:<br>
+          <code style="font-size:0.72rem;user-select:all;">NOMBRE COMPLETO | APODO</code><br>
+          El nombre debe coincidir con el de la plantilla (mayúsculas/tildes da igual).
+          Líneas vacías o sin <code>|</code> se ignoran. Si el apodo está vacío, se borra.
+        </p>
+        <p style="font-size:0.72rem;color:var(--muted);margin-bottom:6px;"><b>Ejemplos:</b></p>
+        <pre id="nickBulkExamples" style="font-size:0.68rem;background:rgba(0,0,0,.25);padding:8px 10px;border-radius:10px;overflow:auto;margin:0 0 8px;white-space:pre-wrap;">JOAQUIN JESUS ROMERO CASARES | QUINI ROMERO
+DIANA HURTADO MARTINEZ | DIANA HURTADO
+ARTURO HARGUINDEY LOPEZ | ARTURO HARGUINDEY
+JUAN CARLOS PENDOLERO GUTIERREZ | JC PENDOLERO
+PABLO NEBOT MORCILLO | PAU NEBOT
+ANGEL MANUEL RUIZ CARRASCO | ANGEL RUIZ LARGUI</pre>
+        <textarea id="nickBulkInput" rows="8" placeholder="NOMBRE COMPLETO | APODO&#10;NOMBRE COMPLETO | APODO&#10;..." style="width:100%;margin-bottom:8px;font-size:0.78rem;"></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" id="btnImportNicks" style="flex:1;">Importar apodos</button>
+          <button class="btn btn-danger" id="btnClearAllNicks" title="Borra todos los apodos">Vaciar apodos</button>
+        </div>
+        <div id="nickImportStatus" style="font-size:0.78rem;color:var(--muted);margin-top:8px;white-space:pre-wrap;"></div>
       </div>
       <div class="card">
         <div class="section-title">Actualizar club y puntos</div>
@@ -5116,6 +5137,84 @@ window.clearNick = async function(id) {
   renderNickUI();
   renderOnce();
 };
+
+function findPlayerByNameLoose(name) {
+  var q = foldText(name || '');
+  if (!q) return null;
+  // coincidencia exacta normalizada
+  var exact = PLAYERS.find(function(p) { return foldText(p.name) === q; });
+  if (exact) return exact;
+  // sin espacios extras
+  var q2 = q.replace(/\s+/g, ' ').trim();
+  exact = PLAYERS.find(function(p) { return foldText(p.name).replace(/\s+/g, ' ').trim() === q2; });
+  if (exact) return exact;
+  // si solo hay un resultado que contiene el nombre completo
+  var hits = PLAYERS.filter(function(p) {
+    var n = foldText(p.name);
+    return n === q2 || n.indexOf(q2) !== -1 || q2.indexOf(n) !== -1;
+  });
+  if (hits.length === 1) return hits[0];
+  return null;
+}
+
+async function persistNicknames() {
+  var err = (await supabaseClient.from('settings').upsert({
+    key: 'player_nicknames',
+    value: JSON.stringify(dbData.nicknames || {})
+  }, { onConflict: 'key' })).error;
+  if (err) throw err;
+}
+
+document.getElementById('btnImportNicks') && document.getElementById('btnImportNicks').addEventListener('click', async function() {
+  var raw = (document.getElementById('nickBulkInput').value || '').trim();
+  if (!raw) return alert('Pega la lista de apodos');
+  if (!dbData.nicknames) dbData.nicknames = {};
+  var lines = raw.split(/\r?\n/);
+  var ok = 0, fail = [], skip = 0;
+  lines.forEach(function(line, idx) {
+    line = line.trim();
+    if (!line) { skip++; return; }
+    // quitar comillas accidentales
+    line = line.replace(/^["']|["']$/g, '');
+    var sep = line.indexOf('|');
+    if (sep < 0) {
+      // también aceptar ; o tab
+      if (line.indexOf(';') >= 0) sep = line.indexOf(';');
+      else if (line.indexOf('\t') >= 0) sep = line.indexOf('\t');
+      else { fail.push('L' + (idx+1) + ': sin separador | → ' + line.slice(0, 60)); return; }
+    }
+    var nombre = line.slice(0, sep).trim();
+    var apodo = line.slice(sep + 1).trim();
+    if (!nombre) { fail.push('L' + (idx+1) + ': nombre vacío'); return; }
+    var p = findPlayerByNameLoose(nombre);
+    if (!p) { fail.push('L' + (idx+1) + ': no encontrado → ' + nombre); return; }
+    if (apodo) dbData.nicknames[String(p.id)] = apodo;
+    else delete dbData.nicknames[String(p.id)];
+    ok++;
+  });
+  try {
+    await persistNicknames();
+    renderNickUI();
+    renderOnce();
+    var st = document.getElementById('nickImportStatus');
+    var msg = 'Importados: ' + ok + ' · Ignoradas: ' + skip + ' · Fallos: ' + fail.length;
+    if (fail.length) msg += '\n\nFallos:\n' + fail.slice(0, 40).join('\n') + (fail.length > 40 ? '\n… y ' + (fail.length-40) + ' más' : '');
+    if (st) st.textContent = msg;
+    alert(msg.split('\n')[0] + (fail.length ? ' (mira el detalle debajo)' : ''));
+  } catch (e) { alert(e.message); }
+});
+
+document.getElementById('btnClearAllNicks') && document.getElementById('btnClearAllNicks').addEventListener('click', async function() {
+  if (!confirm('¿Borrar TODOS los apodos?')) return;
+  dbData.nicknames = {};
+  try {
+    await persistNicknames();
+    renderNickUI();
+    renderOnce();
+    var st = document.getElementById('nickImportStatus');
+    if (st) st.textContent = 'Todos los apodos borrados.';
+  } catch (e) { alert(e.message); }
+});
 
 // Init
 (async function() {
